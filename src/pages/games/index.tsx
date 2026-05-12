@@ -3,7 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Input } from '@/components/ui/input'
-import { Search, Users, Clock, ChevronDown, RotateCcw } from 'lucide-react-taro'
+import { Search, ChevronDown, RotateCcw } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -36,6 +36,14 @@ const DIFFICULTY_META: Record<string, { label: string; emoji: string; color: str
   easy: { label: '简单', emoji: '🟢', color: '#059669', bg: '#ecfdf5' },
   medium: { label: '中等', emoji: '🟡', color: '#d97706', bg: '#fffbeb' },
   hard: { label: '困难', emoji: '🔴', color: '#dc2626', bg: '#fef2f2' },
+}
+
+const SCENE_META: Record<string, { emoji: string; label: string; color: string; bg: string }> = {
+  gathering: { emoji: '🎉', label: '聚会', color: '#7c3aed', bg: '#f5f3ff' },
+  teambuilding: { emoji: '🏢', label: '团建', color: '#0891b2', bg: '#ecfeff' },
+  family: { emoji: '👨‍👩‍👧', label: '亲子', color: '#059669', bg: '#ecfdf5' },
+  couple: { emoji: '💑', label: '情侣', color: '#e11d48', bg: '#fff1f2' },
+  drinking: { emoji: '🍻', label: '酒局', color: '#d97706', bg: '#fffbeb' },
 }
 
 const FILTER_OPTIONS = {
@@ -310,15 +318,22 @@ const GamesPage: FC = () => {
                       </View>
                       {/* 右侧内容 */}
                       <View className="flex-1 min-w-0">
+                        {/* 名字 + 人数时长 */}
                         <View className="flex flex-row items-center justify-between">
-                          <Text className="text-base font-bold text-gray-900">{game.name}</Text>
-                          <View className="rounded-full px-2 py-1" style={{ backgroundColor: difficultyInfo.bg }}>
+                          <View className="flex flex-row items-center gap-2 min-w-0 flex-1">
+                            <Text className="text-base font-bold text-gray-900 flex-shrink-0">{game.name}</Text>
+                            <View className="flex flex-row items-center gap-2">
+                              <Text className="text-xs text-gray-400">👥 {game.min_players}-{game.max_players}人</Text>
+                              <Text className="text-xs text-gray-400">⏱ {game.duration}min</Text>
+                            </View>
+                          </View>
+                          <View className="rounded-full px-2 py-1 flex-shrink-0" style={{ backgroundColor: difficultyInfo.bg }}>
                             <Text className="text-xs" style={{ color: difficultyInfo.color }}>{difficultyInfo.emoji} {difficultyInfo.label}</Text>
                           </View>
                         </View>
                         <Text className="block text-xs text-gray-400 mt-1 line-clamp-1">{game.intro}</Text>
 
-                        {/* 类型标签 */}
+                        {/* 类型 + 场景标签 */}
                         <View className="flex flex-row flex-wrap items-center gap-1 mt-2">
                           {game.type?.map((t) => {
                             const meta = TYPE_META[t]
@@ -328,18 +343,14 @@ const GamesPage: FC = () => {
                               </View>
                             ) : null
                           })}
-                        </View>
-
-                        {/* 底部信息条 */}
-                        <View className="flex flex-row items-center gap-3 mt-2 pt-2" style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
-                          <View className="flex flex-row items-center gap-1">
-                            <Users size={12} color="#9ca3af" />
-                            <Text className="text-xs text-gray-500">{game.min_players}-{game.max_players}人</Text>
-                          </View>
-                          <View className="flex flex-row items-center gap-1">
-                            <Clock size={12} color="#9ca3af" />
-                            <Text className="text-xs text-gray-500">{game.duration}min</Text>
-                          </View>
+                          {game.scene?.map((s) => {
+                            const meta = SCENE_META[s]
+                            return meta ? (
+                              <View key={s} className="rounded-full px-2 py-1" style={{ backgroundColor: meta.bg }}>
+                                <Text className="text-xs" style={{ color: meta.color }}>{meta.emoji} {meta.label}</Text>
+                              </View>
+                            ) : null
+                          })}
                         </View>
                       </View>
                     </View>
