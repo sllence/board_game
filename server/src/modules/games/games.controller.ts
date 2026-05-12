@@ -11,6 +11,7 @@ export class GamesController {
     scene?: string
     min_players?: string
     max_players?: string
+    duration?: string
     difficulty?: string
     keyword?: string
   }) {

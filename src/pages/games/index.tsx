@@ -3,9 +3,8 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, Users, Clock, Star, ChessKing } from 'lucide-react-taro'
+import { Search, Users, Clock, Star, ChessKing, ChevronDown } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -20,16 +19,8 @@ interface BoardGame {
   icon_key: string
   icon_bg: string
   icon_color: string
-  hero_bg: string
   intro: string
 }
-
-const TYPE_TABS = [
-  { key: '', label: '全部' },
-  { key: 'strategy', label: '策略' },
-  { key: 'social', label: '社交' },
-  { key: 'party', label: '聚会' },
-]
 
 const TYPE_GRADIENT: Record<string, string> = {
   strategy: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
@@ -43,17 +34,67 @@ const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string 
   hard: { label: '困难', color: '#dc2626', bg: '#fef2f2' },
 }
 
+// 筛选项配置
+const FILTER_OPTIONS = {
+  type: [
+    { key: '', label: '类型' },
+    { key: 'strategy', label: '策略' },
+    { key: 'social', label: '社交' },
+    { key: 'party', label: '聚会' },
+  ],
+  scene: [
+    { key: '', label: '场景' },
+    { key: 'party', label: '派对' },
+  ],
+  players: [
+    { key: '', label: '人数' },
+    { key: '2', label: '2人' },
+    { key: '3', label: '3人' },
+    { key: '4', label: '4人' },
+    { key: '5', label: '5人' },
+    { key: '6', label: '6人+' },
+  ],
+  duration: [
+    { key: '', label: '时长' },
+    { key: '15', label: '15分钟内' },
+    { key: '30', label: '30分钟内' },
+    { key: '45', label: '45分钟内' },
+    { key: '60', label: '60分钟内' },
+  ],
+  difficulty: [
+    { key: '', label: '难度' },
+    { key: 'easy', label: '简单' },
+    { key: 'medium', label: '中等' },
+    { key: 'hard', label: '困难' },
+  ],
+} as const
+
+type FilterKey = keyof typeof FILTER_OPTIONS
+
 const GamesPage: FC = () => {
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeType, setActiveType] = useState('')
   const [keyword, setKeyword] = useState('')
+  const [activeFilter, setActiveFilter] = useState<FilterKey | null>(null)
+  const [filters, setFilters] = useState({
+    type: '',
+    scene: '',
+    players: '',
+    duration: '',
+    difficulty: '',
+  })
 
   const fetchGames = async () => {
     setLoading(true)
     try {
       const params: Record<string, string> = {}
-      if (activeType) params.type = activeType
+      if (filters.type) params.type = filters.type
+      if (filters.scene) params.scene = filters.scene
+      if (filters.difficulty) params.difficulty = filters.difficulty
+      if (filters.duration) params.duration = filters.duration
+      if (filters.players) {
+        params.min_players = filters.players
+      }
       if (keyword) params.keyword = keyword
       const queryStr = new URLSearchParams(params).toString()
       const url = `/api/games${queryStr ? '?' + queryStr : ''}`
@@ -70,15 +111,35 @@ const GamesPage: FC = () => {
 
   useEffect(() => {
     fetchGames()
-  }, [activeType])
+  }, [filters])
 
   const handleSearch = () => {
     fetchGames()
   }
 
+  const handleFilterSelect = (filterKey: FilterKey, value: string) => {
+    setFilters(prev => ({ ...prev, [filterKey]: value }))
+    setActiveFilter(null)
+  }
+
+  const getFilterLabel = (filterKey: FilterKey): string => {
+    const currentValue = filters[filterKey]
+    if (!currentValue) {
+      return FILTER_OPTIONS[filterKey][0].label
+    }
+    const option = FILTER_OPTIONS[filterKey].find(opt => opt.key === currentValue)
+    return option ? option.label : FILTER_OPTIONS[filterKey][0].label
+  }
+
+  const isFilterActive = (filterKey: FilterKey): boolean => {
+    return filters[filterKey] !== ''
+  }
+
   const goToDetail = (id: number) => {
     Taro.navigateTo({ url: `/pages/rule-detail/index?id=${id}` })
   }
+
+  const filterKeys: FilterKey[] = ['type', 'scene', 'players', 'duration', 'difficulty']
 
   return (
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
@@ -107,25 +168,73 @@ const GamesPage: FC = () => {
         </View>
       </View>
 
-      {/* 分类 Tab - 浮动 */}
+      {/* 筛选栏 - 下拉选择器 */}
       <View className="px-4 -mt-4 mb-3">
         <Card className="border-0 shadow-sm">
-          <CardContent className="flex flex-row gap-2 p-3">
-            {TYPE_TABS.map((tab) => (
-              <Badge
-                key={tab.key}
-                variant={activeType === tab.key ? 'default' : 'secondary'}
-                className="cursor-pointer"
-                onClick={() => setActiveType(tab.key)}
+          <CardContent className="flex flex-row items-center gap-2 p-3">
+            {filterKeys.map((filterKey) => (
+              <View
+                key={filterKey}
+                className="flex-1 relative"
+                onClick={() => {
+                  setActiveFilter(activeFilter === filterKey ? null : filterKey)
+                }}
               >
-                <Text className="text-xs">{tab.label}</Text>
-              </Badge>
+                <View
+                  className="flex flex-row items-center justify-center gap-1 rounded-full py-2 px-1"
+                  style={{
+                    backgroundColor: isFilterActive(filterKey) ? '#eef2ff' : '#f9fafb',
+                    borderWidth: 1,
+                    borderColor: activeFilter === filterKey ? '#4F46E5' : (isFilterActive(filterKey) ? '#4F46E5' : '#e5e7eb'),
+                    borderStyle: 'solid',
+                  }}
+                >
+                  <Text className="text-xs" style={{ color: isFilterActive(filterKey) ? '#4F46E5' : '#6b7280' }}>
+                    {getFilterLabel(filterKey)}
+                  </Text>
+                  <ChevronDown size={12} color={isFilterActive(filterKey) ? '#4F46E5' : '#9ca3af'} />
+                </View>
+                {/* 下拉选项 */}
+                {activeFilter === filterKey && (
+                  <View
+                    className="absolute left-0 right-0 top-full mt-1 rounded-xl shadow-lg z-50 overflow-hidden"
+                    style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderStyle: 'solid' }}
+                  >
+                    {FILTER_OPTIONS[filterKey].map((option) => (
+                      <View
+                        key={option.key}
+                        className="py-2 px-3"
+                        style={{
+                          backgroundColor: filters[filterKey] === option.key ? '#eef2ff' : '#fff',
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleFilterSelect(filterKey, option.key)
+                        }}
+                      >
+                        <Text className="text-xs" style={{ color: filters[filterKey] === option.key ? '#4F46E5' : '#374151' }}>
+                          {option.label}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
             ))}
           </CardContent>
         </Card>
       </View>
 
-      {/* 游戏列表 - 渐变卡片 */}
+      {/* 点击空白关闭下拉 */}
+      {activeFilter && (
+        <View
+          className="fixed inset-0 z-40"
+          style={{ backgroundColor: 'transparent' }}
+          onClick={() => setActiveFilter(null)}
+        />
+      )}
+
+      {/* 游戏列表 */}
       <View className="flex-1 px-4 pb-20">
         {loading ? (
           <View className="flex items-center justify-center py-20">
@@ -133,7 +242,7 @@ const GamesPage: FC = () => {
           </View>
         ) : games.length === 0 ? (
           <View className="flex items-center justify-center py-20">
-            <Text className="block text-gray-400 text-sm">暂无桌游数据</Text>
+            <Text className="block text-gray-400 text-sm">暂无符合条件的桌游</Text>
           </View>
         ) : (
           <View className="flex flex-col gap-3">

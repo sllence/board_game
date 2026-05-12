@@ -8,6 +8,7 @@ export class GamesService {
     scene?: string
     min_players?: string
     max_players?: string
+    duration?: string
     difficulty?: string
     keyword?: string
   }) {
@@ -21,6 +22,10 @@ export class GamesService {
     if (filters.type) query = query.eq('type', filters.type)
     if (filters.scene) query = query.eq('scene', filters.scene)
     if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
+    if (filters.duration) {
+      const dur = Number(filters.duration)
+      query = query.lte('duration', dur)
+    }
     if (filters.min_players) query = query.gte('max_players', Number(filters.min_players))
     if (filters.max_players) query = query.lte('min_players', Number(filters.max_players))
     if (filters.keyword) query = query.ilike('name', `%${filters.keyword}%`)
