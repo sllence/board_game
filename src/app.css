@@ -150,6 +150,13 @@ image {
   border-color: var(--border);
 }
 
+/* Fix lucide-react-taro icon rendering in H5 - override Tailwind preflight */
+img[src^="data:image/svg"] {
+  display: inline-block !important;
+  max-width: none !important;
+  vertical-align: middle;
+}
+
 ::selection {
   background-color: var(--selection);
   color: var(--selection-foreground);
