@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Clock, Trophy, Gamepad2 } from 'lucide-react-taro'
+import { Clock, Crown, Gamepad2 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface PlayerInfo {
@@ -123,7 +123,7 @@ const HistoryPage: FC = () => {
                     {/* 分数/胜者 */}
                     {session.winner && (
                       <View className="flex flex-row items-center gap-1">
-                        <Trophy size={12} color="#eab308" />
+                        <Crown size={12} color="#eab308" />
                         <Text className="text-xs text-muted-foreground">胜者: </Text>
                         <Text className="text-xs font-medium text-foreground">{session.winner}</Text>
                       </View>

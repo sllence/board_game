@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { User, Trophy, Clock, Heart, Settings, LogIn, Gamepad2 } from 'lucide-react-taro'
+import { User, Crown, Clock, Heart, Settings, LogIn, Gamepad2 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface UserInfo {
@@ -111,7 +111,7 @@ const ProfilePage: FC = () => {
                 <Text className="block text-xs text-muted-foreground">对局数</Text>
               </View>
               <View className="flex flex-col items-center">
-                <Trophy size={20} color="#eab308" />
+                <Crown size={20} color="#eab308" />
                 <Text className="block text-lg font-bold text-foreground mt-1">{userInfo.total_wins || 0}</Text>
                 <Text className="block text-xs text-muted-foreground">胜场</Text>
               </View>

@@ -35,8 +35,8 @@ export default defineAppConfig({
       {
         pagePath: 'pages/games/index',
         text: '桌游馆',
-        iconPath: './assets/tabbar/dices.png',
-        selectedIconPath: './assets/tabbar/dices-active.png',
+        iconPath: './assets/tabbar/layout-grid.png',
+        selectedIconPath: './assets/tabbar/layout-grid-active.png',
       },
       {
         pagePath: 'pages/tools/index',
@@ -47,8 +47,8 @@ export default defineAppConfig({
       {
         pagePath: 'pages/history/index',
         text: '对局',
-        iconPath: './assets/tabbar/clock.png',
-        selectedIconPath: './assets/tabbar/clock-active.png',
+        iconPath: './assets/tabbar/crown.png',
+        selectedIconPath: './assets/tabbar/crown-active.png',
       },
       {
         pagePath: 'pages/profile/index',
