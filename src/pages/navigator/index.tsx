@@ -200,7 +200,8 @@ const NavigatorPage: FC = () => {
             >
               <View className="flex flex-row items-center gap-3">
                 <View
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white bg-opacity-20"
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
                 >
                   <Text className="text-2xl font-bold text-white">{game.name.charAt(0)}</Text>
                 </View>
@@ -255,7 +256,8 @@ const NavigatorPage: FC = () => {
             {players.map((player, idx) => (
               <View
                 key={idx}
-                className="flex flex-row items-center gap-1 bg-primary bg-opacity-10 rounded-full px-3 py-1"
+                className="flex flex-row items-center gap-1 rounded-full px-3 py-1"
+                style={{ backgroundColor: 'rgba(79,70,229,0.1)' }}
               >
                 <User size={12} color="#4f46e5" />
                 <Text className="text-sm text-primary font-medium">{player.name}</Text>
@@ -303,7 +305,7 @@ const NavigatorPage: FC = () => {
             <Text className="block text-base font-bold text-white truncate">{game?.name}</Text>
             <Text className="block text-xs text-white text-opacity-70 mt-1">对局进行中</Text>
           </View>
-          <View className="flex flex-row items-center gap-2 bg-white bg-opacity-20 rounded-full px-3 py-1">
+          <View className="flex flex-row items-center gap-2 rounded-full px-3 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             <Timer size={14} color="#fff" />
             <Text className="block text-sm text-white font-mono font-bold">{formatTime(elapsedSeconds)}</Text>
           </View>
@@ -515,7 +517,7 @@ const NavigatorPage: FC = () => {
 
       {/* 已结束提示 */}
       {phase === 'finished' && (
-        <View className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <View className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <Card className="w-72 shadow-xl">
             <CardContent className="flex flex-col items-center p-6">
               <View className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-3">

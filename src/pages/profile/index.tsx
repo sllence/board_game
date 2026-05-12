@@ -78,7 +78,7 @@ const ProfilePage: FC = () => {
       <View className="px-5 pt-14 pb-8" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
         {userInfo ? (
           <View className="flex flex-row items-center gap-4">
-            <View className="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+            <View className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
               <User size={28} color="#fff" />
             </View>
             <View className="flex-1">
@@ -88,14 +88,14 @@ const ProfilePage: FC = () => {
           </View>
         ) : (
           <View className="flex flex-row items-center gap-4">
-            <View className="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+            <View className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
               <User size={28} color="rgba(255,255,255,0.6)" />
             </View>
             <View className="flex-1">
               <Text className="block text-lg font-bold text-white">未登录</Text>
               <Text className="block text-sm text-white text-opacity-70 mt-1">登录后同步对局记录</Text>
             </View>
-            <Button size="sm" onClick={login} className="bg-white bg-opacity-20 border-0">
+            <Button size="sm" onClick={login} className="border-0" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
               <View className="flex flex-row items-center gap-1">
                 <LogIn size={14} color="#fff" />
                 <Text className="text-white">登录</Text>

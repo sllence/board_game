@@ -124,10 +124,10 @@ const RuleDetailPage: FC = () => {
       >
         <Text className="block text-2xl font-bold text-white">{game.name}</Text>
         <View className="flex flex-row items-center gap-2 mt-2">
-          <View className="bg-white bg-opacity-20 rounded-full px-3 py-1">
+          <View className="rounded-full px-3 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             <Text className="text-xs text-white font-medium">{TYPE_MAP[game.type] || game.type}</Text>
           </View>
-          <View className="bg-white bg-opacity-20 rounded-full px-3 py-1">
+          <View className="rounded-full px-3 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             <Text className="text-xs text-white font-medium" style={{ color: diffInfo.color }}>{diffInfo.label}</Text>
           </View>
         </View>

@@ -102,13 +102,16 @@ const ToolsPage: FC = () => {
               onClick={() => handleToolClick(tool)}
             >
               <View className="p-4 flex flex-col items-center">
-                <View className="w-14 h-14 rounded-2xl bg-white bg-opacity-20 flex items-center justify-center mb-3">
+                <View
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+                  style={{ background: 'rgba(255,255,255,0.2)' }}
+                >
                   {tool.icon}
                 </View>
                 <Text className="block text-base font-bold text-white">{tool.name}</Text>
                 <Text className="block text-xs text-white text-opacity-80 mt-1 text-center">{tool.desc}</Text>
                 {tool.soon && (
-                  <View className="mt-2 bg-white bg-opacity-20 rounded-full px-2 py-1">
+                  <View className="mt-2 rounded-full px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                     <Text className="text-xs text-white">即将上线</Text>
                   </View>
                 )}

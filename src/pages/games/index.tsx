@@ -91,7 +91,7 @@ const GamesPage: FC = () => {
         <Text className="block text-xl font-bold text-white mb-3">发现好玩的桌游</Text>
         {/* 搜索栏 */}
         <View className="relative">
-          <View className="bg-white bg-opacity-15 rounded-2xl pl-10 pr-4 py-2">
+          <View className="rounded-2xl pl-10 pr-4 py-2" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
             <Input
               className="w-full bg-transparent text-sm text-white placeholder-white placeholder-opacity-60"
               placeholder="搜索桌游名称..."
@@ -150,21 +150,21 @@ const GamesPage: FC = () => {
                       <Text className="block text-lg font-bold text-white">{game.name}</Text>
                       <Text className="block text-xs text-white text-opacity-80 mt-1 line-clamp-1">{game.intro}</Text>
                       <View className="flex flex-row items-center gap-2 mt-3">
-                        <View className="bg-white bg-opacity-20 rounded-full px-2 py-1 flex flex-row items-center gap-1">
+                        <View className="rounded-full px-2 py-1 flex flex-row items-center gap-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                           <Users size={10} color="#fff" />
                           <Text className="text-xs text-white">{game.min_players}-{game.max_players}人</Text>
                         </View>
-                        <View className="bg-white bg-opacity-20 rounded-full px-2 py-1 flex flex-row items-center gap-1">
+                        <View className="rounded-full px-2 py-1 flex flex-row items-center gap-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                           <Clock size={10} color="#fff" />
                           <Text className="text-xs text-white">{game.duration}min</Text>
                         </View>
-                        <View className="bg-white bg-opacity-20 rounded-full px-2 py-1 flex flex-row items-center gap-1">
+                        <View className="rounded-full px-2 py-1 flex flex-row items-center gap-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                           <Star size={10} color="#fbbf24" />
                           <Text className="text-xs text-white">{DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}</Text>
                         </View>
                       </View>
                     </View>
-                    <View className="w-12 h-12 rounded-2xl bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0 ml-3">
+                    <View className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ml-3" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                       <Text className="text-xl font-bold text-white">{game.name.charAt(0)}</Text>
                     </View>
                   </View>

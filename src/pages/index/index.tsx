@@ -140,18 +140,18 @@ const IndexPage: FC = () => {
                   <View className="flex-1">
                     <Text className="block text-lg font-bold text-white">{game.name}</Text>
                     <View className="flex flex-row items-center gap-3 mt-2">
-                      <View className="bg-white bg-opacity-20 rounded-full px-2 py-1">
+                      <View className="rounded-full px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                         <Text className="text-xs text-white">{game.min_players}-{game.max_players}人</Text>
                       </View>
-                      <View className="bg-white bg-opacity-20 rounded-full px-2 py-1">
+                      <View className="rounded-full px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                         <Text className="text-xs text-white">{game.duration}分钟</Text>
                       </View>
-                      <View className="bg-white bg-opacity-20 rounded-full px-2 py-1">
+                      <View className="rounded-full px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                         <Text className="text-xs text-white">{DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}</Text>
                       </View>
                     </View>
                   </View>
-                  <View className="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center">
+                  <View className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                     <Text className="text-lg font-bold text-white">{game.name.charAt(0)}</Text>
                   </View>
                 </View>
