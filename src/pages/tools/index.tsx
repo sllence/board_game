@@ -1,13 +1,13 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Dices, Timer, Layers, Shuffle, Calculator, Target, Toolbox } from 'lucide-react-taro'
-import type { FC } from 'react'
+import { Dices, Timer, Layers, Shuffle, Calculator, Target } from 'lucide-react-taro'
+import type { FC, ReactNode } from 'react'
 
 interface ToolItem {
   key: string
   name: string
   desc: string
-  icon: React.ReactNode
+  icon: ReactNode
   gradient: string
   path: string
   soon: boolean
@@ -84,7 +84,7 @@ const ToolsPage: FC = () => {
       {/* 顶部标题区 */}
       <View className="px-5 pt-12 pb-6" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
         <View className="flex flex-row items-center gap-2 mb-1">
-          <Toolbox size={20} color="#fbbf24" />
+          <Text style={{ fontSize: '18px' }}>🧰</Text>
           <Text className="text-sm font-medium text-yellow-300">工具箱</Text>
         </View>
         <Text className="block text-xl font-bold text-white">桌游辅助工具</Text>
