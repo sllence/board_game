@@ -98,48 +98,50 @@ const TimerPage: FC = () => {
     : 0
 
   return (
-    <View className="flex flex-col min-h-screen bg-background">
+    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
       {/* 标题 */}
-      <View className="px-4 pt-12 pb-4">
-        <View className="flex flex-row items-center gap-2">
-          <Timer size={22} color="#10b981" />
-          <Text className="block text-xl font-bold text-foreground">计时器</Text>
+      <View className="px-5 pt-12 pb-4 bg-white">
+        <View className="flex flex-row items-center gap-3">
+          <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+            <Timer size={18} color="#fff" />
+          </View>
+          <Text className="block text-xl font-bold text-[#1e1b4b]">计时器</Text>
         </View>
       </View>
 
       {/* 模式切换 */}
-      <View className="px-4 mb-4">
+      <View className="px-5 mt-4 mb-4">
         <View className="flex flex-row gap-2">
           <Badge
             variant={mode === 'countdown' ? 'default' : 'secondary'}
-            className="cursor-pointer"
+            className="cursor-pointer rounded-lg px-4 py-2"
             onClick={() => switchMode('countdown')}
           >
-            <Text className="text-sm">倒计时</Text>
+            <Text className="text-sm font-medium">倒计时</Text>
           </Badge>
           <Badge
             variant={mode === 'stopwatch' ? 'default' : 'secondary'}
-            className="cursor-pointer"
+            className="cursor-pointer rounded-lg px-4 py-2"
             onClick={() => switchMode('stopwatch')}
           >
-            <Text className="text-sm">正计时</Text>
+            <Text className="text-sm font-medium">正计时</Text>
           </Badge>
         </View>
       </View>
 
       {/* 预设选择（仅倒计时模式） */}
       {mode === 'countdown' && (
-        <View className="px-4 mb-6">
-          <Text className="block text-sm font-medium text-foreground mb-2">快速设置</Text>
+        <View className="px-5 mb-5">
+          <Text className="block text-sm font-medium text-[#374151] mb-3">快速设置</Text>
           <View className="flex flex-row flex-wrap gap-2">
             {PRESETS.map((preset) => (
               <Badge
                 key={preset.seconds}
                 variant={totalSeconds === preset.seconds ? 'default' : 'secondary'}
-                className="cursor-pointer"
+                className="cursor-pointer rounded-lg px-4 py-2"
                 onClick={() => selectPreset(preset.seconds)}
               >
-                <Text className="text-sm">{preset.label}</Text>
+                <Text className="text-sm font-medium">{preset.label}</Text>
               </Badge>
             ))}
           </View>
@@ -147,22 +149,23 @@ const TimerPage: FC = () => {
       )}
 
       {/* 时间显示 */}
-      <View className="flex-1 flex flex-col items-center justify-center px-4">
-        <View className="relative w-52 h-52 flex items-center justify-center">
-          {/* 进度环背景 */}
-          <View className="absolute inset-0 rounded-full border-8 border-muted" />
-          {/* 进度环前景（简化版用边框色表示） */}
-          {mode === 'countdown' && running && (
+      <View className="flex-1 flex flex-col items-center justify-center px-5">
+        <View
+          className="relative w-52 h-52 rounded-full flex items-center justify-center bg-white"
+          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+        >
+          {/* 进度指示 */}
+          {mode === 'countdown' && running && progress > 0 && (
             <View
-              className="absolute inset-0 rounded-full border-8 border-primary"
-              style={{ clipPath: `inset(0 0 ${100 - progress}% 0)` }}
+              className="absolute bottom-0 left-0 right-0 rounded-b-full"
+              style={{ height: `${progress}%`, background: 'linear-gradient(180deg, transparent, rgba(79,70,229,0.08))' }}
             />
           )}
           {mode === 'countdown' && !running && remaining === 0 && totalSeconds > 0 && (
-            <View className="absolute inset-0 rounded-full border-8 border-red-500" />
+            <View className="absolute inset-0 rounded-full border-4 border-red-400" />
           )}
-          <View className="flex flex-col items-center">
-            <Text className="block text-5xl font-mono font-bold text-foreground">
+          <View className="flex flex-col items-center relative">
+            <Text className="block text-5xl font-mono font-bold text-[#1e1b4b]">
               {formatTime(remaining)}
             </Text>
             {mode === 'countdown' && remaining === 0 && totalSeconds > 0 && (
@@ -173,25 +176,40 @@ const TimerPage: FC = () => {
       </View>
 
       {/* 控制按钮 */}
-      <View className="px-4 pb-8 flex flex-row gap-3 justify-center">
-        <Button variant="outline" size="lg" onClick={reset}>
+      <View className="px-5 pb-8 flex flex-row gap-3 justify-center">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={reset}
+          className="rounded-2xl w-24"
+        >
           <View className="flex flex-row items-center gap-2">
-            <RotateCcw size={18} color="#6b7280" />
-            <Text>重置</Text>
+            <RotateCcw size={16} color="#6b7280" />
+            <Text className="text-gray-500">重置</Text>
           </View>
         </Button>
-        {!running ? (
-          <Button size="lg" onClick={start}>
+        {running ? (
+          <Button
+            size="lg"
+            onClick={pause}
+            className="rounded-2xl flex-1 max-w-48"
+            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+          >
             <View className="flex flex-row items-center gap-2">
-              <Play size={18} color="#fff" />
-              <Text className="text-white">开始</Text>
+              <Pause size={18} color="#fff" />
+              <Text className="text-white font-semibold">暂停</Text>
             </View>
           </Button>
         ) : (
-          <Button size="lg" variant="secondary" onClick={pause}>
+          <Button
+            size="lg"
+            onClick={start}
+            className="rounded-2xl flex-1 max-w-48"
+            style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}
+          >
             <View className="flex flex-row items-center gap-2">
-              <Pause size={18} color="#1a1a2e" />
-              <Text>暂停</Text>
+              <Play size={18} color="#fff" />
+              <Text className="text-white font-semibold">开始</Text>
             </View>
           </Button>
         )}

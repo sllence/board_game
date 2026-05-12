@@ -3,9 +3,8 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
-import { Lightbulb, ArrowLeft } from 'lucide-react-taro'
+import { Lightbulb, BookOpen } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface Step {
@@ -49,16 +48,16 @@ const GuideDetailPage: FC = () => {
 
   if (loading) {
     return (
-      <View className="flex items-center justify-center min-h-screen bg-background">
-        <Text className="block text-muted-foreground text-sm">加载中...</Text>
+      <View className="flex items-center justify-center min-h-screen bg-[#f5f5f7]">
+        <Text className="block text-gray-400 text-sm">加载中...</Text>
       </View>
     )
   }
 
   if (!guide) {
     return (
-      <View className="flex items-center justify-center min-h-screen bg-background">
-        <Text className="block text-muted-foreground text-sm">未找到攻略信息</Text>
+      <View className="flex items-center justify-center min-h-screen bg-[#f5f5f7]">
+        <Text className="block text-gray-400 text-sm">未找到攻略信息</Text>
       </View>
     )
   }
@@ -67,54 +66,73 @@ const GuideDetailPage: FC = () => {
   const tips: string[] = Array.isArray(guide.tips) ? guide.tips : []
 
   return (
-    <View className="flex flex-col min-h-screen bg-background">
+    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
       {/* 头部 */}
-      <View className="px-5 pt-12 pb-6 bg-muted bg-opacity-50">
-        <Text className="block text-xl font-bold text-foreground">{guide.title}</Text>
-        <Text className="block text-sm text-muted-foreground mt-1">{guide.desc}</Text>
+      <View className="px-5 pt-12 pb-6 bg-white">
+        <View className="flex flex-row items-center gap-3">
+          <View
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: guide.cover_bg || '#f3f4f6' }}
+          >
+            <BookOpen size={20} color="#4F46E5" />
+          </View>
+          <View className="flex-1">
+            <Text className="block text-xl font-bold text-[#1e1b4b]">{guide.title}</Text>
+            <Text className="block text-sm text-gray-400 mt-1">{guide.desc}</Text>
+          </View>
+        </View>
       </View>
 
       {/* 步骤 */}
       <View className="px-4 mt-4">
         <View className="flex flex-row items-center gap-2 mb-3">
-          <ArrowLeft size={18} color="#1a1a2e" />
-          <Text className="block text-base font-semibold text-foreground">攻略步骤</Text>
+          <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+            <BookOpen size={14} color="#fff" />
+          </View>
+          <Text className="block text-base font-semibold text-[#1e1b4b]">攻略步骤</Text>
         </View>
-        <Accordion type="multiple" defaultValue={steps.map((_, i) => `step-${i}`)}>
-          {steps.map((step, idx) => (
-            <AccordionItem key={idx} value={`step-${idx}`}>
-              <AccordionTrigger>
-                <View className="flex flex-row items-center gap-2">
-                  <Badge variant="secondary">
-                    <Text className="text-xs">{idx + 1}</Text>
-                  </Badge>
-                  <Text className="text-sm font-medium">{step.title}</Text>
-                </View>
-              </AccordionTrigger>
-              <AccordionContent>
-                <Text className="block text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {step.content}
-                </Text>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-0">
+            <Accordion type="multiple" defaultValue={steps.map((_, i) => `step-${i}`)}>
+              {steps.map((step, idx) => (
+                <AccordionItem key={idx} value={`step-${idx}`}>
+                  <AccordionTrigger>
+                    <View className="flex flex-row items-center gap-2">
+                      <View className="w-5 h-5 rounded flex items-center justify-center bg-indigo-100">
+                        <Text className="text-xs font-bold text-indigo-600">{idx + 1}</Text>
+                      </View>
+                      <Text className="text-sm font-medium text-[#1e1b4b]">{step.title}</Text>
+                    </View>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <Text className="block text-sm text-gray-500 leading-relaxed whitespace-pre-line pl-7">
+                      {step.content}
+                    </Text>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
       </View>
 
       {/* 提示 */}
       {tips.length > 0 && (
-        <View className="px-4 mt-4">
+        <View className="px-4 mt-5">
           <View className="flex flex-row items-center gap-2 mb-3">
-            <Lightbulb size={18} color="#f59e0b" />
-            <Text className="block text-base font-semibold text-foreground">提示</Text>
+            <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+              <Lightbulb size={14} color="#fff" />
+            </View>
+            <Text className="block text-base font-semibold text-[#1e1b4b]">提示</Text>
           </View>
           <View className="flex flex-col gap-2">
             {tips.map((tip, idx) => (
-              <Card key={idx}>
-                <CardContent className="p-3">
-                  <Text className="block text-sm text-foreground">{tip}</Text>
-                </CardContent>
-              </Card>
+              <View key={idx} className="bg-amber-50 rounded-xl px-4 py-3 flex flex-row gap-3">
+                <View className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0 mt-1">
+                  <Text className="text-xs text-white font-bold">{idx + 1}</Text>
+                </View>
+                <Text className="block text-sm text-amber-900 flex-1">{tip}</Text>
+              </View>
             ))}
           </View>
         </View>

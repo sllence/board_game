@@ -2,7 +2,6 @@ import { View, Text } from '@tarojs/components'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Shuffle, Plus, X, User } from 'lucide-react-taro'
 import type { FC } from 'react'
@@ -43,28 +42,31 @@ const RandomPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-background">
+    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
       {/* 标题 */}
-      <View className="px-4 pt-12 pb-4">
-        <View className="flex flex-row items-center gap-2">
-          <Shuffle size={22} color="#ef4444" />
-          <Text className="block text-xl font-bold text-foreground">随机选人</Text>
+      <View className="px-5 pt-12 pb-4 bg-white">
+        <View className="flex flex-row items-center gap-3">
+          <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
+            <Shuffle size={18} color="#fff" />
+          </View>
+          <Text className="block text-xl font-bold text-[#1e1b4b]">随机选人</Text>
         </View>
       </View>
 
       {/* 名单管理 */}
-      <View className="px-4 mb-4">
-        <Text className="block text-sm font-medium text-foreground mb-2">参与者名单</Text>
+      <View className="px-5 mt-4 mb-4 bg-white mx-4 rounded-2xl p-4">
+        <Text className="block text-sm font-medium text-[#374151] mb-3">参与者名单</Text>
         <View className="flex flex-row gap-2 mb-3">
-          <View className="flex-1">
+          <View className="flex-1 bg-gray-50 rounded-xl px-4 py-3">
             <Input
               placeholder="输入名称..."
               value={newName}
               onInput={(e) => setNewName(e.detail.value)}
               onConfirm={addName}
+              className="bg-transparent"
             />
           </View>
-          <Button size="sm" onClick={addName}>
+          <Button size="sm" onClick={addName} className="rounded-xl h-11">
             <View className="flex flex-row items-center gap-1">
               <Plus size={14} color="#fff" />
               <Text className="text-white">添加</Text>
@@ -73,7 +75,7 @@ const RandomPage: FC = () => {
         </View>
         <View className="flex flex-row flex-wrap gap-2">
           {names.map((name, idx) => (
-            <Badge key={idx} variant="secondary" className="flex flex-row items-center gap-1">
+            <Badge key={idx} variant="secondary" className="flex flex-row items-center gap-1 rounded-lg px-3 py-1">
               <User size={12} color="#9ca3af" />
               <Text className="text-sm">{name}</Text>
               <View className="cursor-pointer" onClick={() => removeName(idx)}>
@@ -85,25 +87,33 @@ const RandomPage: FC = () => {
       </View>
 
       {/* 结果展示 */}
-      <View className="flex-1 flex flex-col items-center justify-center px-4">
+      <View className="flex-1 flex flex-col items-center justify-center px-5">
         {result ? (
-          <Card className="w-48">
-            <CardContent className="flex flex-col items-center p-6">
-              <User size={32} color="#ef4444" />
-              <Text className="block text-xl font-bold text-foreground mt-3">{result}</Text>
-            </CardContent>
-          </Card>
+          <View
+            className="w-48 rounded-2xl bg-white flex flex-col items-center py-8"
+            style={{ boxShadow: selecting ? '0 0 0 3px rgba(79,70,229,0.2)' : '0 4px 20px rgba(0,0,0,0.06)' }}
+          >
+            <View className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
+              <User size={24} color="#fff" />
+            </View>
+            <Text className="block text-xl font-bold text-[#1e1b4b]">{result}</Text>
+          </View>
         ) : (
-          <View className="flex flex-col items-center opacity-40">
+          <View className="flex flex-col items-center opacity-30">
             <Shuffle size={64} color="#ef4444" />
-            <Text className="block text-sm text-muted-foreground mt-4">点击下方按钮随机选择</Text>
+            <Text className="block text-sm text-gray-400 mt-4">点击下方按钮随机选择</Text>
           </View>
         )}
       </View>
 
       {/* 按钮 */}
-      <View className="px-4 pb-8">
-        <Button className="w-full h-12" onClick={pickRandom} disabled={names.length < 2 || selecting}>
+      <View className="px-5 pb-8">
+        <Button
+          className="w-full h-12 rounded-2xl"
+          onClick={pickRandom}
+          disabled={names.length < 2 || selecting}
+          style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}
+        >
           <View className="flex flex-row items-center gap-2">
             <Shuffle size={18} color="#fff" />
             <Text className="text-white font-semibold">

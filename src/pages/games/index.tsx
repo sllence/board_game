@@ -5,7 +5,7 @@ import { Network } from '@/network'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, Users, Clock, Star } from 'lucide-react-taro'
+import { Search, Users, Clock, Star, ChessKing } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -20,6 +20,7 @@ interface BoardGame {
   icon_key: string
   icon_bg: string
   icon_color: string
+  hero_bg: string
   intro: string
 }
 
@@ -30,10 +31,16 @@ const TYPE_TABS = [
   { key: 'party', label: '聚会' },
 ]
 
-const DIFFICULTY_MAP: Record<string, { label: string; color: string }> = {
-  easy: { label: '简单', color: '#10b981' },
-  medium: { label: '中等', color: '#f59e0b' },
-  hard: { label: '困难', color: '#ef4444' },
+const TYPE_GRADIENT: Record<string, string> = {
+  strategy: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+  social: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
+  party: 'linear-gradient(135deg, #F97316 0%, #EF4444 100%)',
+}
+
+const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string }> = {
+  easy: { label: '简单', color: '#059669', bg: '#ecfdf5' },
+  medium: { label: '中等', color: '#d97706', bg: '#fffbeb' },
+  hard: { label: '困难', color: '#dc2626', bg: '#fef2f2' },
 }
 
 const GamesPage: FC = () => {
@@ -74,84 +81,95 @@ const GamesPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-background">
-      {/* 搜索栏 */}
-      <View className="px-4 pt-3 pb-2">
+    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+      {/* 顶部标题区 */}
+      <View className="px-5 pt-12 pb-4" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
+        <View className="flex flex-row items-center gap-2 mb-1">
+          <ChessKing size={20} color="#fbbf24" />
+          <Text className="text-sm font-medium text-yellow-300">桌游馆</Text>
+        </View>
+        <Text className="block text-xl font-bold text-white mb-3">发现好玩的桌游</Text>
+        {/* 搜索栏 */}
         <View className="relative">
-          <Input
-            className="w-full bg-muted rounded-full pl-10 pr-4 py-2 text-sm"
-            placeholder="搜索桌游名称..."
-            value={keyword}
-            onInput={(e) => setKeyword(e.detail.value)}
-            onConfirm={handleSearch}
-          />
+          <View className="bg-white bg-opacity-15 rounded-2xl pl-10 pr-4 py-2">
+            <Input
+              className="w-full bg-transparent text-sm text-white placeholder-white placeholder-opacity-60"
+              placeholder="搜索桌游名称..."
+              placeholderClass="text-white text-opacity-60"
+              value={keyword}
+              onInput={(e) => setKeyword(e.detail.value)}
+              onConfirm={handleSearch}
+            />
+          </View>
           <View className="absolute left-3 top-1/2 -translate-y-1/2">
-            <Search size={16} color="#9ca3af" />
+            <Search size={16} color="rgba(255,255,255,0.6)" />
           </View>
         </View>
       </View>
 
-      {/* 分类 Tab */}
-      <View className="flex flex-row gap-2 px-4 pb-3">
-        {TYPE_TABS.map((tab) => (
-          <Badge
-            key={tab.key}
-            variant={activeType === tab.key ? 'default' : 'secondary'}
-            className="cursor-pointer"
-            onClick={() => setActiveType(tab.key)}
-          >
-            <Text className="text-xs">{tab.label}</Text>
-          </Badge>
-        ))}
+      {/* 分类 Tab - 浮动 */}
+      <View className="px-4 -mt-4 mb-3">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="flex flex-row gap-2 p-3">
+            {TYPE_TABS.map((tab) => (
+              <Badge
+                key={tab.key}
+                variant={activeType === tab.key ? 'default' : 'secondary'}
+                className="cursor-pointer"
+                onClick={() => setActiveType(tab.key)}
+              >
+                <Text className="text-xs">{tab.label}</Text>
+              </Badge>
+            ))}
+          </CardContent>
+        </Card>
       </View>
 
-      {/* 游戏列表 */}
+      {/* 游戏列表 - 渐变卡片 */}
       <View className="flex-1 px-4 pb-20">
         {loading ? (
           <View className="flex items-center justify-center py-20">
-            <Text className="block text-muted-foreground text-sm">加载中...</Text>
+            <Text className="block text-gray-400 text-sm">加载中...</Text>
           </View>
         ) : games.length === 0 ? (
           <View className="flex items-center justify-center py-20">
-            <Text className="block text-muted-foreground text-sm">暂无桌游数据</Text>
+            <Text className="block text-gray-400 text-sm">暂无桌游数据</Text>
           </View>
         ) : (
           <View className="flex flex-col gap-3">
             {games.map((game) => (
-              <Card key={game.id} className="cursor-pointer" onClick={() => goToDetail(game.id)}>
-                <CardContent className="flex flex-row items-center p-4 gap-4">
-                  {/* 图标 */}
-                  <View
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: game.icon_bg || '#e5e7eb' }}
-                  >
-                    <Text className="text-lg font-bold" style={{ color: game.icon_color || '#1f2937' }}>
-                      {game.name.charAt(0)}
-                    </Text>
-                  </View>
-                  {/* 信息 */}
-                  <View className="flex-1 min-w-0">
-                    <Text className="block text-base font-semibold text-foreground truncate">{game.name}</Text>
-                    <Text className="block text-xs text-muted-foreground mt-1 line-clamp-1">{game.intro}</Text>
-                    <View className="flex flex-row items-center gap-3 mt-2">
-                      <View className="flex flex-row items-center gap-1">
-                        <Users size={12} color="#9ca3af" />
-                        <Text className="text-xs text-muted-foreground">{game.min_players}-{game.max_players}人</Text>
-                      </View>
-                      <View className="flex flex-row items-center gap-1">
-                        <Clock size={12} color="#9ca3af" />
-                        <Text className="text-xs text-muted-foreground">{game.duration}min</Text>
-                      </View>
-                      <View className="flex flex-row items-center gap-1">
-                        <Star size={12} color={DIFFICULTY_MAP[game.difficulty]?.color || '#9ca3af'} />
-                        <Text className="text-xs" style={{ color: DIFFICULTY_MAP[game.difficulty]?.color || '#9ca3af' }}>
-                          {DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}
-                        </Text>
+              <View
+                key={game.id}
+                className="cursor-pointer rounded-2xl overflow-hidden shadow-sm"
+                style={{ background: TYPE_GRADIENT[game.type] || TYPE_GRADIENT.strategy }}
+                onClick={() => goToDetail(game.id)}
+              >
+                <View className="p-4">
+                  <View className="flex flex-row items-center justify-between">
+                    <View className="flex-1 min-w-0">
+                      <Text className="block text-lg font-bold text-white">{game.name}</Text>
+                      <Text className="block text-xs text-white text-opacity-80 mt-1 line-clamp-1">{game.intro}</Text>
+                      <View className="flex flex-row items-center gap-2 mt-3">
+                        <View className="bg-white bg-opacity-20 rounded-full px-2 py-1 flex flex-row items-center gap-1">
+                          <Users size={10} color="#fff" />
+                          <Text className="text-xs text-white">{game.min_players}-{game.max_players}人</Text>
+                        </View>
+                        <View className="bg-white bg-opacity-20 rounded-full px-2 py-1 flex flex-row items-center gap-1">
+                          <Clock size={10} color="#fff" />
+                          <Text className="text-xs text-white">{game.duration}min</Text>
+                        </View>
+                        <View className="bg-white bg-opacity-20 rounded-full px-2 py-1 flex flex-row items-center gap-1">
+                          <Star size={10} color="#fbbf24" />
+                          <Text className="text-xs text-white">{DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}</Text>
+                        </View>
                       </View>
                     </View>
+                    <View className="w-12 h-12 rounded-2xl bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0 ml-3">
+                      <Text className="text-xl font-bold text-white">{game.name.charAt(0)}</Text>
+                    </View>
                   </View>
-                </CardContent>
-              </Card>
+                </View>
+              </View>
             ))}
           </View>
         )}

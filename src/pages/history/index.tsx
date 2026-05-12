@@ -2,8 +2,7 @@ import { View, Text } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Clock, History, Gamepad2 } from 'lucide-react-taro'
+import { Clock, History, Trophy } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface PlayerInfo {
@@ -24,9 +23,9 @@ interface GameSession {
   created_at: string
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  playing: { label: '进行中', color: '#3b82f6' },
-  finished: { label: '已结束', color: '#10b981' },
+const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
+  playing: { label: '进行中', color: '#3b82f6', bg: '#eff6ff' },
+  finished: { label: '已结束', color: '#059669', bg: '#ecfdf5' },
 }
 
 const HistoryPage: FC = () => {
@@ -64,74 +63,82 @@ const HistoryPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-background">
-      {/* 标题 */}
-      <View className="px-4 pt-12 pb-4">
-        <Text className="block text-xl font-bold text-foreground">对局历史</Text>
-        <Text className="block text-sm text-muted-foreground mt-1">回顾你的桌游对局记录</Text>
+    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+      {/* 顶部标题区 */}
+      <View className="px-5 pt-12 pb-6" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
+        <View className="flex flex-row items-center gap-2 mb-1">
+          <History size={20} color="#fbbf24" />
+          <Text className="text-sm font-medium text-yellow-300">对局</Text>
+        </View>
+        <Text className="block text-xl font-bold text-white">对局历史</Text>
+        <Text className="block text-sm text-white text-opacity-80 mt-1">回顾你的桌游对局记录</Text>
       </View>
 
       {/* 列表 */}
-      <View className="flex-1 px-4 pb-20">
+      <View className="flex-1 px-4 -mt-3 pb-20">
         {loading ? (
           <View className="flex items-center justify-center py-20">
-            <Text className="block text-muted-foreground text-sm">加载中...</Text>
+            <Text className="block text-gray-400 text-sm">加载中...</Text>
           </View>
         ) : sessions.length === 0 ? (
-          <View className="flex flex-col items-center py-20">
-            <Gamepad2 size={48} color="#d1d5db" />
-            <Text className="block text-muted-foreground text-sm mt-4">暂无对局记录</Text>
-            <Text className="block text-xs text-muted-foreground mt-1">开始你的第一局桌游吧！</Text>
-          </View>
+          <Card className="border-0">
+            <CardContent className="flex flex-col items-center p-10">
+              <View className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
+                <Trophy size={28} color="#d1d5db" />
+              </View>
+              <Text className="block text-sm text-gray-400">暂无对局记录</Text>
+              <Text className="block text-xs text-gray-300 mt-1">开始你的第一局桌游吧！</Text>
+            </CardContent>
+          </Card>
         ) : (
           <View className="flex flex-col gap-3">
             {sessions.map((session) => {
-              const statusInfo = STATUS_MAP[session.status] || { label: session.status, color: '#9ca3af' }
+              const statusInfo = STATUS_MAP[session.status] || { label: session.status, color: '#9ca3af', bg: '#f3f4f6' }
               const playerList: PlayerInfo[] = Array.isArray(session.players) ? session.players : []
               const scores = Array.isArray(session.scoring_snapshot) ? session.scoring_snapshot : []
               return (
-                <Card key={session.id}>
+                <Card key={session.id} className="border-0 shadow-sm">
                   <CardContent className="p-4">
                     {/* 头部 */}
-                    <View className="flex flex-row items-center justify-between mb-2">
-                      <Text className="block text-sm font-semibold text-foreground">{session.session_name || '未命名对局'}</Text>
-                      <Badge variant={session.status === 'finished' ? 'default' : 'secondary'}>
-                        <Text className="text-xs" style={{ color: statusInfo.color }}>{statusInfo.label}</Text>
-                      </Badge>
+                    <View className="flex flex-row items-center justify-between mb-3">
+                      <Text className="block text-base font-semibold text-[#1e1b4b]">{session.session_name || '未命名对局'}</Text>
+                      <View className="rounded-full px-2 py-1" style={{ backgroundColor: statusInfo.bg }}>
+                        <Text className="text-xs font-medium" style={{ color: statusInfo.color }}>{statusInfo.label}</Text>
+                      </View>
                     </View>
 
                     {/* 信息 */}
-                    <View className="flex flex-row items-center gap-3 mb-2">
+                    <View className="flex flex-row items-center gap-3 mb-3">
                       <View className="flex flex-row items-center gap-1">
                         <Clock size={12} color="#9ca3af" />
-                        <Text className="text-xs text-muted-foreground">{formatDuration(session.duration)}</Text>
+                        <Text className="text-xs text-gray-400">{formatDuration(session.duration)}</Text>
                       </View>
-                      <Text className="text-xs text-muted-foreground">{formatDate(session.created_at)}</Text>
+                      <Text className="text-xs text-gray-400">{formatDate(session.created_at)}</Text>
                     </View>
 
                     {/* 玩家列表 */}
                     {playerList.length > 0 && (
-                      <View className="flex flex-row flex-wrap gap-1 mb-2">
+                      <View className="flex flex-row flex-wrap gap-2 mb-3">
                         {playerList.map((p, idx) => (
-                          <Badge key={idx} variant="secondary">
-                            <Text className="text-xs">{p.name}</Text>
-                          </Badge>
+                          <View key={idx} className="bg-gray-100 rounded-full px-3 py-1">
+                            <Text className="text-xs text-gray-600">{p.name}</Text>
+                          </View>
                         ))}
                       </View>
                     )}
 
-                    {/* 分数/胜者 */}
+                    {/* 胜者 */}
                     {session.winner && (
-                      <View className="flex flex-row items-center gap-1">
-                        <History size={12} color="#1a1a2e" />
-                        <Text className="text-xs text-muted-foreground">胜者: </Text>
-                        <Text className="text-xs font-medium text-foreground">{session.winner}</Text>
+                      <View className="flex flex-row items-center gap-2 bg-amber-50 rounded-xl px-3 py-2">
+                        <Trophy size={14} color="#d97706" />
+                        <Text className="text-xs text-amber-700">胜者: </Text>
+                        <Text className="text-xs font-semibold text-amber-800">{session.winner}</Text>
                       </View>
                     )}
                     {scores.length > 0 && (
-                      <View className="flex flex-row flex-wrap gap-2 mt-1">
+                      <View className="flex flex-row flex-wrap gap-2 mt-2">
                         {scores.map((s, idx) => (
-                          <Text key={idx} className="text-xs text-muted-foreground">
+                          <Text key={idx} className="text-xs text-gray-400">
                             {s.name}: {s.score}分
                           </Text>
                         ))}
