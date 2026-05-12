@@ -1,11 +1,61 @@
 export default defineAppConfig({
   pages: [
-    'pages/index/index'
+    'pages/index/index',
+    'pages/games/index',
+    'pages/tools/index',
+    'pages/history/index',
+    'pages/profile/index',
+    'pages/dice/index',
+    'pages/timer/index',
+    'pages/cards/index',
+    'pages/random/index',
+    'pages/scorer/index',
+    'pages/navigator/index',
+    'pages/rule-detail/index',
+    'pages/guide-detail/index',
   ],
   window: {
     backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: 'WeChat',
+    navigationBarBackgroundColor: '#ffffff',
+    navigationBarTitleText: '桌游助手',
     navigationBarTextStyle: 'black'
+  },
+  tabBar: {
+    color: '#9999aa',
+    selectedColor: '#1a1a2e',
+    backgroundColor: '#ffffff',
+    borderStyle: 'black',
+    list: [
+      {
+        pagePath: 'pages/index/index',
+        text: '首页',
+        iconPath: './assets/tabbar/house.png',
+        selectedIconPath: './assets/tabbar/house-active.png',
+      },
+      {
+        pagePath: 'pages/games/index',
+        text: '桌游馆',
+        iconPath: './assets/tabbar/dices.png',
+        selectedIconPath: './assets/tabbar/dices-active.png',
+      },
+      {
+        pagePath: 'pages/tools/index',
+        text: '工具箱',
+        iconPath: './assets/tabbar/wrench.png',
+        selectedIconPath: './assets/tabbar/wrench-active.png',
+      },
+      {
+        pagePath: 'pages/history/index',
+        text: '对局',
+        iconPath: './assets/tabbar/clock.png',
+        selectedIconPath: './assets/tabbar/clock-active.png',
+      },
+      {
+        pagePath: 'pages/profile/index',
+        text: '我的',
+        iconPath: './assets/tabbar/user.png',
+        selectedIconPath: './assets/tabbar/user-active.png',
+      }
+    ]
   }
 })

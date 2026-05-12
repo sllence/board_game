@@ -1,6 +1,5 @@
 import * as React from "react"
 import { View } from "@tarojs/components"
-import { type ITouchEvent } from "@tarojs/taro"
 import { cn } from "@/lib/utils"
 
 const TabsContext = React.createContext<{
@@ -63,7 +62,7 @@ const TabsTrigger = React.forwardRef<
     const context = React.useContext(TabsContext)
     const isActive = context?.value === value
     
-    const handleClick = (e: ITouchEvent) => {
+    const handleClick = (e: any) => {
         if (disabled) return
         context?.onValueChange?.(value)
         onClick?.(e)

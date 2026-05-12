@@ -1,6 +1,6 @@
 import * as React from "react"
 import { View } from "@tarojs/components"
-import Taro, { type ITouchEvent } from "@tarojs/taro"
+import Taro from "@tarojs/taro"
 
 import { cn } from "@/lib/utils"
 
@@ -79,7 +79,7 @@ const Slider = React.forwardRef<
     }
   }
 
-  const handleTouchStart = (e: ITouchEvent) => {
+  const handleTouchStart = (e: any) => {
     if (disabled) return
     setIsDragging(true)
     // Try to update rect on touch start in case of layout changes
@@ -135,7 +135,7 @@ const Slider = React.forwardRef<
     }
   }
 
-  const handleTouchMove = (e: ITouchEvent) => {
+  const handleTouchMove = (e: any) => {
     if (disabled) return
     const touch = e.touches[0] || e.changedTouches[0]
     if (touch) {
@@ -143,7 +143,7 @@ const Slider = React.forwardRef<
     }
   }
 
-  const handleTouchEnd = (e: ITouchEvent) => {
+  const handleTouchEnd = (e: any) => {
     if (disabled) return
     setIsDragging(false)
     const touch = e.touches[0] || e.changedTouches[0]
