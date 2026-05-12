@@ -16,7 +16,7 @@
     "dev:weapp": "taro build --type weapp --watch",
     "dev:web": "taro build --type h5 --watch",
     "preinstall": "npx only-allow pnpm",
-    "postinstall": "weapp-tw patch",
+    "postinstall": "weapp-tw patch && node scripts/patch-lucide.mjs",
     "kill:all": "pkill -9 -f 'concurrently' 2>/dev/null || true; pkill -9 -f 'nest start' 2>/dev/null || true; pkill -9 -f 'taro build' 2>/dev/null || true; pkill -9 -f 'node.*dev' 2>/dev/null || true; echo 'All dev processes cleaned'",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx,css}\"",
     "lint:build": "eslint \"src/**/*.{js,jsx,ts,tsx,css}\" --max-warnings=0 --quiet",

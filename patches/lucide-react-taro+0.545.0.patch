@@ -1,0 +1,46 @@
+--- a/dist/esm/index.js
++++ b/dist/esm/index.js
+@@ -37,13 +37,25 @@
+     if (!rootProps) {
+       rootProps = context;
+     }
+-    return /* @__PURE__ */ React.createElement(Image, {
+-      src: svgDataUrl,
+-      style: {
+-        width: `${sizeValue}px`,
+-        height: `${sizeValue}px`,
+-        ...style
+-      },
+-      className,
+-      ...rootProps
+-    });
++    // H5端: 用 CSS background-image 渲染，绕过 Taro Image 组件不支持 data:image/svg+xml 的问题
++    if (typeof window !== 'undefined' && !process.env.TARO_ENV?.startsWith('weapp') && !process.env.TARO_ENV?.startsWith('tt')) {
++      return /* @__PURE__ */ React.createElement('div', {
++        style: {
++          width: `${sizeValue}px`,
++          height: `${sizeValue}px`,
++          display: 'inline-block',
++          verticalAlign: 'middle',
++          backgroundImage: `url("${svgDataUrl}")`,
++          backgroundSize: 'contain',
++          backgroundRepeat: 'no-repeat',
++          backgroundPosition: 'center',
++          ...style
++        },
++        className,
++        ...rootProps
++      });
++    }
++    // 小程序端: 保留原 Image 组件
++    return /* @__PURE__ */ React.createElement(Image, {
++      src: svgDataUrl,
++      style: {
++        width: `${sizeValue}px`,
++        height: `${sizeValue}px`,
++        ...style
++      },
++      className,
++      ...rootProps
++    });
+   };
