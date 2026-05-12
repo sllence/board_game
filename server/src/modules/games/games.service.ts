@@ -19,7 +19,7 @@ export class GamesService {
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
-    if (filters.type) query = query.eq('type', filters.type)
+    if (filters.type) query = query.contains('type', [filters.type])
     if (filters.scene) query = query.contains('scene', [filters.scene])
     if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
     if (filters.duration) {

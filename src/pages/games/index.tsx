@@ -10,7 +10,7 @@ import type { FC } from 'react'
 interface BoardGame {
   id: number
   name: string
-  type: string
+  type: string[]
   scene: string
   min_players: number
   max_players: number
@@ -24,8 +24,12 @@ interface BoardGame {
 
 const TYPE_GRADIENT: Record<string, string> = {
   strategy: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-  social: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
-  party: 'linear-gradient(135deg, #F97316 0%, #EF4444 100%)',
+  puzzle: 'linear-gradient(135deg, #0EA5E9 0%, #6366F1 100%)',
+  auction: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
+  roleplay: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
+  management: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+  cooperative: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+  versus: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
 }
 
 const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -39,8 +43,12 @@ const FILTER_OPTIONS = {
   type: [
     { key: '', label: '类型' },
     { key: 'strategy', label: '策略' },
-    { key: 'social', label: '社交' },
-    { key: 'party', label: '聚会' },
+    { key: 'puzzle', label: '益智' },
+    { key: 'auction', label: '拍卖' },
+    { key: 'roleplay', label: '扮演' },
+    { key: 'management', label: '经营' },
+    { key: 'cooperative', label: '合作' },
+    { key: 'versus', label: '对抗' },
   ],
   scene: [
     { key: '', label: '场景' },
@@ -254,7 +262,7 @@ const GamesPage: FC = () => {
               <View
                 key={game.id}
                 className="cursor-pointer rounded-2xl overflow-hidden shadow-sm"
-                style={{ background: TYPE_GRADIENT[game.type] || TYPE_GRADIENT.strategy }}
+                style={{ background: TYPE_GRADIENT[game.type?.[0]] || TYPE_GRADIENT.strategy }}
                 onClick={() => goToDetail(game.id)}
               >
                 <View className="p-4">
@@ -262,7 +270,17 @@ const GamesPage: FC = () => {
                     <View className="flex-1 min-w-0">
                       <Text className="block text-lg font-bold text-white">{game.name}</Text>
                       <Text className="block text-xs text-white text-opacity-80 mt-1 line-clamp-1">{game.intro}</Text>
-                      <View className="flex flex-row items-center gap-2 mt-3">
+                      <View className="flex flex-row flex-wrap items-center gap-1 mt-2">
+                        {game.type?.map((t) => {
+                          const typeOption = FILTER_OPTIONS.type.find(opt => opt.key === t)
+                          return typeOption ? (
+                            <View key={t} className="rounded-full px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
+                              <Text className="text-xs text-white text-opacity-90">{typeOption.label}</Text>
+                            </View>
+                          ) : null
+                        })}
+                      </View>
+                      <View className="flex flex-row items-center gap-2 mt-2">
                         <View className="rounded-full px-2 py-1 flex flex-row items-center gap-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                           <Users size={10} color="#fff" />
                           <Text className="text-xs text-white">{game.min_players}-{game.max_players}人</Text>
