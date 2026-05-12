@@ -35,20 +35,20 @@ export default defineAppConfig({
       {
         pagePath: 'pages/games/index',
         text: '桌游馆',
-        iconPath: './assets/tabbar/layout-grid.png',
-        selectedIconPath: './assets/tabbar/layout-grid-active.png',
+        iconPath: './assets/tabbar/chess-king.png',
+        selectedIconPath: './assets/tabbar/chess-king-active.png',
       },
       {
         pagePath: 'pages/tools/index',
         text: '工具箱',
-        iconPath: './assets/tabbar/wrench.png',
-        selectedIconPath: './assets/tabbar/wrench-active.png',
+        iconPath: './assets/tabbar/toolbox.png',
+        selectedIconPath: './assets/tabbar/toolbox-active.png',
       },
       {
         pagePath: 'pages/history/index',
         text: '对局',
-        iconPath: './assets/tabbar/crown.png',
-        selectedIconPath: './assets/tabbar/crown-active.png',
+        iconPath: './assets/tabbar/history.png',
+        selectedIconPath: './assets/tabbar/history-active.png',
       },
       {
         pagePath: 'pages/profile/index',
