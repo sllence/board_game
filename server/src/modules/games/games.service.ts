@@ -26,8 +26,10 @@ export class GamesService {
       const dur = Number(filters.duration)
       query = query.lte('duration', dur)
     }
-    if (filters.min_players) query = query.gte('max_players', Number(filters.min_players))
-    if (filters.max_players) query = query.lte('min_players', Number(filters.max_players))
+    if (filters.min_players) {
+      const p = Number(filters.min_players)
+      query = query.lte('min_players', p).gte('max_players', p)
+    }
     if (filters.keyword) query = query.ilike('name', `%${filters.keyword}%`)
 
     const { data, error } = await query
