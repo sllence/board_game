@@ -6,11 +6,16 @@ import { Badge } from '@/components/ui/badge'
 import { Clock, Trophy, Gamepad2 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
+interface PlayerInfo {
+  name: string
+  score: number
+}
+
 interface GameSession {
   id: number
   game_id: number
   session_name: string
-  players: string[]
+  players: PlayerInfo[]
   winner: string
   rounds: number
   duration: number
@@ -82,7 +87,7 @@ const HistoryPage: FC = () => {
           <View className="flex flex-col gap-3">
             {sessions.map((session) => {
               const statusInfo = STATUS_MAP[session.status] || { label: session.status, color: '#9ca3af' }
-              const playerList = Array.isArray(session.players) ? session.players : []
+              const playerList: PlayerInfo[] = Array.isArray(session.players) ? session.players : []
               const scores = Array.isArray(session.scoring_snapshot) ? session.scoring_snapshot : []
               return (
                 <Card key={session.id}>
@@ -107,9 +112,9 @@ const HistoryPage: FC = () => {
                     {/* 玩家列表 */}
                     {playerList.length > 0 && (
                       <View className="flex flex-row flex-wrap gap-1 mb-2">
-                        {playerList.map((name, idx) => (
+                        {playerList.map((p, idx) => (
                           <Badge key={idx} variant="secondary">
-                            <Text className="text-xs">{name}</Text>
+                            <Text className="text-xs">{p.name}</Text>
                           </Badge>
                         ))}
                       </View>
