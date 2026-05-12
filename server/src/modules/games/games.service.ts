@@ -20,7 +20,7 @@ export class GamesService {
       .order('sort_order', { ascending: true })
 
     if (filters.type) query = query.eq('type', filters.type)
-    if (filters.scene) query = query.eq('scene', filters.scene)
+    if (filters.scene) query = query.contains('scene', [filters.scene])
     if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
     if (filters.duration) {
       const dur = Number(filters.duration)

@@ -44,7 +44,11 @@ const FILTER_OPTIONS = {
   ],
   scene: [
     { key: '', label: '场景' },
-    { key: 'party', label: '派对' },
+    { key: 'gathering', label: '聚会' },
+    { key: 'teambuilding', label: '团建' },
+    { key: 'family', label: '亲子' },
+    { key: 'couple', label: '情侣' },
+    { key: 'drinking', label: '酒局' },
   ],
   players: [
     { key: '', label: '人数' },
