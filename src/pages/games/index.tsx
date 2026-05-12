@@ -3,7 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Input } from '@/components/ui/input'
-import { Search, Users, Clock, Star, ChevronDown, RotateCcw } from 'lucide-react-taro'
+import { Search, Users, Clock, ChevronDown, RotateCcw } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -302,11 +302,11 @@ const GamesPage: FC = () => {
                 >
                   {/* 顶部色条 */}
                   <View style={{ height: 4, backgroundColor: gameColor }} />
-                  <View className="p-4">
+                  <View className="p-3">
                     <View className="flex flex-row items-start">
                       {/* 左侧图标 */}
-                      <View className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 mr-3" style={{ backgroundColor: gameBg }}>
-                        <Text className="text-xl">{TYPE_META[game.type?.[0]]?.emoji || '🎲'}</Text>
+                      <View className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mr-3" style={{ backgroundColor: gameBg }}>
+                        <Text className="text-lg">{TYPE_META[game.type?.[0]]?.emoji || '🎲'}</Text>
                       </View>
                       {/* 右侧内容 */}
                       <View className="flex-1 min-w-0">
@@ -331,7 +331,7 @@ const GamesPage: FC = () => {
                         </View>
 
                         {/* 底部信息条 */}
-                        <View className="flex flex-row items-center gap-3 mt-3 pt-2" style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
+                        <View className="flex flex-row items-center gap-3 mt-2 pt-2" style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
                           <View className="flex flex-row items-center gap-1">
                             <Users size={12} color="#9ca3af" />
                             <Text className="text-xs text-gray-500">{game.min_players}-{game.max_players}人</Text>
@@ -339,10 +339,6 @@ const GamesPage: FC = () => {
                           <View className="flex flex-row items-center gap-1">
                             <Clock size={12} color="#9ca3af" />
                             <Text className="text-xs text-gray-500">{game.duration}min</Text>
-                          </View>
-                          <View className="flex flex-row items-center gap-1">
-                            <Star size={12} color="#9ca3af" />
-                            <Text className="text-xs text-gray-500">{difficultyInfo.label}</Text>
                           </View>
                         </View>
                       </View>
