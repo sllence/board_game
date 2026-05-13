@@ -229,8 +229,7 @@ const ProfilePage: FC = () => {
             size="sm"
             onClick={() => {
               setUserInfo(null)
-              // 不清除本地缓存的用户信息，这样重新登录时可以直接使用
-              // Taro.removeStorageSync('userInfo')
+              Taro.removeStorageSync('userInfo')
               Taro.showToast({ title: '已退出', icon: 'success' })
             }}
             className="border-0"
