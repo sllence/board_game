@@ -86,8 +86,41 @@ const ProfilePage: FC = () => {
     try {
       let avatarUrl = userInfo?.avatar_url || ''
 
-      // 先更新昵称，简单直接
-      console.log('[updateProfile] updating nickname...')
+      // 如果选择了头像，先上传头像
+      if (tempAvatarUrl) {
+        try {
+          console.log('[uploadAvatar] uploading avatar...')
+          const uploadRes = await Network.uploadFile({
+            url: '/api/user/avatar',
+            filePath: tempAvatarUrl,
+            name: 'file',
+            formData: {
+              user_id: String(userInfo?.id)
+            }
+          }) as any
+          console.log('[uploadAvatar] response:', uploadRes)
+          
+          // 解析上传结果
+          let uploadData
+          if (typeof uploadRes.data === 'string') {
+            uploadData = JSON.parse(uploadRes.data)
+          } else if (uploadRes.data && typeof uploadRes.data === 'object') {
+            uploadData = uploadRes.data
+          } else {
+            uploadData = uploadRes
+          }
+          
+          // 获取头像URL，兼容不同的返回格式
+          avatarUrl = uploadData.data?.avatar_url || uploadData.data?.url || uploadData.avatar_url || uploadData.url || ''
+          console.log('[uploadAvatar] got avatarUrl:', avatarUrl)
+        } catch (uploadErr) {
+          console.error('[uploadAvatar] upload failed:', uploadErr)
+          // 头像上传失败不阻止昵称保存，继续保存昵称
+        }
+      }
+
+      // 更新用户信息（昵称 + 头像URL）
+      console.log('[updateProfile] updating profile...')
       await Network.request({
         url: '/api/user/profile',
         method: 'PUT',
@@ -98,7 +131,7 @@ const ProfilePage: FC = () => {
         }
       })
 
-      // 更新成功，即使头像上传失败也没关系
+      // 更新成功
       const updatedUser = {
         ...userInfo!,
         nickname: tempNickname,
