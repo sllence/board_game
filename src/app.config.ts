@@ -13,6 +13,7 @@ export default defineAppConfig({
     'pages/navigator/index',
     'pages/rule-detail/index',
     'pages/guide-detail/index',
+    'pages/games-admin/index',
   ],
   window: {
     backgroundTextStyle: 'light',

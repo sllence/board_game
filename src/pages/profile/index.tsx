@@ -13,6 +13,7 @@ interface UserInfo {
   total_games: number
   total_wins: number
   total_time: number
+  is_admin?: boolean
 }
 
 const ProfilePage: FC = () => {
@@ -260,6 +261,10 @@ const ProfilePage: FC = () => {
     { emoji: '⚙️', name: '设置', desc: '主题、通知等偏好', soon: true },
   ]
 
+  const ADMIN_MENU_ITEMS = [
+    { emoji: '🛠️', name: '桌游管理', desc: '编辑和管理桌游信息' },
+  ]
+
   if (!userInfo) {
     return (
       <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
@@ -373,6 +378,33 @@ const ProfilePage: FC = () => {
 
       {/* 菜单列表 */}
       <View className="px-4">
+        {/* 管理员菜单 - 仅管理员可见 */}
+        {userInfo?.is_admin && ADMIN_MENU_ITEMS.map((item) => (
+          <Card 
+            key={item.name} 
+            className="border-0 shadow-sm mb-3" 
+            onClick={() => {
+              if (item.name === '桌游管理') {
+                Taro.navigateTo({ url: '/pages/games-admin/index' })
+              }
+            }}
+          >
+            <CardContent className="flex flex-row items-center p-4">
+              <Text className="text-xl mr-3">{item.emoji}</Text>
+              <View className="flex-1">
+                <Text className="block text-sm font-medium text-gray-800">{item.name}</Text>
+                <Text className="block text-xs text-gray-400 mb-1">{item.desc}</Text>
+              </View>
+              <View
+                className="rounded-full px-2 py-1"
+                style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}
+              >
+                <Text className="text-xs text-red-500">管理</Text>
+              </View>
+            </CardContent>
+          </Card>
+        ))}
+        {/* 普通菜单 */}
         {MENU_ITEMS.map((item) => (
           <Card key={item.name} className="border-0 shadow-sm mb-3">
             <CardContent className="flex flex-row items-center p-4">
