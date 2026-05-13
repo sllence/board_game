@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Network } from '@/network'
 import type { FC } from 'react'
 
 interface UserInfo {
@@ -16,6 +17,9 @@ interface UserInfo {
 
 const ProfilePage: FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+
+  const isMiniApp = [Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv() as any)
 
   useEffect(() => {
     const cached = Taro.getStorageSync('userInfo')
@@ -28,10 +32,66 @@ const ProfilePage: FC = () => {
     }
   }, [])
 
+  const handleWeChatLogin = async () => {
+    if (!isMiniApp) {
+      Taro.showToast({ title: '请在小程序中体验', icon: 'none' })
+      return
+    }
+
+    setIsLoggingIn(true)
+    try {
+      const { code } = await Taro.login()
+      const res = await Network.request({
+        url: '/api/auth/login',
+        method: 'POST',
+        data: { code, platform: 'wechat' }
+      }) as any
+
+      const user = res.data.data
+      setUserInfo(user)
+      Taro.setStorageSync('userInfo', JSON.stringify(user))
+      Taro.showToast({ title: '登录成功', icon: 'success' })
+    } catch (err) {
+      console.error('登录失败', err)
+      Taro.showToast({ title: '登录失败', icon: 'none' })
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
+
   const MENU_ITEMS = [
     { emoji: '❤️', name: '我的收藏', desc: '收藏的桌游和攻略', soon: true },
     { emoji: '⚙️', name: '设置', desc: '主题、通知等偏好', soon: true },
   ]
+
+  if (!userInfo) {
+    return (
+      <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+        <View className="px-5 pt-20 pb-8" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
+          <View className="flex items-center justify-center mb-8" style={{ width: '80px', height: '80px', borderRadius: '24px', backgroundColor: 'rgba(255,255,255,0.2)' }}>
+            <Text className="text-3xl">🎮</Text>
+          </View>
+          <Text className="block text-2xl font-bold text-white text-center mb-2">欢迎来到桌游助手</Text>
+          <Text className="block text-white text-center opacity-80 mb-8">登录后解锁更多功能</Text>
+          <View className="flex flex-col gap-3">
+            {isMiniApp && (
+              <Button
+                size="lg"
+                className="w-full bg-white text-indigo-600 border-0"
+                onClick={handleWeChatLogin}
+                disabled={isLoggingIn}
+              >
+                <Text className="font-medium">{isLoggingIn ? '登录中...' : '微信一键登录'}</Text>
+              </Button>
+            )}
+          </View>
+        </View>
+        <View className="flex-1 flex items-center justify-center">
+          <Text className="text-gray-400 text-xs">登录后可体验完整功能</Text>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
