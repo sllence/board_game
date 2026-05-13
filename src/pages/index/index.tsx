@@ -1,11 +1,11 @@
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import Taro, { useDidShow } from '@tarojs/taro'
+import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Clock, Dices, Layers, Shuffle, Calculator, ArrowRight, Sparkles } from 'lucide-react-taro'
-import { requireLogin } from '@/utils/auth'
+import { Clock, Dices, Layers, Shuffle, Calculator, ArrowRight, Sparkles, Play, History } from 'lucide-react-taro'
+import { requireLogin, getCurrentUser } from '@/utils/auth'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -23,12 +23,13 @@ interface BoardGame {
 
 interface GameSession {
   id: number
-  game_id: number
+  game_id: number | null
   session_name: string
-  winner: string
-  duration: number
+  winner: string | null
+  duration: number | null
   status: string
   created_at: string
+  game?: { name: string } | null
 }
 
 const QUICK_TOOLS = [
@@ -53,11 +54,14 @@ const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string 
 
 const IndexPage: FC = () => {
   const [hotGames, setHotGames] = useState<BoardGame[]>([])
-  const [recentSessions] = useState<GameSession[]>([])
+  const [recentSessions, setRecentSessions] = useState<GameSession[]>([])
+  const [activeSession, setActiveSession] = useState<GameSession | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
+  useDidShow(() => {
     fetchHotGames()
-  }, [])
+    fetchRecentSessions()
+  })
 
   const fetchHotGames = async () => {
     try {
@@ -69,12 +73,51 @@ const IndexPage: FC = () => {
     }
   }
 
+  const fetchRecentSessions = async () => {
+    const currentUser = getCurrentUser()
+    if (!currentUser?.id) {
+      setRecentSessions([])
+      setActiveSession(null)
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await Network.request({ 
+        url: `/api/sessions/recent?user_id=${currentUser.id}` 
+      })
+      console.log('[IndexPage] fetchRecentSessions response:', res.data)
+      const sessions = res.data?.data || []
+      setRecentSessions(sessions)
+      
+      // 找到第一个进行中的对局
+      const active = sessions.find((s: GameSession) => s.status === 'playing')
+      setActiveSession(active || null)
+    } catch (err) {
+      console.error('[IndexPage] fetchRecentSessions error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const goToGame = (id: number) => {
     Taro.navigateTo({ url: `/pages/rule-detail/index?id=${id}` })
   }
 
   const goToTool = (path: string) => {
     Taro.navigateTo({ url: path })
+  }
+
+  const goToSession = (sessionId: number) => {
+    requireLogin(() => {
+      Taro.navigateTo({ url: `/pages/navigator/index?sessionId=${sessionId}` })
+    })
+  }
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return ''
+    const d = new Date(dateStr)
+    return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`
   }
 
   return (
@@ -113,6 +156,41 @@ const IndexPage: FC = () => {
           </CardContent>
         </Card>
       </View>
+
+      {/* 继续游戏 - 如果有进行中的对局 */}
+      {activeSession && (
+        <View className="px-4 mb-5">
+          <View
+            className="cursor-pointer"
+            onClick={() => goToSession(activeSession.id)}
+          >
+            <Card className="border-0 overflow-hidden">
+              <View className="h-1" style={{ background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)' }} />
+              <CardContent className="p-4">
+                <View className="flex flex-row items-center justify-between">
+                  <View className="flex flex-row items-center gap-3">
+                    <View className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                      <Play size={20} color="#4F46E5" />
+                    </View>
+                    <View>
+                      <Text className="block text-base font-semibold text-foreground">
+                        {activeSession.game?.name || activeSession.session_name}
+                      </Text>
+                      <Text className="block text-xs text-gray-500 mt-1">
+                        进行中 · {formatDate(activeSession.created_at)}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="flex flex-row items-center gap-1">
+                    <Text className="text-xs text-primary">继续</Text>
+                    <ArrowRight size={12} color="#4F46E5" />
+                  </View>
+                </View>
+              </CardContent>
+            </Card>
+          </View>
+        </View>
+      )}
 
       {/* 热门桌游 - 渐变卡片 */}
       <View className="px-4 mb-5">
@@ -165,7 +243,10 @@ const IndexPage: FC = () => {
       {/* 最近对局 */}
       <View className="px-4 pb-20">
         <View className="flex flex-row items-center justify-between mb-3">
-          <Text className="block text-base font-semibold text-[#1e1b4b]">最近对局</Text>
+          <View className="flex flex-row items-center gap-2">
+            <History size={16} color="#4F46E5" />
+            <Text className="block text-base font-semibold text-[#1e1b4b]">最近对局</Text>
+          </View>
           <View
             className="flex flex-row items-center gap-1 cursor-pointer"
             onClick={() => requireLogin(() => Taro.switchTab({ url: '/pages/history/index' }))}
@@ -174,7 +255,13 @@ const IndexPage: FC = () => {
             <ArrowRight size={12} color="#4F46E5" />
           </View>
         </View>
-        {recentSessions.length === 0 ? (
+        {loading ? (
+          <Card className="border-0">
+            <CardContent className="flex flex-col items-center p-8">
+              <Text className="block text-sm text-gray-400">加载中...</Text>
+            </CardContent>
+          </Card>
+        ) : recentSessions.length === 0 ? (
           <Card className="border-0">
             <CardContent className="flex flex-col items-center p-8">
               <View className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
@@ -187,13 +274,54 @@ const IndexPage: FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <View className="flex flex-col gap-2">
+          <View className="flex flex-col gap-3">
             {recentSessions.slice(0, 3).map((session) => (
-              <Card key={session.id} className="border-0">
-                <CardContent className="p-3">
-                  <Text className="block text-sm font-medium text-foreground">{session.session_name}</Text>
-                </CardContent>
-              </Card>
+              <View
+                key={session.id}
+                className="cursor-pointer"
+                onClick={() => goToSession(session.id)}
+              >
+                <Card className="border-0 overflow-hidden">
+                  <View 
+                    className="h-1" 
+                    style={{ 
+                      background: session.status === 'playing' 
+                        ? 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)' 
+                        : 'linear-gradient(90deg, #059669 0%, #10b981 100%)' 
+                    }} 
+                  />
+                  <CardContent className="p-4">
+                    <View className="flex flex-row items-center justify-between">
+                      <View className="flex-1">
+                        <Text className="block text-sm font-semibold text-foreground">
+                          {session.game?.name || session.session_name}
+                        </Text>
+                        <View className="flex flex-row items-center gap-3 mt-2">
+                          <View className="flex flex-row items-center gap-1">
+                            <Clock size={12} color="#9ca3af" />
+                            <Text className="text-xs text-gray-500">
+                              {session.status === 'playing' ? '进行中' : '已结束'}
+                            </Text>
+                          </View>
+                          <Text className="text-xs text-gray-400">·</Text>
+                          <Text className="text-xs text-gray-500">
+                            {formatDate(session.created_at)}
+                          </Text>
+                          {session.duration && session.status === 'finished' && (
+                            <>
+                              <Text className="text-xs text-gray-400">·</Text>
+                              <Text className="text-xs text-gray-500">
+                                {Math.floor(session.duration / 60)}分钟
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      </View>
+                      <ArrowRight size={12} color="#d1d5db" />
+                    </View>
+                  </CardContent>
+                </Card>
+              </View>
             ))}
           </View>
         )}

@@ -319,6 +319,10 @@ const ProfilePage: FC = () => {
                 setUserInfo(null)
                 Taro.removeStorageSync('userInfo')
                 Taro.showToast({ title: '已退出', icon: 'success' })
+                // 退出后跳转到首页
+                setTimeout(() => {
+                  Taro.switchTab({ url: '/pages/index/index' })
+                }, 500)
               }}
               className="border-0"
               style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}

@@ -59,14 +59,21 @@ const HistoryPage: FC = () => {
     setLoading(true)
     try {
       const currentUser = getCurrentUser()
-      const url = currentUser?.id 
-        ? `/api/sessions/recent?user_id=${currentUser.id}`
-        : '/api/sessions/recent'
+      // 防御性编程：确保user_id存在
+      if (!currentUser?.id) {
+        console.warn('[HistoryPage] no current user, showing empty')
+        setSessions([])
+        return
+      }
+      
+      const url = `/api/sessions/recent?user_id=${currentUser.id}`
       const res = await Network.request({ url })
       console.log('[HistoryPage] fetchSessions response:', res.data)
       setSessions(res.data?.data || [])
     } catch (err) {
       console.error('[HistoryPage] fetchSessions error:', err)
+      // 出错时也展示空列表，而不是崩溃
+      setSessions([])
     } finally {
       setLoading(false)
     }

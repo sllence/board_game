@@ -115,10 +115,10 @@ const NavigatorPage: FC = () => {
   // 自动保存：玩家分数变化时保存到后端
   useEffect(() => {
     if (phase !== 'playing' || !sessionId || players.length === 0) return
-    // 防抖：避免频繁保存
+    // 防抖：避免频繁保存（2.5秒）
     const timeoutId = setTimeout(() => {
       saveSessionProgress()
-    }, 1000)
+    }, 2500)
     return () => clearTimeout(timeoutId)
   }, [players, elapsedSeconds])
 
