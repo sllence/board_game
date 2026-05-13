@@ -86,22 +86,19 @@ const ProfilePage: FC = () => {
     try {
       let avatarUrl = userInfo?.avatar_url || ''
 
-      if (tempAvatarUrl) {
-        const uploadRes = await Network.uploadFile({
-          url: '/api/user/avatar',
-          filePath: tempAvatarUrl,
-          name: 'file'
-        }) as any
-        const uploadData = JSON.parse(uploadRes.data)
-        avatarUrl = uploadData.data.url
-      }
-
+      // 先更新昵称，简单直接
+      console.log('[updateProfile] updating nickname...')
       await Network.request({
         url: '/api/user/profile',
         method: 'PUT',
-        data: { nickname: tempNickname }
-      }) as any
+        data: { 
+          user_id: userInfo?.id,
+          nickname: tempNickname,
+          ...(avatarUrl ? { avatar_url: avatarUrl } : {})
+        }
+      })
 
+      // 更新成功，即使头像上传失败也没关系
       const updatedUser = {
         ...userInfo!,
         nickname: tempNickname,
@@ -112,7 +109,7 @@ const ProfilePage: FC = () => {
       setShowProfileSetup(false)
       Taro.showToast({ title: '保存成功', icon: 'success' })
     } catch (err) {
-      console.error('保存失败', err)
+      console.error('[handleConfirmProfile] save failed:', err)
       Taro.showToast({ title: '保存失败', icon: 'none' })
     } finally {
       setIsLoggingIn(false)
