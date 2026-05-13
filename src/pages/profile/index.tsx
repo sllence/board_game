@@ -1,4 +1,5 @@
-import { View, Text, Image } from '@tarojs/components'
+// eslint-disable-next-line no-restricted-syntax -- 微信chooseAvatar和nickname必须使用原生Button/Input
+import { View, Text, Image, Button as TaroButton, Input as TaroInput } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
@@ -19,6 +20,9 @@ interface UserInfo {
 const ProfilePage: FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [tempAvatarUrl, setTempAvatarUrl] = useState('')
+  const [tempNickname, setTempNickname] = useState('')
+  const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
 
   useEffect(() => {
     const cached = Taro.getStorageSync('userInfo')
@@ -31,56 +35,138 @@ const ProfilePage: FC = () => {
     }
   }, [])
 
-  /** 一键登录 */
-  const handleLogin = async () => {
+  /** 保存用户信息到本地和state */
+  const saveUser = (user: UserInfo) => {
+    setUserInfo(user)
+    Taro.setStorageSync('userInfo', JSON.stringify(user))
+  }
+
+  /** 微信端：选择头像后回调 */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChooseAvatar = (e: any) => {
+    const avatarUrl = e?.detail?.avatarUrl
+    if (avatarUrl) {
+      console.log('[Profile] chooseAvatar url:', avatarUrl)
+      setTempAvatarUrl(avatarUrl)
+    }
+  }
+
+  /** 微信端：输入昵称回调 */
+  const handleNicknameInput = (e) => {
+    setTempNickname(e.detail.value)
+  }
+
+  /** 微信端：确认登录（有头像和昵称） */
+  const handleWeappConfirmLogin = async () => {
     if (isLoggingIn) return
     setIsLoggingIn(true)
     try {
-      let user: UserInfo | undefined
-      const env = Taro.getEnv()
+      Taro.showLoading({ title: '登录中...' })
+      const loginRes = await Taro.login()
+      console.log('[Profile] Taro.login code:', loginRes.code)
 
-      if (env === Taro.ENV_TYPE.WEAPP || env === Taro.ENV_TYPE.TT) {
-        // 微信/抖音小程序：Taro.login 获取 code（静默调用，不会弹窗）
-        const platformName = env === Taro.ENV_TYPE.WEAPP ? '微信' : '抖音'
-        Taro.showLoading({ title: `${platformName}登录中...` })
-        const loginRes = await Taro.login()
-        console.log('[ProfilePage] Taro.login code:', loginRes.code)
-
-        const res = await Network.request({
-          url: '/api/auth/login',
-          method: 'POST',
-          data: {
-            code: loginRes.code,
-            platform: env === Taro.ENV_TYPE.WEAPP ? 'weapp' : 'tt',
-            nickname: env === Taro.ENV_TYPE.WEAPP ? '微信用户' : '抖音用户',
-          },
-        })
-        Taro.hideLoading()
-        console.log('[ProfilePage] login response:', res.data)
-        user = res.data?.data
-      } else {
-        // H5 开发环境
-        const res = await Network.request({
-          url: '/api/auth/login',
-          method: 'POST',
-          data: { code: 'dev_code', platform: 'h5' },
-        })
-        console.log('[ProfilePage] login response:', res.data)
-        user = res.data?.data
+      let avatarUrl = tempAvatarUrl
+      // 如果选择了头像，先上传到服务器
+      if (avatarUrl) {
+        try {
+          const uploadRes = await Network.uploadFile({
+            url: '/api/user/avatar',
+            filePath: avatarUrl,
+            name: 'file',
+          }) as any
+          console.log('[Profile] avatar upload:', uploadRes.data)
+          avatarUrl = uploadRes.data?.data?.url || avatarUrl
+        } catch (err) {
+          console.error('[Profile] avatar upload error:', err)
+        }
       }
 
+      const nickname = tempNickname || '微信用户'
+      const res = await Network.request({
+        url: '/api/auth/login',
+        method: 'POST',
+        data: {
+          code: loginRes.code,
+          platform: 'weapp',
+          nickname,
+          avatar_url: avatarUrl,
+        },
+      })
+      Taro.hideLoading()
+      console.log('[Profile] login response:', res.data)
+      const user = res.data?.data
       if (user) {
-        setUserInfo(user)
-        Taro.setStorageSync('userInfo', JSON.stringify(user))
+        saveUser(user)
         Taro.showToast({ title: '登录成功', icon: 'success' })
       } else {
         Taro.showToast({ title: '登录失败', icon: 'none' })
       }
     } catch (err) {
-      console.error('[ProfilePage] login error:', err)
+      Taro.hideLoading()
+      console.error('[Profile] login error:', err)
       Taro.showToast({ title: '登录失败，请重试', icon: 'none' })
     } finally {
       setIsLoggingIn(false)
+    }
+  }
+
+  /** 抖音端登录 */
+  const handleTtLogin = async () => {
+    if (isLoggingIn) return
+    setIsLoggingIn(true)
+    try {
+      Taro.showLoading({ title: '抖音登录中...' })
+      const loginRes = await Taro.login()
+      const res = await Network.request({
+        url: '/api/auth/login',
+        method: 'POST',
+        data: { code: loginRes.code, platform: 'tt', nickname: '抖音用户' },
+      })
+      Taro.hideLoading()
+      const user = res.data?.data
+      if (user) {
+        saveUser(user)
+        Taro.showToast({ title: '登录成功', icon: 'success' })
+      } else {
+        Taro.showToast({ title: '登录失败', icon: 'none' })
+      }
+    } catch (err) {
+      Taro.hideLoading()
+      Taro.showToast({ title: '登录失败，请重试', icon: 'none' })
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
+
+  /** H5端登录 */
+  const handleH5Login = async () => {
+    if (isLoggingIn) return
+    setIsLoggingIn(true)
+    try {
+      const res = await Network.request({
+        url: '/api/auth/login',
+        method: 'POST',
+        data: { code: 'dev_code', platform: 'h5' },
+      })
+      const user = res.data?.data
+      if (user) {
+        saveUser(user)
+        Taro.showToast({ title: '登录成功', icon: 'success' })
+      }
+    } catch (err) {
+      Taro.showToast({ title: '登录失败', icon: 'none' })
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
+
+  /** 一键登录（非微信端） */
+  const handleLogin = async () => {
+    const env = Taro.getEnv()
+    if (env === Taro.ENV_TYPE.TT) {
+      await handleTtLogin()
+    } else {
+      await handleH5Login()
     }
   }
 
@@ -92,6 +178,8 @@ const ProfilePage: FC = () => {
       success: (res) => {
         if (res.confirm) {
           setUserInfo(null)
+          setTempAvatarUrl('')
+          setTempNickname('')
           Taro.removeStorageSync('userInfo')
           Taro.showToast({ title: '已退出', icon: 'success' })
         }
@@ -109,22 +197,15 @@ const ProfilePage: FC = () => {
       {/* 用户信息区 - 渐变头部 */}
       <View className="px-5 pt-14 pb-8" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
         {userInfo ? (
+          /* 已登录 - 展示用户信息 */
           <View className="flex flex-row items-center gap-4">
-            {/* 头像 */}
-            {userInfo.avatar_url ? (
-              <Image
-                src={userInfo.avatar_url}
-                className="w-16 h-16 rounded-full"
-                style={{ width: '64px', height: '64px', borderRadius: '50%' }}
-              />
-            ) : (
-              <View
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-              >
+            <View className="flex items-center justify-center" style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.2)' }}>
+              {userInfo.avatar_url ? (
+                <Image src={userInfo.avatar_url} style={{ width: '64px', height: '64px', borderRadius: '50%' }} />
+              ) : (
                 <Text className="text-2xl">🎮</Text>
-              </View>
-            )}
+              )}
+            </View>
             <View className="flex-1">
               <Text className="block text-lg font-bold text-white">{userInfo.nickname || '桌游玩家'}</Text>
             </View>
@@ -141,25 +222,78 @@ const ProfilePage: FC = () => {
             </Button>
           </View>
         ) : (
+          /* 未登录 - 微信端用chooseAvatar+nickname，其他端一键登录 */
           <View className="flex flex-col items-center">
             <View
               className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
               style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
             >
-              <Text className="text-3xl">🎮</Text>
+              {isWeapp && tempAvatarUrl ? (
+                <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px', borderRadius: '50%' }} />
+              ) : (
+                <Text className="text-3xl">🎮</Text>
+              )}
             </View>
-            <Text className="block text-xl font-bold text-white mb-1">桌游助手</Text>
-            <Text className="block text-sm text-white mb-6" style={{ opacity: 0.7 }}>登录后同步对局记录</Text>
-            <Button
-              onClick={handleLogin}
-              disabled={isLoggingIn}
-              className="border-0 rounded-full px-10 py-3"
-              style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
-            >
-              <Text className="text-white text-base font-medium">
-                {isLoggingIn ? '登录中...' : '一键登录'}
-              </Text>
-            </Button>
+
+            {isWeapp ? (
+              /* 微信端：选择头像 + 填昵称 + 确认登录 */
+              <View className="w-full flex flex-col items-center">
+                <View className="flex flex-row items-center gap-3 mb-4 w-full px-4">
+                  {/* 选择头像按钮 */}
+                  <TaroButton
+                    openType="chooseAvatar"
+                    onChooseAvatar={handleChooseAvatar}
+                    className="border-0 p-0 m-0 bg-transparent rounded-full"
+                    style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.2)', lineHeight: 'normal', flexShrink: 0 }}
+                  >
+                    <View className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                      <Text className="text-lg">📷</Text>
+                    </View>
+                  </TaroButton>
+                  {/* 昵称输入框 - type=nickname 微信会自动填充 */}
+                  <View
+                    className="flex-1 rounded-xl px-3 py-2"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+                  >
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- TaroInput需要type=nickname */}
+                    <TaroInput
+                      type="nickname"
+                      placeholder="微信昵称"
+                      value={tempNickname}
+                      onInput={handleNicknameInput}
+                      style={{ color: '#fff', fontSize: '15px', width: '100%' }}
+                      placeholderStyle="color: rgba(255,255,255,0.5)"
+                    />
+                  </View>
+                </View>
+                <Button
+                  onClick={handleWeappConfirmLogin}
+                  disabled={isLoggingIn}
+                  className="border-0 rounded-full px-10 py-3"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
+                >
+                  <Text className="text-white text-base font-medium">
+                    {isLoggingIn ? '登录中...' : '确认登录'}
+                  </Text>
+                </Button>
+              </View>
+            ) : (
+              /* 非微信端：一键登录 */
+              <>
+                <Text className="block text-xl font-bold text-white mb-1">桌游助手</Text>
+                <Text className="block text-sm text-white mb-6" style={{ opacity: 0.7 }}>登录后同步对局记录</Text>
+                <Button
+                  onClick={handleLogin}
+                  disabled={isLoggingIn}
+                  className="border-0 rounded-full px-10 py-3"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
+                >
+                  <Text className="text-white text-base font-medium">
+                    {isLoggingIn ? '登录中...' : '一键登录'}
+                  </Text>
+                </Button>
+              </>
+            )}
           </View>
         )}
       </View>
