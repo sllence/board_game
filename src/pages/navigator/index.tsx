@@ -12,7 +12,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import {
   Play, Plus, X, User, Dices, Timer, Layers,
   Shuffle, Calculator, BookOpen,
-  Trophy, RotateCcw, Minus, Send, Sparkles, ChessKing
+  Trophy, RotateCcw, Minus, Send, Sparkles, ChessKing, ArrowLeft
 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -37,7 +37,21 @@ interface Player {
   customScores?: Record<string, number>
 }
 
-type Phase = 'setup' | 'playing' | 'finished'
+interface GameSession {
+  id: number
+  session_name: string
+  game_id: number | null
+  game?: BoardGame
+  status: string
+  players: string[]
+  winner: string | null
+  scoring_snapshot: Player[] | null
+  duration_seconds: number | null
+  created_at: string
+  user_id: number | null
+}
+
+type Phase = 'setup' | 'playing' | 'finished' | 'viewing'
 
 const TOOL_ITEMS = [
   { key: 'dice', label: '骰子', icon: <Dices size={20} color="#6366f1" />, path: '/pages/dice/index' },
@@ -59,12 +73,13 @@ const NavigatorPage: FC = () => {
   const [aiLoading, setAiLoading] = useState(false)
   const [showFinishDialog, setShowFinishDialog] = useState(false)
   const [scoringStep, setScoringStep] = useState(1)
+  const [session, setSession] = useState<GameSession | null>(null)
 
   useEffect(() => {
     if (!checkLogin()) {
       Taro.showModal({
         title: '需要登录',
-        content: '请先登录后再开始对局',
+        content: '请先登录后再继续',
         confirmText: '去登录',
         cancelText: '返回',
         showCancel: true,
@@ -80,7 +95,13 @@ const NavigatorPage: FC = () => {
     }
     const instance = Taro.getCurrentInstance()
     const gameId = instance?.router?.params?.gameId
-    if (gameId) {
+    const sessionIdParam = instance?.router?.params?.sessionId
+    
+    if (sessionIdParam) {
+      // 查看历史对局详情
+      fetchSession(Number(sessionIdParam))
+    } else if (gameId) {
+      // 开始新对局
       fetchGame(Number(gameId))
     }
   }, [])
@@ -101,6 +122,31 @@ const NavigatorPage: FC = () => {
       }
     } catch (err) {
       console.error('[NavigatorPage] fetchGame error:', err)
+    }
+  }
+
+  const fetchSession = async (id: number) => {
+    try {
+      const res = await Network.request({ url: `/api/sessions/${id}` })
+      console.log('[NavigatorPage] fetchSession response:', res.data)
+      const sessionData = res.data?.data
+      if (sessionData) {
+        setSession(sessionData)
+        if (sessionData.game) {
+          setGame(sessionData.game)
+        }
+        if (sessionData.scoring_snapshot) {
+          setPlayers(sessionData.scoring_snapshot)
+        } else if (sessionData.players) {
+          setPlayers(sessionData.players.map((name: string) => ({ name, score: 0 })))
+        }
+        if (sessionData.duration_seconds) {
+          setElapsedSeconds(sessionData.duration_seconds)
+        }
+        setPhase('viewing')
+      }
+    } catch (err) {
+      console.error('[NavigatorPage] fetchSession error:', err)
     }
   }
 
@@ -199,7 +245,185 @@ const NavigatorPage: FC = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
 
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'playing': return '进行中'
+      case 'finished': return '已结束'
+      case 'cancelled': return '已取消'
+      default: return status
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'playing': return '#22c55e'
+      case 'finished': return '#3b82f6'
+      case 'cancelled': return '#ef4444'
+      default: return '#6b7280'
+    }
+  }
+
   const sections = Array.isArray(game?.sections) ? game.sections : []
+  const sortedPlayers = [...players].sort((a, b) => b.score - a.score)
+  const rankColors = ['#eab308', '#9ca3af', '#b45309']
+
+  // =================== VIEWING PHASE (查看历史对局) ===================
+  if (phase === 'viewing') {
+    return (
+      <View className="flex flex-col min-h-screen bg-background">
+        {/* 顶部信息栏 */}
+        <View
+          className="px-4 pt-14 pb-3"
+          style={{ background: game?.hero_bg || 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
+        >
+          <View className="flex flex-row items-center justify-between">
+            <View className="flex-1 min-w-0">
+              <View className="flex flex-row items-center gap-2">
+                <View className="cursor-pointer" onClick={() => Taro.navigateBack()}>
+                  <ArrowLeft size={20} color="#fff" />
+                </View>
+                <View className="flex-1 min-w-0">
+                  <Text className="block text-base font-bold text-white truncate">{session?.session_name || game?.name || '对局详情'}</Text>
+                  <Text className="block text-xs text-white text-opacity-70 mt-1">
+                    {session?.created_at ? formatDate(session.created_at) : ''}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            {session && (
+              <View className="flex flex-row items-center gap-2 rounded-full px-3 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                <View className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor(session.status) }} />
+                <Text className="block text-sm text-white font-mono">{getStatusText(session.status)}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* 核心内容区 */}
+        <View className="flex-1 px-4 pt-4 pb-4 overflow-y-auto">
+          {/* 对局信息 */}
+          {session && (
+            <View className="mb-5">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <View className="flex flex-col gap-3">
+                    <View className="flex flex-row items-center justify-between">
+                      <Text className="block text-sm text-muted-foreground">时长</Text>
+                      <Text className="block text-sm font-semibold text-foreground">
+                        {session.duration_seconds ? formatTime(session.duration_seconds) : '-'}
+                      </Text>
+                    </View>
+                    {session.winner && (
+                      <View className="flex flex-row items-center justify-between">
+                        <Text className="block text-sm text-muted-foreground">胜者</Text>
+                        <View className="flex flex-row items-center gap-1">
+                          <Trophy size={14} color="#eab308" />
+                          <Text className="block text-sm font-semibold text-amber-600">{session.winner}</Text>
+                        </View>
+                      </View>
+                    )}
+                    {session.players && session.players.length > 0 && (
+                      <View className="flex flex-row items-center justify-between">
+                        <Text className="block text-sm text-muted-foreground">参与者</Text>
+                        <Text className="block text-sm font-semibold text-foreground">{session.players.length}人</Text>
+                      </View>
+                    )}
+                  </View>
+                </CardContent>
+              </Card>
+            </View>
+          )}
+
+          {/* 计分板 */}
+          {players.length > 0 && (
+            <View className="mb-5">
+              <View className="flex flex-row items-center gap-2 mb-3">
+                <View className="w-1 h-4 rounded-full bg-violet-500" />
+                <Calculator size={16} color="#8b5cf6" />
+                <Text className="block text-sm font-bold text-foreground">最终得分</Text>
+              </View>
+              <View className="flex flex-col gap-2">
+                {sortedPlayers.map((player, rank) => (
+                  <Card key={player.name} className="shadow-sm">
+                    <CardContent className="flex flex-row items-center p-3 gap-3">
+                      <View
+                        className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: rank < 3 ? rankColors[rank] : '#e5e7eb' }}
+                      >
+                        {rank === 0 ? (
+                          <Trophy size={14} color="#fff" />
+                        ) : (
+                          <Text className="text-xs font-bold text-white">{rank + 1}</Text>
+                        )}
+                      </View>
+                      <View className="flex-1 min-w-0">
+                        <Text className="block text-sm font-semibold text-foreground truncate">{player.name}</Text>
+                        <Text className="block text-2xl font-bold text-primary mt-1">{player.score}</Text>
+                      </View>
+                    </CardContent>
+                  </Card>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* 规则速查 */}
+          {sections.length > 0 && (
+            <View className="mb-5">
+              <View className="flex flex-row items-center gap-2 mb-3">
+                <View className="w-1 h-4 rounded-full bg-blue-500" />
+                <BookOpen size={16} color="#3b82f6" />
+                <Text className="block text-sm font-bold text-foreground">规则速查</Text>
+              </View>
+              <Accordion type="multiple" defaultValue={[]}>
+                {sections.map((section, idx) => (
+                  <AccordionItem key={idx} value={`nav-section-${idx}`}>
+                    <AccordionTrigger>
+                      <Text className="text-xs font-medium">{section.title}</Text>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <Text className="block text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{section.content}</Text>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </View>
+          )}
+        </View>
+
+        {/* 底部操作栏 */}
+        <View
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '12px',
+            padding: '12px 16px',
+            backgroundColor: '#fff',
+            borderTop: '1px solid #e5e7eb',
+            zIndex: 100,
+          }}
+        >
+          <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => Taro.navigateBack()}>
+            <View className="flex flex-row items-center gap-1">
+              <ArrowLeft size={14} color="#6b7280" />
+              <Text>返回</Text>
+            </View>
+          </Button>
+        </View>
+
+        <View className="h-16" />
+      </View>
+    )
+  }
 
   // =================== SETUP PHASE ===================
   if (phase === 'setup') {
@@ -207,8 +431,15 @@ const NavigatorPage: FC = () => {
       <View className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-background">
         {/* Header */}
         <View className="px-4 pt-14 pb-6">
-          <Text className="block text-2xl font-bold text-foreground">对局设置</Text>
-          <Text className="block text-sm text-muted-foreground mt-1">选择桌游、添加玩家，准备开始</Text>
+          <View className="flex flex-row items-center gap-3">
+            <View className="cursor-pointer" onClick={() => Taro.navigateBack()}>
+              <ArrowLeft size={20} color="#111827" />
+            </View>
+            <View className="flex-1">
+              <Text className="block text-2xl font-bold text-foreground">对局设置</Text>
+              <Text className="block text-sm text-muted-foreground mt-1">选择桌游、添加玩家，准备开始</Text>
+            </View>
+          </View>
         </View>
 
         {/* 游戏信息 Hero Card */}
@@ -302,7 +533,7 @@ const NavigatorPage: FC = () => {
             </View>
           </Button>
           <Text className="block text-xs text-muted-foreground text-center mt-3">
-            {game ? `至少${game.min_players}人，最多${game.max_players}人` : '请先选择桌游'}
+            {game ? `至少${game.min_players}人，最多${game.max_players}人` : ('请先选择桌游')}
           </Text>
         </View>
       </View>
@@ -310,9 +541,6 @@ const NavigatorPage: FC = () => {
   }
 
   // =================== PLAYING PHASE ===================
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score)
-  const rankColors = ['#eab308', '#9ca3af', '#b45309']
-
   return (
     <View className="flex flex-col min-h-screen bg-background">
       {/* 顶部信息栏 */}
@@ -420,9 +648,7 @@ const NavigatorPage: FC = () => {
                     <Text className="text-xs font-medium">{section.title}</Text>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <Text className="block text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                      {section.content}
-                    </Text>
+                    <Text className="block text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{section.content}</Text>
                   </AccordionContent>
                 </AccordionItem>
               ))}

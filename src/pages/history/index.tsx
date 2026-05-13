@@ -120,7 +120,7 @@ const HistoryPage: FC = () => {
               const playerList: PlayerInfo[] = Array.isArray(session.players) ? session.players : []
               const scores = Array.isArray(session.scoring_snapshot) ? session.scoring_snapshot : []
               const handleSessionClick = () => {
-                Taro.navigateTo({ url: `/pages/session-detail/index?id=${session.id}` })
+                Taro.navigateTo({ url: `/pages/navigator/index?sessionId=${session.id}` })
               }
               return (
                 <Card key={session.id} className="border-0 shadow-sm" onClick={handleSessionClick}>

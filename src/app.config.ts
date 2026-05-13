@@ -13,7 +13,6 @@ export default defineAppConfig({
     'pages/navigator/index',
     'pages/rule-detail/index',
     'pages/guide-detail/index',
-    'pages/session-detail/index',
   ],
   window: {
     backgroundTextStyle: 'light',
