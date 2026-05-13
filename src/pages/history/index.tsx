@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import Taro, { useDidShow } from '@tarojs/taro'
+import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Clock, History, Trophy } from 'lucide-react-taro'
@@ -34,7 +34,7 @@ const HistoryPage: FC = () => {
   const [sessions, setSessions] = useState<GameSession[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  useDidShow(() => {
     if (!checkLogin()) {
       Taro.showModal({
         title: '需要登录',
@@ -53,7 +53,7 @@ const HistoryPage: FC = () => {
       return
     }
     fetchSessions()
-  }, [])
+  })
 
   const fetchSessions = async () => {
     setLoading(true)
