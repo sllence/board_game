@@ -112,6 +112,34 @@ const NavigatorPage: FC = () => {
     return () => clearInterval(id)
   }, [timerRunning])
 
+  // 自动保存：玩家分数变化时保存到后端
+  useEffect(() => {
+    if (phase !== 'playing' || !sessionId || players.length === 0) return
+    // 防抖：避免频繁保存
+    const timeoutId = setTimeout(() => {
+      saveSessionProgress()
+    }, 1000)
+    return () => clearTimeout(timeoutId)
+  }, [players, elapsedSeconds])
+
+  const saveSessionProgress = async () => {
+    if (!sessionId) return
+    try {
+      await Network.request({
+        url: `/api/sessions/${sessionId}`,
+        method: 'PUT',
+        data: {
+          players: players.map((p) => p.name),
+          scoring_snapshot: players,
+          duration_seconds: elapsedSeconds,
+        },
+      })
+      console.log('[NavigatorPage] saveSessionProgress success')
+    } catch (err) {
+      console.error('[NavigatorPage] saveSessionProgress error:', err)
+    }
+  }
+
   const fetchGame = async (id: number) => {
     try {
       const res = await Network.request({ url: `/api/games/${id}` })
@@ -132,6 +160,7 @@ const NavigatorPage: FC = () => {
       const sessionData = res.data?.data
       if (sessionData) {
         setSession(sessionData)
+        setSessionId(sessionData.id)
         if (sessionData.game) {
           setGame(sessionData.game)
         }
@@ -143,7 +172,14 @@ const NavigatorPage: FC = () => {
         if (sessionData.duration_seconds) {
           setElapsedSeconds(sessionData.duration_seconds)
         }
-        setPhase('viewing')
+        // 如果是进行中的对局，可以继续游戏
+        if (sessionData.status === 'playing') {
+          setPhase('playing')
+          setTimerRunning(true)
+        } else {
+          // 已结束或已取消的对局，只读查看
+          setPhase('viewing')
+        }
       }
     } catch (err) {
       console.error('[NavigatorPage] fetchSession error:', err)
