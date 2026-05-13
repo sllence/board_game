@@ -50,10 +50,30 @@ const ProfilePage: FC = () => {
         data: { code, platform: 'wechat' }
       }) as any
 
-      const user = res.data.data
+      let user = res.data.data
+      
+      // 检查本地是否有缓存的用户信息（头像和昵称）
+      const cachedUserInfo = Taro.getStorageSync('userInfo')
+      if (cachedUserInfo) {
+        try {
+          const cachedUser = JSON.parse(cachedUserInfo)
+          // 如果本地缓存有头像和昵称，优先使用本地的
+          if (cachedUser.nickname || cachedUser.avatar_url) {
+            user = {
+              ...user,
+              nickname: cachedUser.nickname || user.nickname,
+              avatar_url: cachedUser.avatar_url || user.avatar_url
+            }
+          }
+        } catch {
+          // ignore parse error
+        }
+      }
+      
       setUserInfo(user)
       Taro.setStorageSync('userInfo', JSON.stringify(user))
 
+      // 只有在本地和后端都没有头像和昵称时，才弹出设置弹窗
       if (!user.nickname || !user.avatar_url) {
         setShowProfileSetup(true)
       } else {
@@ -209,7 +229,8 @@ const ProfilePage: FC = () => {
             size="sm"
             onClick={() => {
               setUserInfo(null)
-              Taro.removeStorageSync('userInfo')
+              // 不清除本地缓存的用户信息，这样重新登录时可以直接使用
+              // Taro.removeStorageSync('userInfo')
               Taro.showToast({ title: '已退出', icon: 'success' })
             }}
             className="border-0"
