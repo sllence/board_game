@@ -14,18 +14,22 @@ export class GamesController {
     duration?: string
     difficulty?: string
     keyword?: string
+    is_admin?: string
   }) {
-    return this.gamesService.findAll(query)
+    return this.gamesService.findAll({
+      ...query,
+      is_admin: query.is_admin === 'true'
+    })
   }
 
   @Get('hot')
-  async findHot() {
-    return this.gamesService.findHot()
+  async findHot(@Query('is_admin') isAdmin?: string) {
+    return this.gamesService.findHot(isAdmin === 'true')
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.gamesService.findOne(Number(id))
+  async findOne(@Param('id') id: string, @Query('is_admin') isAdmin?: string) {
+    return this.gamesService.findOne(Number(id), isAdmin === 'true')
   }
 
   @Post()

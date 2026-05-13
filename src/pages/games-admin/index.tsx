@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text, ScrollView, Image } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Card, CardContent } from '@/components/ui/card'
@@ -11,33 +11,45 @@ import type { FC } from 'react'
 interface BoardGame {
   id: number
   name: string
-  emoji?: string
   icon_key?: string
+  image_url?: string
   type: string[]
   scene: string[]
   min_players: number
   max_players: number
-  duration: number
+  min_duration?: number
+  max_duration?: number
   difficulty: number
   intro?: string
+  beginner_tips?: string
   sort_order?: number
+  status?: string
 }
 
 interface GameFormData {
   name: string
   icon_key: string
+  image_url: string
   type: string[]
   scene: string[]
   min_players: number
   max_players: number
-  duration: number
+  min_duration: number
+  max_duration: number
   difficulty: number
   intro: string
+  beginner_tips: string
   sort_order: number
+  status: string
 }
 
 const TYPE_OPTIONS = ['策略', '益智', '拍卖', '扮演', '经营', '合作', '对抗']
 const SCENE_OPTIONS = ['聚会', '团建', '亲子', '情侣', '酒局']
+const STATUS_OPTIONS = [
+  { value: 'online', label: '上线', desc: '所有人可见' },
+  { value: 'preview', label: '预览', desc: '仅管理员可见' },
+  { value: 'offline', label: '下线', desc: '仅管理员可见' }
+]
 const DIFFICULTY_OPTIONS = [
   { value: 1, label: '入门' },
   { value: 2, label: '简单' },
@@ -54,14 +66,18 @@ const GamesAdminPage: FC = () => {
   const [formData, setFormData] = useState<GameFormData>({
     name: '',
     icon_key: '🎲',
+    image_url: '',
     type: [],
     scene: [],
     min_players: 2,
     max_players: 4,
-    duration: 30,
+    min_duration: 30,
+    max_duration: 60,
     difficulty: 3,
     intro: '',
-    sort_order: 0
+    beginner_tips: '',
+    sort_order: 0,
+    status: 'online'
   })
   const [saving, setSaving] = useState(false)
 
@@ -106,7 +122,8 @@ const GamesAdminPage: FC = () => {
       setLoading(true)
       const res = await Network.request({
         url: '/api/games',
-        method: 'GET'
+        method: 'GET',
+        data: { is_admin: 'true' }
       })
       setGames(res.data.data || [])
     } catch (err) {
@@ -117,19 +134,52 @@ const GamesAdminPage: FC = () => {
     }
   }
 
+  const handleChooseImage = () => {
+    Taro.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: async (res) => {
+        const tempFilePath = res.tempFilePaths[0]
+        if (!tempFilePath) return
+        try {
+          Taro.showLoading({ title: '上传中...' })
+          const uploadRes = await Network.uploadFile({
+            url: '/api/user/avatar',
+            filePath: tempFilePath,
+            name: 'file'
+          })
+          const data = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
+          const imageUrl = data.data?.avatar_url || data.data?.url || data.avatar_url || data.url || ''
+          setFormData(prev => ({ ...prev, image_url: imageUrl }))
+          Taro.hideLoading()
+          Taro.showToast({ title: '上传成功', icon: 'success' })
+        } catch (err) {
+          console.error('[uploadImage] failed:', err)
+          Taro.hideLoading()
+          Taro.showToast({ title: '上传失败', icon: 'none' })
+        }
+      }
+    })
+  }
+
   const handleEditGame = (game: BoardGame) => {
     setEditingGame(game)
     setFormData({
       name: game.name || '',
       icon_key: game.icon_key || '🎲',
+      image_url: game.image_url || '',
       type: game.type || [],
       scene: game.scene || [],
       min_players: game.min_players || 2,
       max_players: game.max_players || 4,
-      duration: game.duration || 30,
+      min_duration: game.min_duration || 30,
+      max_duration: game.max_duration || 60,
       difficulty: game.difficulty || 3,
       intro: game.intro || '',
-      sort_order: game.sort_order || 0
+      beginner_tips: game.beginner_tips || '',
+      sort_order: game.sort_order || 0,
+      status: game.status || 'online'
     })
     setShowModal(true)
   }
@@ -139,14 +189,18 @@ const GamesAdminPage: FC = () => {
     setFormData({
       name: '',
       icon_key: '🎲',
+      image_url: '',
       type: [],
       scene: [],
       min_players: 2,
       max_players: 4,
-      duration: 30,
+      min_duration: 30,
+      max_duration: 60,
       difficulty: 3,
       intro: '',
-      sort_order: 0
+      beginner_tips: '',
+      sort_order: 0,
+      status: 'online'
     })
     setShowModal(true)
   }
@@ -187,6 +241,10 @@ const GamesAdminPage: FC = () => {
     }
     if (formData.min_players > formData.max_players) {
       Taro.showToast({ title: '最少人数不能大于最多人数', icon: 'none' })
+      return
+    }
+    if (formData.min_duration > formData.max_duration) {
+      Taro.showToast({ title: '最短时长不能大于最长时长', icon: 'none' })
       return
     }
 
@@ -247,9 +305,18 @@ const GamesAdminPage: FC = () => {
     return map[difficulty] || '#eab308'
   }
 
+  const getStatusText = (status?: string): string => {
+    const map: Record<string, string> = { online: '上线', preview: '预览', offline: '下线' }
+    return map[status || 'online'] || '上线'
+  }
+
+  const getStatusColor = (status?: string): string => {
+    const map: Record<string, string> = { online: '#22c55e', preview: '#eab308', offline: '#ef4444' }
+    return map[status || 'online'] || '#22c55e'
+  }
+
   return (
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
-      {/* 顶部导航栏区域 */}
       <View className="px-5 pt-14 pb-4 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
           <View className="flex flex-row items-center gap-3">
@@ -264,7 +331,6 @@ const GamesAdminPage: FC = () => {
         </View>
       </View>
 
-      {/* 桌游列表 */}
       <ScrollView className="flex-1 px-4 py-4" scrollY>
         {loading ? (
           <View className="flex items-center justify-center py-20">
@@ -276,9 +342,25 @@ const GamesAdminPage: FC = () => {
               <CardContent className="p-4">
                 <View className="flex flex-row items-start justify-between">
                   <View className="flex flex-row items-start gap-3 flex-1">
-                    <Text className="text-3xl">{game.icon_key || game.emoji || '🎲'}</Text>
+                    {game.image_url ? (
+                      <View style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden' }}>
+                        <Image src={game.image_url} style={{ width: '100%', height: '100%' }} mode="aspectFill" />
+                      </View>
+                    ) : (
+                      <Text className="text-4xl">{game.icon_key || '🎲'}</Text>
+                    )}
                     <View className="flex-1">
-                      <Text className="block font-semibold text-gray-900 mb-1">{game.name}</Text>
+                      <View className="flex flex-row items-center gap-2 mb-1">
+                        <Text className="block font-semibold text-gray-900">{game.name}</Text>
+                        <View
+                          className="rounded-full px-2 py-1"
+                          style={{ backgroundColor: `${getStatusColor(game.status)}20` }}
+                        >
+                          <Text style={{ color: getStatusColor(game.status), fontSize: '11px' }}>
+                            {getStatusText(game.status)}
+                          </Text>
+                        </View>
+                      </View>
                       <View className="flex flex-row flex-wrap gap-1 mb-2">
                         {game.type.slice(0, 3).map((t) => (
                           <View
@@ -295,7 +377,7 @@ const GamesAdminPage: FC = () => {
                       </View>
                       <View className="flex flex-row items-center gap-4 text-xs text-gray-500">
                         <Text className="block">👥 {game.min_players}-{game.max_players}人</Text>
-                        <Text className="block">⏱️ {game.duration}分钟</Text>
+                        <Text className="block">⏱️ {game.min_duration || 30}-{game.max_duration || 60}分钟</Text>
                         <View
                           className="rounded-full px-2 py-1"
                           style={{ backgroundColor: `${getDifficultyColor(game.difficulty)}20` }}
@@ -328,11 +410,9 @@ const GamesAdminPage: FC = () => {
         )}
       </ScrollView>
 
-      {/* 编辑/添加弹窗 */}
       {showModal && (
         <View className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
           <View className="w-full bg-white rounded-t-2xl max-h-[85vh]">
-            {/* 弹窗顶部 */}
             <View className="px-5 py-4 border-b border-gray-100 flex flex-row items-center justify-between">
               <Button size="sm" variant="ghost" onClick={() => setShowModal(false)}>
                 <Text className="text-gray-500">取消</Text>
@@ -345,11 +425,52 @@ const GamesAdminPage: FC = () => {
               </Button>
             </View>
 
-            {/* 弹窗内容 */}
             <ScrollView className="px-5 py-4 max-h-[70vh]" scrollY>
-              {/* 图标 */}
               <View className="mb-4">
-                <Text className="block text-sm font-medium text-gray-700 mb-2">图标</Text>
+                <Text className="block text-sm font-medium text-gray-700 mb-2">状态</Text>
+                <View className="flex flex-row gap-2">
+                  {STATUS_OPTIONS.map((opt) => (
+                    <View
+                      key={opt.value}
+                      className={`flex-1 rounded-xl p-3 border-2 cursor-pointer ${
+                        formData.status === opt.value
+                          ? 'border-indigo-600 bg-indigo-50'
+                          : 'border-gray-200 bg-gray-50'
+                      }`}
+                      onClick={() => setFormData(prev => ({ ...prev, status: opt.value }))}
+                    >
+                      <Text className={`block font-semibold text-sm ${
+                        formData.status === opt.value ? 'text-indigo-700' : 'text-gray-700'
+                      }`}
+                      >
+                        {opt.label}
+                      </Text>
+                      <Text className="block text-xs text-gray-500 mt-1">{opt.desc}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">图片</Text>
+                <View className="flex flex-row items-center gap-4">
+                  <View style={{ width: '80px', height: '80px', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+                    {formData.image_url ? (
+                      <Image src={formData.image_url} style={{ width: '100%', height: '100%' }} mode="aspectFill" />
+                    ) : (
+                      <View className="flex items-center justify-center h-full">
+                        <Text className="text-3xl">{formData.icon_key || '🎲'}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Button size="sm" onClick={handleChooseImage}>
+                    <Text className="text-sm">选择图片</Text>
+                  </Button>
+                </View>
+              </View>
+
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">备用emoji</Text>
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
                   <Input
                     className="w-full bg-transparent"
@@ -361,7 +482,6 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              {/* 名称 */}
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">桌游名称 *</Text>
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
@@ -374,7 +494,6 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              {/* 类型 */}
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">类型 *</Text>
                 <View className="flex flex-row flex-wrap gap-2">
@@ -401,7 +520,6 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              {/* 场景 */}
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">场景</Text>
                 <View className="flex flex-row flex-wrap gap-2">
@@ -428,7 +546,6 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              {/* 人数 */}
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">游戏人数</Text>
                 <View className="flex flex-row items-center gap-4">
@@ -458,20 +575,35 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              {/* 时长 */}
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">游戏时长（分钟）</Text>
-                <View className="bg-gray-50 rounded-xl px-4 py-3">
-                  <Input
-                    className="w-full bg-transparent"
-                    type="number"
-                    value={String(formData.duration)}
-                    onInput={(e) => setFormData(prev => ({ ...prev, duration: Number(e.detail.value) }))}
-                  />
+                <View className="flex flex-row items-center gap-4">
+                  <View className="flex-1">
+                    <Text className="block text-xs text-gray-500 mb-1">最短</Text>
+                    <View className="bg-gray-50 rounded-xl px-4 py-3">
+                      <Input
+                        className="w-full bg-transparent"
+                        type="number"
+                        value={String(formData.min_duration)}
+                        onInput={(e) => setFormData(prev => ({ ...prev, min_duration: Number(e.detail.value) }))}
+                      />
+                    </View>
+                  </View>
+                  <Text className="text-gray-400">-</Text>
+                  <View className="flex-1">
+                    <Text className="block text-xs text-gray-500 mb-1">最长</Text>
+                    <View className="bg-gray-50 rounded-xl px-4 py-3">
+                      <Input
+                        className="w-full bg-transparent"
+                        type="number"
+                        value={String(formData.max_duration)}
+                        onInput={(e) => setFormData(prev => ({ ...prev, max_duration: Number(e.detail.value) }))}
+                      />
+                    </View>
+                  </View>
                 </View>
               </View>
 
-              {/* 难度 */}
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">难度</Text>
                 <View className="flex flex-row flex-wrap gap-2">
@@ -498,7 +630,6 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              {/* 简介 */}
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">简介</Text>
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
@@ -511,7 +642,18 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              {/* 排序 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">新手提示</Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Input
+                    className="w-full bg-transparent"
+                    placeholder="请输入新手提示"
+                    value={formData.beginner_tips}
+                    onInput={(e) => setFormData(prev => ({ ...prev, beginner_tips: e.detail.value }))}
+                  />
+                </View>
+              </View>
+
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">排序</Text>
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
