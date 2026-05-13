@@ -11,20 +11,27 @@ export class GamesService {
     duration?: string
     difficulty?: string
     keyword?: string
+    is_admin?: boolean
   }) {
     const client = getSupabaseClient()
     let query = client
       .from('board_games')
-      .select('id, name, type, scene, min_players, max_players, duration, difficulty, icon_key, icon_bg, icon_color, intro, sort_order')
-      .eq('is_active', true)
+      .select(
+        'id, name, type, scene, min_players, max_players, min_duration, max_duration, difficulty, icon_key, icon_bg, icon_color, image_url, intro, sort_order, status'
+      )
       .order('sort_order', { ascending: true })
+
+    // 如果是管理员，可以看到所有状态；否则只能看到online
+    if (!filters.is_admin) {
+      query = query.eq('status', 'online')
+    }
 
     if (filters.type) query = query.contains('type', [filters.type])
     if (filters.scene) query = query.contains('scene', [filters.scene])
     if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
     if (filters.duration) {
       const dur = Number(filters.duration)
-      query = query.lte('duration', dur)
+      query = query.lte('max_duration', dur)
     }
     if (filters.min_players) {
       const p = Number(filters.min_players)
@@ -37,26 +44,39 @@ export class GamesService {
     return { data }
   }
 
-  async findHot() {
+  async findHot(is_admin = false) {
     const client = getSupabaseClient()
-    const { data, error } = await client
+    let query = client
       .from('board_games')
-      .select('id, name, type, min_players, max_players, duration, difficulty, icon_key, icon_bg, icon_color')
-      .eq('is_active', true)
+      .select(
+        'id, name, type, min_players, max_players, min_duration, max_duration, difficulty, icon_key, icon_bg, icon_color, image_url, status'
+      )
       .order('sort_order', { ascending: true })
       .limit(6)
+
+    // 如果是管理员，可以看到所有状态；否则只能看到online
+    if (!is_admin) {
+      query = query.eq('status', 'online')
+    }
+
+    const { data, error } = await query
     if (error) throw new Error(`查询热门桌游失败: ${error.message}`)
     return { data }
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, is_admin = false) {
     const client = getSupabaseClient()
-    const { data, error } = await client
+    let query = client
       .from('board_games')
       .select('*')
       .eq('id', id)
-      .eq('is_active', true)
-      .maybeSingle()
+
+    // 如果是管理员，可以看到所有状态；否则只能看到online
+    if (!is_admin) {
+      query = query.eq('status', 'online')
+    }
+
+    const { data, error } = await query.maybeSingle()
     if (error) throw new Error(`查询桌游详情失败: ${error.message}`)
     return { data }
   }
