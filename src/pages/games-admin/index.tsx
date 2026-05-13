@@ -339,86 +339,111 @@ const GamesAdminPage: FC = () => {
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50">
-      <View className="px-5 pt-14 pb-6 bg-white border-b border-gray-200">
+      {/* Header */}
+      <View className="px-5 pt-14 pb-4 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
           <View className="flex flex-row items-center gap-3">
             <Button size="sm" variant="ghost" onClick={() => Taro.navigateBack()}>
-              <Text className="text-gray-600">← 返回</Text>
+              <Text className="text-gray-500">← 返回</Text>
             </Button>
-            <Text className="text-2xl font-black text-gray-900 tracking-tight">🎲 桌游俱乐部</Text>
+            <Text className="text-xl font-bold text-gray-900">桌游管理</Text>
           </View>
           <Button size="sm" onClick={handleAddGame}>
-            <Text className="text-sm font-bold text-white">+ 添加桌游</Text>
+            <Text className="text-sm font-medium text-white">+ 添加</Text>
           </Button>
         </View>
       </View>
 
+      {/* Game List */}
       <ScrollView className="flex-1 px-4 py-4" scrollY>
         {loading ? (
           <View className="flex items-center justify-center py-20">
-            <Text className="text-gray-500">加载中...</Text>
+            <Text className="text-gray-400">加载中...</Text>
           </View>
         ) : (
           games.map((game) => (
-            <Card key={game.id} className="border-0 shadow-sm mb-4 bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <CardContent className="p-5">
-                <View className="flex flex-row items-start justify-between">
-                  <View className="flex flex-row items-start gap-3 flex-1">
-                    {game.image_url ? (
-                      <View style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden' }}>
-                        <Image src={game.image_url} style={{ width: '100%', height: '100%' }} mode="aspectFill" />
-                      </View>
-                    ) : (
-                      <Text className="text-4xl">{game.icon_key || '🎲'}</Text>
-                    )}
-                    <View className="flex-1">
-                      <View className="flex flex-row items-center gap-2 mb-1">
-                        <Text className="block font-semibold text-gray-900">{game.name}</Text>
-                        <View
-                          className="rounded-full px-2 py-1"
-                          style={{ backgroundColor: `${getStatusColor(game.status)}20` }}
-                        >
-                          <Text style={{ color: getStatusColor(game.status), fontSize: '11px' }}>
-                            {getStatusText(game.status)}
-                          </Text>
-                        </View>
-                      </View>
-                      <View className="flex flex-row flex-wrap gap-1 mb-2">
-                        {game.type.slice(0, 3).map((t) => (
-                          <View
-                            key={t}
-                            className="rounded-full px-2 py-1"
-                            style={{ backgroundColor: '#f3f4f6' }}
-                          >
-                            <Text className="text-xs text-gray-600">{t}</Text>
-                          </View>
-                        ))}
-                        {game.type.length > 3 && (
-                          <Text className="text-xs text-gray-500">+{game.type.length - 3}</Text>
-                        )}
-                      </View>
-                      <View className="flex flex-row items-center gap-4 text-xs text-gray-500">
-                        <Text className="block">👥 {game.min_players}-{game.max_players}人</Text>
-                        <Text className="block">⏱️ {game.min_duration || 30}-{game.max_duration || 60}分钟</Text>
-                        <View
-                          className="rounded-full px-2 py-1"
-                          style={{ backgroundColor: `${getDifficultyColor(game.difficulty)}20` }}
-                        >
-                          <Text style={{ color: getDifficultyColor(game.difficulty), fontSize: '12px' }}>
-                            {getDifficultyText(game.difficulty)}
-                          </Text>
-                        </View>
-                      </View>
+            <Card key={game.id} className="mb-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              {/* Cover Image */}
+              {game.image_url ? (
+                <View style={{ width: '100%', height: '160px' }}>
+                  <Image src={game.image_url} style={{ width: '100%', height: '100%' }} mode="aspectFill" />
+                </View>
+              ) : (
+                <View className="w-full h-24 bg-gray-100 flex items-center justify-center">
+                  <Text className="text-5xl">{game.icon_key || '🎲'}</Text>
+                </View>
+              )}
+
+              <CardContent className="p-4">
+                {/* Title Row */}
+                <View className="flex flex-row items-center justify-between mb-2">
+                  <Text className="text-lg font-bold text-gray-900">{game.name}</Text>
+                  <View
+                    className="rounded-full px-3 py-1"
+                    style={{ backgroundColor: `${getStatusColor(game.status)}15` }}
+                  >
+                    <Text style={{ color: getStatusColor(game.status), fontSize: '12px' }}>
+                      {getStatusText(game.status)}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Tags */}
+                <View className="flex flex-row flex-wrap gap-2 mb-3">
+                  {game.type.map((t) => (
+                    <View
+                      key={t}
+                      className="rounded-full px-3 py-1"
+                      style={{ backgroundColor: '#f3f4f6' }}
+                    >
+                      <Text className="text-xs text-gray-600">{t}</Text>
                     </View>
+                  ))}
+                  {game.scene.map((s) => (
+                    <View
+                      key={s}
+                      className="rounded-full px-3 py-1"
+                      style={{ backgroundColor: '#ede9fe' }}
+                    >
+                      <Text className="text-xs text-violet-600">{s}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Info Row */}
+                <View className="flex flex-row items-center gap-3 mb-4">
+                  <Text className="text-xs text-gray-500">👥 {game.min_players}-{game.max_players}人</Text>
+                  <Text className="text-xs text-gray-300">|</Text>
+                  <Text className="text-xs text-gray-500">⏱ {game.min_duration || 30}-{game.max_duration || 60}分钟</Text>
+                  <Text className="text-xs text-gray-300">|</Text>
+                  <View
+                    className="rounded-full px-2 py-1"
+                    style={{ backgroundColor: `${getDifficultyColor(game.difficulty)}15` }}
+                  >
+                    <Text style={{ color: getDifficultyColor(game.difficulty), fontSize: '11px' }}>
+                      {getDifficultyText(game.difficulty)}
+                    </Text>
                   </View>
-                  <View className="flex flex-row gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => handleEditGame(game)}>
-                      <Text className="text-indigo-600 text-sm">编辑</Text>
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleDeleteGame(game)}>
-                      <Text className="text-red-600 text-sm">删除</Text>
-                    </Button>
-                  </View>
+                </View>
+
+                {/* Action Buttons */}
+                <View className="flex flex-row gap-2 pt-3 border-t border-gray-100">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => handleEditGame(game)}
+                  >
+                    <Text className="text-sm text-gray-700">编辑</Text>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => handleDeleteGame(game)}
+                  >
+                    <Text className="text-sm text-red-500">删除</Text>
+                  </Button>
                 </View>
               </CardContent>
             </Card>
@@ -427,15 +452,17 @@ const GamesAdminPage: FC = () => {
         {!loading && games.length === 0 && (
           <View className="flex flex-col items-center justify-center py-20">
             <Text className="text-4xl mb-3">🎲</Text>
-            <Text className="text-gray-500 text-sm">暂无桌游</Text>
+            <Text className="text-gray-400 text-sm">暂无桌游</Text>
           </View>
         )}
       </ScrollView>
 
+      {/* Edit Modal */}
       {showModal && (
         <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50">
           <View className="w-full bg-white h-full flex flex-col">
-            <View className="px-5 py-4 border-b border-gray-200 flex flex-row items-center justify-between">
+            {/* Modal Header */}
+            <View className="px-5 py-4 border-b border-gray-100 flex flex-row items-center justify-between">
               <Button size="sm" variant="ghost" onClick={() => setShowModal(false)}>
                 <Text className="text-gray-500">取消</Text>
               </Button>
@@ -447,8 +474,10 @@ const GamesAdminPage: FC = () => {
               </Button>
             </View>
 
+            {/* Modal Body */}
             <ScrollView className="flex-1 px-5 py-4" scrollY style={{ flex: 1, minHeight: 0 }}>
-              <View className="mb-4">
+              {/* Status */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">状态</Text>
                 <View className="flex flex-row gap-2">
                   {STATUS_OPTIONS.map((opt) => (
@@ -457,12 +486,12 @@ const GamesAdminPage: FC = () => {
                       className={`flex-1 rounded-xl p-3 border-2 cursor-pointer ${
                         formData.status === opt.value
                           ? 'border-indigo-600 bg-indigo-50'
-                          : 'border-gray-200 bg-gray-50 border border-gray-200'
+                          : 'border-gray-200 bg-gray-50'
                       }`}
                       onClick={() => setFormData(prev => ({ ...prev, status: opt.value }))}
                     >
                       <Text className={`block font-semibold text-sm ${
-                        formData.status === opt.value ? 'text-indigo-700' : 'text-slate-300'
+                        formData.status === opt.value ? 'text-indigo-700' : 'text-gray-700'
                       }`}
                       >
                         {opt.label}
@@ -473,7 +502,8 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Image */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">图片</Text>
                 <View className="flex flex-row items-center gap-4">
                   <View style={{ width: '80px', height: '80px', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
@@ -485,15 +515,16 @@ const GamesAdminPage: FC = () => {
                       </View>
                     )}
                   </View>
-                  <Button size="sm" onClick={handleChooseImage}>
-                    <Text className="text-sm">选择图片</Text>
+                  <Button size="sm" variant="outline" onClick={handleChooseImage}>
+                    <Text className="text-sm text-gray-700">选择图片</Text>
                   </Button>
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Emoji */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">备用emoji</Text>
-                <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                   <Input
                     className="w-full bg-transparent"
                     placeholder="输入emoji，如 🎲"
@@ -504,9 +535,10 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Name */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">桌游名称 *</Text>
-                <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                   <Input
                     className="w-full bg-transparent"
                     placeholder="请输入桌游名称"
@@ -516,13 +548,14 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Type */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">类型 *</Text>
                 <View className="flex flex-row flex-wrap gap-2">
                   {TYPE_OPTIONS.map((type) => (
                     <View
                       key={type}
-                      className={`rounded-full px-3 py-2 cursor-pointer ${
+                      className={`rounded-full px-4 py-2 cursor-pointer ${
                         formData.type.includes(type)
                           ? 'bg-indigo-600'
                           : 'bg-gray-100'
@@ -530,9 +563,7 @@ const GamesAdminPage: FC = () => {
                       onClick={() => toggleType(type)}
                     >
                       <Text className={`text-sm ${
-                        formData.type.includes(type)
-                          ? 'text-white'
-                          : 'text-slate-300'
+                        formData.type.includes(type) ? 'text-white' : 'text-gray-600'
                       }`}
                       >
                         {type}
@@ -542,23 +573,22 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Scene */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">场景</Text>
                 <View className="flex flex-row flex-wrap gap-2">
                   {SCENE_OPTIONS.map((scene) => (
                     <View
                       key={scene}
-                      className={`rounded-full px-3 py-2 cursor-pointer ${
+                      className={`rounded-full px-4 py-2 cursor-pointer ${
                         formData.scene.includes(scene)
-                          ? 'bg-purple-600'
+                          ? 'bg-violet-600'
                           : 'bg-gray-100'
                       }`}
                       onClick={() => toggleScene(scene)}
                     >
                       <Text className={`text-sm ${
-                        formData.scene.includes(scene)
-                          ? 'text-white'
-                          : 'text-slate-300'
+                        formData.scene.includes(scene) ? 'text-white' : 'text-gray-600'
                       }`}
                       >
                         {scene}
@@ -568,12 +598,13 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Players */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">游戏人数</Text>
                 <View className="flex flex-row items-center gap-4">
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最少</Text>
-                    <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                    <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                       <Input
                         className="w-full bg-transparent"
                         type="number"
@@ -582,10 +613,10 @@ const GamesAdminPage: FC = () => {
                       />
                     </View>
                   </View>
-                  <Text className="text-gray-500">-</Text>
+                  <Text className="text-gray-400">-</Text>
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最多</Text>
-                    <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                    <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                       <Input
                         className="w-full bg-transparent"
                         type="number"
@@ -597,12 +628,13 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Duration */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">游戏时长（分钟）</Text>
                 <View className="flex flex-row items-center gap-4">
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最短</Text>
-                    <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                    <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                       <Input
                         className="w-full bg-transparent"
                         type="number"
@@ -611,10 +643,10 @@ const GamesAdminPage: FC = () => {
                       />
                     </View>
                   </View>
-                  <Text className="text-gray-500">-</Text>
+                  <Text className="text-gray-400">-</Text>
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最长</Text>
-                    <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                    <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                       <Input
                         className="w-full bg-transparent"
                         type="number"
@@ -626,23 +658,22 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Difficulty */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">难度</Text>
                 <View className="flex flex-row flex-wrap gap-2">
                   {DIFFICULTY_OPTIONS.map((opt) => (
                     <View
                       key={opt.value}
-                      className={`rounded-full px-3 py-2 cursor-pointer ${
+                      className={`rounded-full px-4 py-2 cursor-pointer ${
                         formData.difficulty === opt.value
-                          ? 'bg-orange-600'
+                          ? 'bg-orange-500'
                           : 'bg-gray-100'
                       }`}
                       onClick={() => setFormData(prev => ({ ...prev, difficulty: opt.value }))}
                     >
                       <Text className={`text-sm ${
-                        formData.difficulty === opt.value
-                          ? 'text-white'
-                          : 'text-slate-300'
+                        formData.difficulty === opt.value ? 'text-white' : 'text-gray-600'
                       }`}
                       >
                         {opt.label}
@@ -652,9 +683,10 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Intro */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">简介</Text>
-                <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                   <Input
                     className="w-full bg-transparent"
                     placeholder="请输入桌游简介"
@@ -664,10 +696,11 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Beginner Tips */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">新手提示</Text>
-                  {/* eslint-disable-next-line no-restricted-syntax */}
-                <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                {/* eslint-disable-next-line no-restricted-syntax */}
+                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                   <TaroTextarea
                     autoHeight
                     className="w-full bg-transparent"
@@ -678,10 +711,12 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
-                  {/* eslint-disable-next-line no-restricted-syntax */}
+              {/* Rules */}
+              <View className="mb-5">
+                {/* eslint-disable-next-line no-restricted-syntax */}
                 <Text className="block text-sm font-medium text-gray-700 mb-2">游戏规则</Text>
-                <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
+                  {/* eslint-disable-next-line no-restricted-syntax */}
                   <TaroTextarea
                     className="w-full bg-transparent"
                     autoHeight
@@ -692,9 +727,10 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              <View className="mb-4">
+              {/* Sort Order */}
+              <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">排序</Text>
-                <View className="bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                   <Input
                     className="w-full bg-transparent"
                     type="number"
