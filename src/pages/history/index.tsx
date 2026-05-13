@@ -119,8 +119,11 @@ const HistoryPage: FC = () => {
               const statusInfo = STATUS_MAP[session.status] || { label: session.status, color: '#9ca3af', bg: '#f3f4f6' }
               const playerList: PlayerInfo[] = Array.isArray(session.players) ? session.players : []
               const scores = Array.isArray(session.scoring_snapshot) ? session.scoring_snapshot : []
+              const handleSessionClick = () => {
+                Taro.navigateTo({ url: `/pages/session-detail/index?id=${session.id}` })
+              }
               return (
-                <Card key={session.id} className="border-0 shadow-sm">
+                <Card key={session.id} className="border-0 shadow-sm" onClick={handleSessionClick}>
                   <CardContent className="p-4">
                     {/* 头部 */}
                     <View className="flex flex-row items-center justify-between mb-3">
