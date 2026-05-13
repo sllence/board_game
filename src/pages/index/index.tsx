@@ -5,6 +5,7 @@ import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Clock, Dices, Layers, Shuffle, Calculator, ArrowRight, Sparkles } from 'lucide-react-taro'
+import { requireLogin } from '@/utils/auth'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -167,7 +168,7 @@ const IndexPage: FC = () => {
           <Text className="block text-base font-semibold text-[#1e1b4b]">最近对局</Text>
           <View
             className="flex flex-row items-center gap-1 cursor-pointer"
-            onClick={() => Taro.switchTab({ url: '/pages/history/index' })}
+            onClick={() => requireLogin(() => Taro.switchTab({ url: '/pages/history/index' }))}
           >
             <Text className="text-xs text-primary">查看全部</Text>
             <ArrowRight size={12} color="#4F46E5" />
@@ -180,7 +181,7 @@ const IndexPage: FC = () => {
                 <Clock size={24} color="#9ca3af" />
               </View>
               <Text className="block text-sm text-gray-400 mb-3">还没有对局记录</Text>
-              <Button size="sm" className="rounded-full" onClick={() => Taro.switchTab({ url: '/pages/games/index' })}>
+              <Button size="sm" className="rounded-full" onClick={() => requireLogin(() => Taro.switchTab({ url: '/pages/games/index' }))}>
                 <Text className="text-white text-xs">开始第一局</Text>
               </Button>
             </CardContent>

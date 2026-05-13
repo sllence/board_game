@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { Users, Clock, Star, BookOpen, Lightbulb, Play, Heart, Volume2, ChevronRight } from 'lucide-react-taro'
+import { requireLogin } from '@/utils/auth'
 import type { FC } from 'react'
 
 interface Section {
@@ -88,7 +89,9 @@ const RuleDetailPage: FC = () => {
 
   const startSession = () => {
     if (!game) return
-    Taro.navigateTo({ url: `/pages/navigator/index?gameId=${game.id}` })
+    requireLogin(() => {
+      Taro.navigateTo({ url: `/pages/navigator/index?gameId=${game.id}` })
+    })
   }
 
   const goToGuide = (guideId: number) => {

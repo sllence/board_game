@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
+import { checkLogin } from '@/utils/auth'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -60,6 +61,23 @@ const NavigatorPage: FC = () => {
   const [scoringStep, setScoringStep] = useState(1)
 
   useEffect(() => {
+    if (!checkLogin()) {
+      Taro.showModal({
+        title: '需要登录',
+        content: '请先登录后再开始对局',
+        confirmText: '去登录',
+        cancelText: '返回',
+        showCancel: true,
+        success: (res) => {
+          if (res.confirm) {
+            Taro.switchTab({ url: '/pages/profile/index' })
+          } else {
+            Taro.navigateBack()
+          }
+        }
+      })
+      return
+    }
     const instance = Taro.getCurrentInstance()
     const gameId = instance?.router?.params?.gameId
     if (gameId) {

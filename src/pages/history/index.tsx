@@ -1,8 +1,10 @@
 import { View, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Clock, History, Trophy } from 'lucide-react-taro'
+import { checkLogin } from '@/utils/auth'
 import type { FC } from 'react'
 
 interface PlayerInfo {
@@ -33,6 +35,23 @@ const HistoryPage: FC = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!checkLogin()) {
+      Taro.showModal({
+        title: '需要登录',
+        content: '请先登录后再查看对局历史',
+        confirmText: '去登录',
+        cancelText: '返回',
+        showCancel: true,
+        success: (res) => {
+          if (res.confirm) {
+            Taro.switchTab({ url: '/pages/profile/index' })
+          } else {
+            Taro.switchTab({ url: '/pages/index/index' })
+          }
+        }
+      })
+      return
+    }
     fetchSessions()
   }, [])
 
