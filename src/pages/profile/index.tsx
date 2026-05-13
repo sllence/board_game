@@ -21,6 +21,7 @@ const ProfilePage: FC = () => {
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null)
   const [tempNickname, setTempNickname] = useState<string | null>(null)
   const [showProfileSetup, setShowProfileSetup] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
 
   const isMiniApp = [Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv() as any)
 
@@ -176,6 +177,84 @@ const ProfilePage: FC = () => {
     Taro.showToast({ title: '登录成功', icon: 'success' })
   }
 
+  const handleOpenEditProfile = () => {
+    setTempAvatarUrl(userInfo?.avatar_url || null)
+    setTempNickname(userInfo?.nickname || '')
+    setShowEditProfile(true)
+  }
+
+  const handleSaveEditProfile = async () => {
+    if (!tempNickname) {
+      Taro.showToast({ title: '请输入昵称', icon: 'none' })
+      return
+    }
+
+    setIsLoggingIn(true)
+    try {
+      let avatarUrl = userInfo?.avatar_url || ''
+
+      // 如果选择了新头像，先上传头像
+      if (tempAvatarUrl && tempAvatarUrl !== userInfo?.avatar_url) {
+        try {
+          console.log('[uploadAvatar] uploading new avatar...')
+          const uploadRes = await Network.uploadFile({
+            url: '/api/user/avatar',
+            filePath: tempAvatarUrl,
+            name: 'file',
+            formData: {
+              user_id: String(userInfo?.id)
+            }
+          }) as any
+          console.log('[uploadAvatar] response:', uploadRes)
+          
+          let uploadData
+          if (typeof uploadRes.data === 'string') {
+            uploadData = JSON.parse(uploadRes.data)
+          } else if (uploadRes.data && typeof uploadRes.data === 'object') {
+            uploadData = uploadRes.data
+          } else {
+            uploadData = uploadRes
+          }
+          
+          avatarUrl = uploadData.data?.avatar_url || uploadData.data?.url || uploadData.avatar_url || uploadData.url || ''
+          console.log('[uploadAvatar] got new avatarUrl:', avatarUrl)
+        } catch (uploadErr) {
+          console.error('[uploadAvatar] upload failed:', uploadErr)
+          avatarUrl = userInfo?.avatar_url || ''
+        }
+      }
+
+      // 更新用户信息
+      console.log('[updateProfile] updating profile...')
+      await Network.request({
+        url: '/api/user/profile',
+        method: 'PUT',
+        data: { 
+          user_id: userInfo?.id,
+          nickname: tempNickname,
+          ...(avatarUrl ? { avatar_url: avatarUrl } : {})
+        }
+      })
+
+      const updatedUser = {
+        ...userInfo!,
+        nickname: tempNickname,
+        avatar_url: avatarUrl
+      }
+      setUserInfo(updatedUser)
+      Taro.setStorageSync('userInfo', JSON.stringify(updatedUser))
+      setShowEditProfile(false)
+      setTempAvatarUrl(null)
+      setTempNickname(null)
+      Taro.showToast({ title: '保存成功', icon: 'success' })
+    } catch (err) {
+      console.error('[handleSaveEditProfile] save failed:', err)
+      Taro.showToast({ title: '保存失败', icon: 'none' })
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
+
   const MENU_ITEMS = [
     { emoji: '❤️', name: '我的收藏', desc: '收藏的桌游和攻略', soon: true },
     { emoji: '⚙️', name: '设置', desc: '主题、通知等偏好', soon: true },
@@ -225,18 +304,28 @@ const ProfilePage: FC = () => {
           <View className="flex-1">
             <Text className="block text-lg font-bold text-white">{userInfo?.nickname || '桌游玩家'}</Text>
           </View>
-          <Button
-            size="sm"
-            onClick={() => {
-              setUserInfo(null)
-              Taro.removeStorageSync('userInfo')
-              Taro.showToast({ title: '已退出', icon: 'success' })
-            }}
-            className="border-0"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-          >
-            <Text className="text-white text-xs">退出</Text>
-          </Button>
+          <View className="flex flex-row gap-2">
+            <Button
+              size="sm"
+              onClick={handleOpenEditProfile}
+              className="border-0"
+              style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+            >
+              <Text className="text-white text-xs">编辑</Text>
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                setUserInfo(null)
+                Taro.removeStorageSync('userInfo')
+                Taro.showToast({ title: '已退出', icon: 'success' })
+              }}
+              className="border-0"
+              style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+            >
+              <Text className="text-white text-xs">退出</Text>
+            </Button>
+          </View>
         </View>
       </View>
 
@@ -379,6 +468,90 @@ const ProfilePage: FC = () => {
                 size="lg"
                 className="flex-1"
                 onClick={handleConfirmProfile}
+                disabled={isLoggingIn}
+              >
+                <Text>{isLoggingIn ? '保存中...' : '保存'}</Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* 编辑用户信息弹窗 */}
+      {showEditProfile && (
+        <View className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
+            <Text className="block text-lg font-bold text-gray-900 mb-2">编辑个人信息</Text>
+            <View className="flex flex-col items-center mb-6">
+              {isMiniApp ? (
+                <TaroButton
+                  openType="chooseAvatar"
+                  onChooseAvatar={handleChooseAvatar}
+                  className="border-0 p-0 bg-transparent w-auto h-auto"
+                >
+                  <View 
+                    className="flex items-center justify-center relative"
+                    style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
+                  >
+                    {tempAvatarUrl ? (
+                      <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                    ) : (
+                      <Text className="text-2xl">🎮</Text>
+                    )}
+                    <View 
+                      className="absolute bottom-0 left-0 right-0 flex items-center justify-center"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.5)', height: '24px' }}
+                    >
+                      <Text className="text-white text-xs">点击更换</Text>
+                    </View>
+                  </View>
+                </TaroButton>
+              ) : (
+                <View 
+                  className="flex items-center justify-center"
+                  style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
+                >
+                  {tempAvatarUrl ? (
+                    <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                  ) : (
+                    <Text className="text-2xl">🎮</Text>
+                  )}
+                </View>
+              )}
+            </View>
+            <View className="mb-6">
+              <Text className="block text-sm font-medium text-gray-700 mb-2">昵称</Text>
+              {isMiniApp ? (
+                <TaroInput
+                  type="nickname"
+                  placeholder="请输入昵称"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl"
+                  onInput={handleNicknameInput}
+                  value={tempNickname || ''}
+                />
+              ) : (
+                <View className="w-full px-4 py-3 bg-gray-50 rounded-xl">
+                  <Text className="text-sm text-gray-400">请在小程序中设置</Text>
+                </View>
+              )}
+            </View>
+            <View className="flex flex-row gap-3">
+              <Button
+                variant="secondary"
+                size="lg"
+                className="flex-1"
+                onClick={() => {
+                  setShowEditProfile(false)
+                  setTempAvatarUrl(null)
+                  setTempNickname(null)
+                }}
+              >
+                <Text>取消</Text>
+              </Button>
+              <Button
+                size="lg"
+                className="flex-1"
+                onClick={handleSaveEditProfile}
                 disabled={isLoggingIn}
               >
                 <Text>{isLoggingIn ? '保存中...' : '保存'}</Text>
