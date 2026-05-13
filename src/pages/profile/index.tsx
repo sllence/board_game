@@ -1,10 +1,10 @@
-import { View, Text, Image, Input, Button as TaroButton } from '@tarojs/components' // eslint-disable-line no-restricted-syntax -- 微信小程序 chooseAvatar/openType 需要原生Button和Input
+import { View, Text, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ChevronRight, LogOut } from 'lucide-react-taro'
+import { LogOut } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface UserInfo {
@@ -19,9 +19,6 @@ interface UserInfo {
 const ProfilePage: FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
-  const [tempNickname, setTempNickname] = useState('')
-
-  const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
 
   useEffect(() => {
     const cached = Taro.getStorageSync('userInfo')
@@ -34,103 +31,39 @@ const ProfilePage: FC = () => {
     }
   }, [])
 
-  /** 微信小程序登录 - 仅用 Taro.login 获取 code，不调用已废弃的 getUserProfile */
-  const weappLogin = async (nickname?: string, avatarUrl?: string) => {
-    const loginRes = await Taro.login()
-    console.log('[ProfilePage] Taro.login code:', loginRes.code)
-
-    const res = await Network.request({
-      url: '/api/auth/login',
-      method: 'POST',
-      data: {
-        code: loginRes.code,
-        platform: 'weapp',
-        nickname: nickname || '微信用户',
-        avatar_url: avatarUrl || '',
-      },
-    })
-    console.log('[ProfilePage] login response:', res.data)
-    return res.data?.data
-  }
-
-  /** 抖音小程序登录 */
-  const ttLogin = async () => {
-    const loginRes = await Taro.login()
-    console.log('[ProfilePage] TT login code:', loginRes.code)
-
-    const res = await Network.request({
-      url: '/api/auth/login',
-      method: 'POST',
-      data: {
-        code: loginRes.code,
-        platform: 'tt',
-      },
-    })
-    console.log('[ProfilePage] login response:', res.data)
-    return res.data?.data
-  }
-
-  /** H5 开发环境登录 */
-  const h5Login = async () => {
-    const res = await Network.request({
-      url: '/api/auth/login',
-      method: 'POST',
-      data: {
-        code: 'dev_code',
-        platform: 'h5',
-      },
-    })
-    console.log('[ProfilePage] login response:', res.data)
-    return res.data?.data
-  }
-
-  /** 微信小程序：选择头像回调 */
-  const onChooseAvatar = (e) => {
-    const avatarUrl = e.detail.avatarUrl
-    console.log('[ProfilePage] chooseAvatar:', avatarUrl)
-    // 先登录获取用户信息，再更新头像
-    doLogin(avatarUrl)
-  }
-
-  /** 执行登录（可选传入头像URL） */
-  const doLogin = async (avatarUrl?: string) => {
+  /** 一键登录 */
+  const handleLogin = async () => {
     if (isLoggingIn) return
     setIsLoggingIn(true)
     try {
       let user: UserInfo | undefined
-      if (isWeapp) {
-        user = await weappLogin(tempNickname, avatarUrl)
-      } else if (Taro.getEnv() === Taro.ENV_TYPE.TT) {
-        user = await ttLogin()
-      } else {
-        user = await h5Login()
-      }
+      const env = Taro.getEnv()
 
-      if (user) {
-        setUserInfo(user)
-        Taro.setStorageSync('userInfo', JSON.stringify(user))
-        Taro.showToast({ title: '登录成功', icon: 'success' })
-      } else {
-        Taro.showToast({ title: '登录失败', icon: 'none' })
-      }
-    } catch (err) {
-      console.error('[ProfilePage] login error:', err)
-      Taro.showToast({ title: '登录失败，请重试', icon: 'none' })
-    } finally {
-      setIsLoggingIn(false)
-    }
-  }
+      if (env === Taro.ENV_TYPE.WEAPP || env === Taro.ENV_TYPE.TT) {
+        // 微信/抖音小程序：Taro.login 获取 code
+        const loginRes = await Taro.login()
+        console.log('[ProfilePage] Taro.login code:', loginRes.code)
 
-  /** H5/抖音端简单登录（无需头像选择） */
-  const simpleLogin = async () => {
-    if (isLoggingIn) return
-    setIsLoggingIn(true)
-    try {
-      let user: UserInfo | undefined
-      if (Taro.getEnv() === Taro.ENV_TYPE.TT) {
-        user = await ttLogin()
+        const res = await Network.request({
+          url: '/api/auth/login',
+          method: 'POST',
+          data: {
+            code: loginRes.code,
+            platform: env === Taro.ENV_TYPE.WEAPP ? 'weapp' : 'tt',
+            nickname: env === Taro.ENV_TYPE.WEAPP ? '微信用户' : '抖音用户',
+          },
+        })
+        console.log('[ProfilePage] login response:', res.data)
+        user = res.data?.data
       } else {
-        user = await h5Login()
+        // H5 开发环境
+        const res = await Network.request({
+          url: '/api/auth/login',
+          method: 'POST',
+          data: { code: 'dev_code', platform: 'h5' },
+        })
+        console.log('[ProfilePage] login response:', res.data)
+        user = res.data?.data
       }
 
       if (user) {
@@ -161,12 +94,6 @@ const ProfilePage: FC = () => {
         }
       },
     })
-  }
-
-  const formatTime = (seconds: number) => {
-    if (!seconds) return '0'
-    const h = Math.floor(seconds / 3600)
-    return `${h}`
   }
 
   const MENU_ITEMS = [
@@ -213,64 +140,23 @@ const ProfilePage: FC = () => {
         ) : (
           <View className="flex flex-col items-center">
             <View
-              className="w-16 h-16 rounded-full flex items-center justify-center mb-3"
+              className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
               style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
             >
-              <Text className="text-2xl">🎮</Text>
+              <Text className="text-3xl">🎮</Text>
             </View>
-            <Text className="block text-lg font-bold text-white mb-1">未登录</Text>
-            <Text className="block text-sm text-white mb-4" style={{ opacity: 0.7 }}>登录后同步对局记录</Text>
-
-            {/* 微信小程序：使用 open-type 选择头像 */}
-            {isWeapp ? (
-              <View className="flex flex-col items-center gap-3 w-full">
-                {/* 昵称输入 */}
-                <View
-                  className="w-full rounded-xl px-4 py-3"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-                >
-                  <Input
-                    style={{ width: '100%', fontSize: '14px', color: '#fff' }}
-                    placeholder="输入昵称（选填）"
-                    placeholderStyle="color: rgba(255,255,255,0.5)"
-                    value={tempNickname}
-                    onInput={(e) => setTempNickname(e.detail.value)}
-                  />
-                </View>
-                {/* 选择头像并登录按钮 */}
-                <TaroButton
-                  openType="chooseAvatar"
-                  onChooseAvatar={onChooseAvatar}
-                  className="w-full border-0 rounded-xl py-3"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.25)', fontSize: '14px' }}
-                >
-                  <Text className="text-white text-sm">😊 选择头像并登录</Text>
-                </TaroButton>
-                {/* 快捷登录（不选头像） */}
-                <Button
-                  onClick={() => doLogin()}
-                  className="w-full border-0 rounded-xl py-3"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
-                  disabled={isLoggingIn}
-                >
-                  <Text className="text-white text-sm" style={{ opacity: 0.8 }}>
-                    {isLoggingIn ? '登录中...' : '跳过，直接登录'}
-                  </Text>
-                </Button>
-              </View>
-            ) : (
-              /* H5/抖音：简单登录 */
-              <Button
-                onClick={simpleLogin}
-                disabled={isLoggingIn}
-                className="border-0 rounded-xl px-8 py-3"
-                style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
-              >
-                <Text className="text-white text-sm">
-                  {isLoggingIn ? '登录中...' : '一键登录'}
-                </Text>
-              </Button>
-            )}
+            <Text className="block text-xl font-bold text-white mb-1">桌游助手</Text>
+            <Text className="block text-sm text-white mb-6" style={{ opacity: 0.7 }}>登录后同步对局记录</Text>
+            <Button
+              onClick={handleLogin}
+              disabled={isLoggingIn}
+              className="border-0 rounded-full px-10 py-3"
+              style={{ backgroundColor: 'rgba(255,255,255,0.25)' }}
+            >
+              <Text className="text-white text-base font-medium">
+                {isLoggingIn ? '登录中...' : '一键登录'}
+              </Text>
+            </Button>
           </View>
         )}
       </View>
@@ -307,42 +193,41 @@ const ProfilePage: FC = () => {
                 >
                   <Text className="text-base">⏱️</Text>
                 </View>
-                <Text className="block text-lg font-bold text-[#1e1b4b]">{formatTime(userInfo.total_time)}</Text>
-                <Text className="block text-xs text-gray-400">小时</Text>
+                <Text className="block text-lg font-bold text-[#1e1b4b]">{userInfo.total_time ? Math.floor(userInfo.total_time / 3600) : 0}</Text>
+                <Text className="block text-xs text-gray-400">游戏时长(h)</Text>
               </View>
             </CardContent>
           </Card>
         </View>
       )}
 
-      {/* 功能列表 */}
-      <View className="px-4 pb-20">
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-0">
-            {MENU_ITEMS.map((item, idx) => (
-              <View
-                key={idx}
-                className="flex flex-row items-center px-4 py-4 cursor-pointer"
-                style={{ borderBottomWidth: idx < MENU_ITEMS.length - 1 ? 1 : 0, borderBottomColor: '#f3f4f6' }}
-                onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}
-              >
-                <View className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center mr-3">
-                  <Text className="text-base">{item.emoji}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="block text-sm font-medium text-[#1e1b4b]">{item.name}</Text>
-                  <Text className="block text-xs text-gray-400">{item.desc}</Text>
-                </View>
-                {item.soon && (
-                  <View className="mr-2 px-2 py-1 rounded" style={{ backgroundColor: 'rgba(99,102,241,0.1)' }}>
-                    <Text className="text-xs text-indigo-600">即将上线</Text>
-                  </View>
-                )}
-                <ChevronRight size={16} color="#d1d5db" />
+      {/* 菜单列表 */}
+      <View className="px-4">
+        {MENU_ITEMS.map((item) => (
+          <Card key={item.name} className="border-0 shadow-sm mb-3">
+            <CardContent className="flex flex-row items-center p-4">
+              <Text className="text-xl mr-3">{item.emoji}</Text>
+              <View className="flex-1">
+                <Text className="block text-sm font-medium text-gray-800">{item.name}</Text>
+                <Text className="block text-xs text-gray-400 mb-1">{item.desc}</Text>
               </View>
-            ))}
-          </CardContent>
-        </Card>
+              {item.soon && (
+                <View
+                  className="rounded-full px-2 py-1"
+                  style={{ backgroundColor: 'rgba(99,102,241,0.1)' }}
+                >
+                  <Text className="text-xs text-indigo-500">即将上线</Text>
+                </View>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </View>
+
+      {/* 版本信息 */}
+      <View className="flex-1" />
+      <View className="flex items-center pb-8 pt-4">
+        <Text className="block text-xs text-gray-300">桌游助手 v1.0.0</Text>
       </View>
     </View>
   )
