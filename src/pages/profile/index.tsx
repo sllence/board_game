@@ -47,7 +47,7 @@ const ProfilePage: FC = () => {
       const res = await Network.request({
         url: '/api/auth/login',
         method: 'POST',
-        data: { code, platform: 'wechat' }
+        data: { code, platform: 'weapp' }
       }) as any
 
       let user = res.data.data
