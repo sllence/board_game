@@ -23,8 +23,7 @@ interface BoardGame {
   difficulty: number
   intro?: string
   beginner_tips?: string
-  rules_description?: string
-  gameplay_description?: string
+  rules?: string
   sort_order?: number
   status?: string
 }
@@ -42,8 +41,7 @@ interface GameFormData {
   difficulty: number
   intro: string
   beginner_tips: string
-  rules_description: string
-  gameplay_description: string
+  rules: string
   sort_order: number
   status: string
 }
@@ -81,8 +79,7 @@ const GamesAdminPage: FC = () => {
     difficulty: 3,
     intro: '',
     beginner_tips: '',
-    rules_description: '',
-    gameplay_description: '',
+    rules: '',
     sort_order: 0,
     status: 'online'
   })
@@ -193,8 +190,7 @@ const GamesAdminPage: FC = () => {
         difficulty: fullGame.difficulty || 3,
         intro: fullGame.intro || '',
         beginner_tips: fullGame.beginner_tips || '',
-        rules_description: fullGame.rules_description || '',
-        gameplay_description: fullGame.gameplay_description || '',
+        rules: fullGame.rules || '',
         sort_order: fullGame.sort_order || 0,
         status: fullGame.status || 'online'
       })
@@ -222,8 +218,7 @@ const GamesAdminPage: FC = () => {
       difficulty: 3,
       intro: '',
       beginner_tips: '',
-      rules_description: '',
-      gameplay_description: '',
+      rules: '',
       sort_order: 0,
       status: 'online'
     })
@@ -680,25 +675,13 @@ const GamesAdminPage: FC = () => {
               </View>
 
               <View className="mb-4">
-                <Text className="block text-sm font-medium text-gray-700 mb-2">规则描述</Text>
+                <Text className="block text-sm font-medium text-gray-700 mb-2">游戏规则</Text>
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
                   <Textarea
                     className="w-full bg-transparent"
-                    placeholder="请输入桌游规则"
-                    value={formData.rules_description}
-                    onInput={(e) => setFormData(prev => ({ ...prev, rules_description: e.detail.value }))}
-                  />
-                </View>
-              </View>
-
-              <View className="mb-4">
-                <Text className="block text-sm font-medium text-gray-700 mb-2">玩法描述</Text>
-                <View className="bg-gray-50 rounded-xl px-4 py-3">
-                  <Textarea
-                    className="w-full bg-transparent"
-                    placeholder="请输入桌游玩法"
-                    value={formData.gameplay_description}
-                    onInput={(e) => setFormData(prev => ({ ...prev, gameplay_description: e.detail.value }))}
+                    placeholder="请输入游戏规则（支持换行）"
+                    value={formData.rules}
+                    onInput={(e) => setFormData(prev => ({ ...prev, rules: e.detail.value }))}
                   />
                 </View>
               </View>
