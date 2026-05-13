@@ -666,6 +666,7 @@ const GamesAdminPage: FC = () => {
                 <Text className="block text-sm font-medium text-gray-700 mb-2">新手提示</Text>
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
                   <Textarea
+                    autoHeight
                     className="w-full bg-transparent"
                     placeholder="请输入新手提示"
                     value={formData.beginner_tips}
@@ -679,6 +680,7 @@ const GamesAdminPage: FC = () => {
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
                   <Textarea
                     className="w-full bg-transparent"
+                    autoHeight
                     placeholder="请输入游戏规则（支持换行）"
                     value={formData.rules}
                     onInput={(e) => setFormData(prev => ({ ...prev, rules: e.detail.value }))}
