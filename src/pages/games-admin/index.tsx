@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import { Network } from '@/network'
 import type { FC } from 'react'
@@ -22,6 +23,8 @@ interface BoardGame {
   difficulty: number
   intro?: string
   beginner_tips?: string
+  rules_description?: string
+  gameplay_description?: string
   sort_order?: number
   status?: string
 }
@@ -39,6 +42,8 @@ interface GameFormData {
   difficulty: number
   intro: string
   beginner_tips: string
+  rules_description: string
+  gameplay_description: string
   sort_order: number
   status: string
 }
@@ -76,6 +81,8 @@ const GamesAdminPage: FC = () => {
     difficulty: 3,
     intro: '',
     beginner_tips: '',
+    rules_description: '',
+    gameplay_description: '',
     sort_order: 0,
     status: 'online'
   })
@@ -178,6 +185,8 @@ const GamesAdminPage: FC = () => {
       difficulty: game.difficulty || 3,
       intro: game.intro || '',
       beginner_tips: game.beginner_tips || '',
+      rules_description: game.rules_description || '',
+      gameplay_description: game.gameplay_description || '',
       sort_order: game.sort_order || 0,
       status: game.status || 'online'
     })
@@ -199,6 +208,8 @@ const GamesAdminPage: FC = () => {
       difficulty: 3,
       intro: '',
       beginner_tips: '',
+      rules_description: '',
+      gameplay_description: '',
       sort_order: 0,
       status: 'online'
     })
@@ -638,6 +649,30 @@ const GamesAdminPage: FC = () => {
                     placeholder="请输入桌游简介"
                     value={formData.intro}
                     onInput={(e) => setFormData(prev => ({ ...prev, intro: e.detail.value }))}
+                  />
+                </View>
+              </View>
+
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">规则描述</Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Textarea
+                    className="w-full bg-transparent"
+                    placeholder="请输入桌游规则"
+                    value={formData.rules_description}
+                    onInput={(e) => setFormData(prev => ({ ...prev, rules_description: e.detail.value }))}
+                  />
+                </View>
+              </View>
+
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">玩法描述</Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Textarea
+                    className="w-full bg-transparent"
+                    placeholder="请输入桌游玩法"
+                    value={formData.gameplay_description}
+                    onInput={(e) => setFormData(prev => ({ ...prev, gameplay_description: e.detail.value }))}
                   />
                 </View>
               </View>
