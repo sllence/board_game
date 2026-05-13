@@ -124,7 +124,7 @@ export class AuthService {
     const newUserData: any = {
       [openidField]: openid,
       platform,
-      nickname: nickname || `玩家${Date.now().toString().slice(-4)}`,
+      nickname: nickname || (platform === 'weapp' ? '微信用户' : platform === 'tt' ? '抖音用户' : `玩家${Date.now().toString().slice(-4)}`),
     }
     if (avatar_url) newUserData.avatar_url = avatar_url
 

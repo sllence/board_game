@@ -45,7 +45,7 @@ const ProfilePage: FC = () => {
       data: {
         code: loginRes.code,
         platform: 'weapp',
-        nickname: nickname || '',
+        nickname: nickname || '微信用户',
         avatar_url: avatarUrl || '',
       },
     })
@@ -197,7 +197,6 @@ const ProfilePage: FC = () => {
             )}
             <View className="flex-1">
               <Text className="block text-lg font-bold text-white">{userInfo.nickname || '桌游玩家'}</Text>
-              <Text className="block text-sm text-white mt-1" style={{ opacity: 0.7 }}>ID: {userInfo.id}</Text>
             </View>
             <Button
               size="sm"
