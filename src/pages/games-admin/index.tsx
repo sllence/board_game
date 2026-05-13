@@ -390,15 +390,6 @@ const GamesAdminPage: FC = () => {
 
                 {/* Tags */}
                 <View className="flex flex-row flex-wrap gap-2 mb-3">
-                  {game.type.map((t) => (
-                    <View
-                      key={t}
-                      className="rounded-full px-3 py-1"
-                      style={{ backgroundColor: '#f3f4f6' }}
-                    >
-                      <Text className="text-xs text-gray-600">{t}</Text>
-                    </View>
-                  ))}
                   {game.scene.map((s) => (
                     <View
                       key={s}
