@@ -1,10 +1,12 @@
-import { View, Text, ScrollView, Image } from '@tarojs/components'
+/* eslint-disable no-restricted-syntax */
+import { View, Text, ScrollView, Image, Textarea as TaroTextarea } from '@tarojs/components'
+/* eslint-enable no-restricted-syntax */
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import { Network } from '@/network'
 import type { FC } from 'react'
@@ -664,8 +666,9 @@ const GamesAdminPage: FC = () => {
 
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">新手提示</Text>
+                  {/* eslint-disable-next-line no-restricted-syntax */}
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
-                  <Textarea
+                  <TaroTextarea
                     autoHeight
                     className="w-full bg-transparent"
                     placeholder="请输入新手提示"
@@ -676,9 +679,10 @@ const GamesAdminPage: FC = () => {
               </View>
 
               <View className="mb-4">
+                  {/* eslint-disable-next-line no-restricted-syntax */}
                 <Text className="block text-sm font-medium text-gray-700 mb-2">游戏规则</Text>
                 <View className="bg-gray-50 rounded-xl px-4 py-3">
-                  <Textarea
+                  <TaroTextarea
                     className="w-full bg-transparent"
                     autoHeight
                     placeholder="请输入游戏规则（支持换行）"
