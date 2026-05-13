@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import { Network } from '@/network'
 import type { FC } from 'react'
@@ -10,21 +11,61 @@ import type { FC } from 'react'
 interface BoardGame {
   id: number
   name: string
-  emoji: string
+  emoji?: string
+  icon_key?: string
   type: string[]
   scene: string[]
   min_players: number
   max_players: number
   duration: number
   difficulty: number
+  intro?: string
+  sort_order?: number
 }
+
+interface GameFormData {
+  name: string
+  icon_key: string
+  type: string[]
+  scene: string[]
+  min_players: number
+  max_players: number
+  duration: number
+  difficulty: number
+  intro: string
+  sort_order: number
+}
+
+const TYPE_OPTIONS = ['策略', '益智', '拍卖', '扮演', '经营', '合作', '对抗']
+const SCENE_OPTIONS = ['聚会', '团建', '亲子', '情侣', '酒局']
+const DIFFICULTY_OPTIONS = [
+  { value: 1, label: '入门' },
+  { value: 2, label: '简单' },
+  { value: 3, label: '中等' },
+  { value: 4, label: '困难' },
+  { value: 5, label: '专家' }
+]
 
 const GamesAdminPage: FC = () => {
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [editingGame, setEditingGame] = useState<BoardGame | null>(null)
+  const [formData, setFormData] = useState<GameFormData>({
+    name: '',
+    icon_key: '🎲',
+    type: [],
+    scene: [],
+    min_players: 2,
+    max_players: 4,
+    duration: 30,
+    difficulty: 3,
+    intro: '',
+    sort_order: 0
+  })
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    // 检查登录和管理员权限
     if (!checkLogin()) {
       Taro.showModal({
         title: '需要登录',
@@ -76,12 +117,122 @@ const GamesAdminPage: FC = () => {
     }
   }
 
-  const handleEditGame = (_game: BoardGame) => {
-    Taro.showToast({ title: '编辑功能开发中', icon: 'none' })
+  const handleEditGame = (game: BoardGame) => {
+    setEditingGame(game)
+    setFormData({
+      name: game.name || '',
+      icon_key: game.icon_key || '🎲',
+      type: game.type || [],
+      scene: game.scene || [],
+      min_players: game.min_players || 2,
+      max_players: game.max_players || 4,
+      duration: game.duration || 30,
+      difficulty: game.difficulty || 3,
+      intro: game.intro || '',
+      sort_order: game.sort_order || 0
+    })
+    setShowModal(true)
   }
 
   const handleAddGame = () => {
-    Taro.showToast({ title: '添加功能开发中', icon: 'none' })
+    setEditingGame(null)
+    setFormData({
+      name: '',
+      icon_key: '🎲',
+      type: [],
+      scene: [],
+      min_players: 2,
+      max_players: 4,
+      duration: 30,
+      difficulty: 3,
+      intro: '',
+      sort_order: 0
+    })
+    setShowModal(true)
+  }
+
+  const handleDeleteGame = (game: BoardGame) => {
+    Taro.showModal({
+      title: '确认删除',
+      content: `确定要删除桌游「${game.name}」吗？`,
+      confirmText: '删除',
+      cancelText: '取消',
+      confirmColor: '#ef4444',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await Network.request({
+              url: `/api/games/${game.id}`,
+              method: 'DELETE'
+            })
+            Taro.showToast({ title: '删除成功', icon: 'success' })
+            loadGames()
+          } catch (err) {
+            console.error('[deleteGame] failed:', err)
+            Taro.showToast({ title: '删除失败', icon: 'none' })
+          }
+        }
+      }
+    })
+  }
+
+  const handleSaveGame = async () => {
+    if (!formData.name.trim()) {
+      Taro.showToast({ title: '请输入桌游名称', icon: 'none' })
+      return
+    }
+    if (formData.type.length === 0) {
+      Taro.showToast({ title: '请至少选择一个类型', icon: 'none' })
+      return
+    }
+    if (formData.min_players > formData.max_players) {
+      Taro.showToast({ title: '最少人数不能大于最多人数', icon: 'none' })
+      return
+    }
+
+    try {
+      setSaving(true)
+      if (editingGame) {
+        await Network.request({
+          url: `/api/games/${editingGame.id}`,
+          method: 'PUT',
+          data: formData
+        })
+        Taro.showToast({ title: '更新成功', icon: 'success' })
+      } else {
+        await Network.request({
+          url: '/api/games',
+          method: 'POST',
+          data: { ...formData, is_active: true }
+        })
+        Taro.showToast({ title: '创建成功', icon: 'success' })
+      }
+      setShowModal(false)
+      loadGames()
+    } catch (err) {
+      console.error('[saveGame] failed:', err)
+      Taro.showToast({ title: '保存失败', icon: 'none' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const toggleType = (type: string) => {
+    setFormData(prev => ({
+      ...prev,
+      type: prev.type.includes(type)
+        ? prev.type.filter(t => t !== type)
+        : [...prev.type, type]
+    }))
+  }
+
+  const toggleScene = (scene: string) => {
+    setFormData(prev => ({
+      ...prev,
+      scene: prev.scene.includes(scene)
+        ? prev.scene.filter(s => s !== scene)
+        : [...prev.scene, scene]
+    }))
   }
 
   const getDifficultyText = (difficulty: number): string => {
@@ -125,7 +276,7 @@ const GamesAdminPage: FC = () => {
               <CardContent className="p-4">
                 <View className="flex flex-row items-start justify-between">
                   <View className="flex flex-row items-start gap-3 flex-1">
-                    <Text className="text-3xl">{game.emoji}</Text>
+                    <Text className="text-3xl">{game.icon_key || game.emoji || '🎲'}</Text>
                     <View className="flex-1">
                       <Text className="block font-semibold text-gray-900 mb-1">{game.name}</Text>
                       <View className="flex flex-row flex-wrap gap-1 mb-2">
@@ -156,9 +307,14 @@ const GamesAdminPage: FC = () => {
                       </View>
                     </View>
                   </View>
-                  <Button size="sm" variant="ghost" onClick={() => handleEditGame(game)}>
-                    <Text className="text-indigo-600 text-sm">编辑</Text>
-                  </Button>
+                  <View className="flex flex-row gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => handleEditGame(game)}>
+                      <Text className="text-indigo-600 text-sm">编辑</Text>
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDeleteGame(game)}>
+                      <Text className="text-red-600 text-sm">删除</Text>
+                    </Button>
+                  </View>
                 </View>
               </CardContent>
             </Card>
@@ -171,6 +327,206 @@ const GamesAdminPage: FC = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* 编辑/添加弹窗 */}
+      {showModal && (
+        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
+          <View className="w-full bg-white rounded-t-2xl max-h-[85vh]">
+            {/* 弹窗顶部 */}
+            <View className="px-5 py-4 border-b border-gray-100 flex flex-row items-center justify-between">
+              <Button size="sm" variant="ghost" onClick={() => setShowModal(false)}>
+                <Text className="text-gray-500">取消</Text>
+              </Button>
+              <Text className="font-semibold text-gray-900">
+                {editingGame ? '编辑桌游' : '添加桌游'}
+              </Text>
+              <Button size="sm" onClick={handleSaveGame} disabled={saving}>
+                <Text className="text-sm">{saving ? '保存中...' : '保存'}</Text>
+              </Button>
+            </View>
+
+            {/* 弹窗内容 */}
+            <ScrollView className="px-5 py-4 max-h-[70vh]" scrollY>
+              {/* 图标 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">图标</Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Input
+                    className="w-full bg-transparent"
+                    placeholder="输入emoji，如 🎲"
+                    value={formData.icon_key}
+                    onInput={(e) => setFormData(prev => ({ ...prev, icon_key: e.detail.value }))}
+                    maxlength={2}
+                  />
+                </View>
+              </View>
+
+              {/* 名称 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">桌游名称 *</Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Input
+                    className="w-full bg-transparent"
+                    placeholder="请输入桌游名称"
+                    value={formData.name}
+                    onInput={(e) => setFormData(prev => ({ ...prev, name: e.detail.value }))}
+                  />
+                </View>
+              </View>
+
+              {/* 类型 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">类型 *</Text>
+                <View className="flex flex-row flex-wrap gap-2">
+                  {TYPE_OPTIONS.map((type) => (
+                    <View
+                      key={type}
+                      className={`rounded-full px-3 py-2 cursor-pointer ${
+                        formData.type.includes(type)
+                          ? 'bg-indigo-600'
+                          : 'bg-gray-100'
+                      }`}
+                      onClick={() => toggleType(type)}
+                    >
+                      <Text className={`text-sm ${
+                        formData.type.includes(type)
+                          ? 'text-white'
+                          : 'text-gray-700'
+                      }`}
+                      >
+                        {type}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* 场景 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">场景</Text>
+                <View className="flex flex-row flex-wrap gap-2">
+                  {SCENE_OPTIONS.map((scene) => (
+                    <View
+                      key={scene}
+                      className={`rounded-full px-3 py-2 cursor-pointer ${
+                        formData.scene.includes(scene)
+                          ? 'bg-purple-600'
+                          : 'bg-gray-100'
+                      }`}
+                      onClick={() => toggleScene(scene)}
+                    >
+                      <Text className={`text-sm ${
+                        formData.scene.includes(scene)
+                          ? 'text-white'
+                          : 'text-gray-700'
+                      }`}
+                      >
+                        {scene}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* 人数 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">游戏人数</Text>
+                <View className="flex flex-row items-center gap-4">
+                  <View className="flex-1">
+                    <Text className="block text-xs text-gray-500 mb-1">最少</Text>
+                    <View className="bg-gray-50 rounded-xl px-4 py-3">
+                      <Input
+                        className="w-full bg-transparent"
+                        type="number"
+                        value={String(formData.min_players)}
+                        onInput={(e) => setFormData(prev => ({ ...prev, min_players: Number(e.detail.value) }))}
+                      />
+                    </View>
+                  </View>
+                  <Text className="text-gray-400">-</Text>
+                  <View className="flex-1">
+                    <Text className="block text-xs text-gray-500 mb-1">最多</Text>
+                    <View className="bg-gray-50 rounded-xl px-4 py-3">
+                      <Input
+                        className="w-full bg-transparent"
+                        type="number"
+                        value={String(formData.max_players)}
+                        onInput={(e) => setFormData(prev => ({ ...prev, max_players: Number(e.detail.value) }))}
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* 时长 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">游戏时长（分钟）</Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Input
+                    className="w-full bg-transparent"
+                    type="number"
+                    value={String(formData.duration)}
+                    onInput={(e) => setFormData(prev => ({ ...prev, duration: Number(e.detail.value) }))}
+                  />
+                </View>
+              </View>
+
+              {/* 难度 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">难度</Text>
+                <View className="flex flex-row flex-wrap gap-2">
+                  {DIFFICULTY_OPTIONS.map((opt) => (
+                    <View
+                      key={opt.value}
+                      className={`rounded-full px-3 py-2 cursor-pointer ${
+                        formData.difficulty === opt.value
+                          ? 'bg-orange-600'
+                          : 'bg-gray-100'
+                      }`}
+                      onClick={() => setFormData(prev => ({ ...prev, difficulty: opt.value }))}
+                    >
+                      <Text className={`text-sm ${
+                        formData.difficulty === opt.value
+                          ? 'text-white'
+                          : 'text-gray-700'
+                      }`}
+                      >
+                        {opt.label}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* 简介 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">简介</Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Input
+                    className="w-full bg-transparent"
+                    placeholder="请输入桌游简介"
+                    value={formData.intro}
+                    onInput={(e) => setFormData(prev => ({ ...prev, intro: e.detail.value }))}
+                  />
+                </View>
+              </View>
+
+              {/* 排序 */}
+              <View className="mb-4">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">排序</Text>
+                <View className="bg-gray-50 rounded-xl px-4 py-3">
+                  <Input
+                    className="w-full bg-transparent"
+                    type="number"
+                    value={String(formData.sort_order)}
+                    onInput={(e) => setFormData(prev => ({ ...prev, sort_order: Number(e.detail.value) }))}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </View>
   )
 }

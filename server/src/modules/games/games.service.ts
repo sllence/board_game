@@ -60,4 +60,37 @@ export class GamesService {
     if (error) throw new Error(`查询桌游详情失败: ${error.message}`)
     return { data }
   }
+
+  async create(gameData: any) {
+    const client = getSupabaseClient()
+    const { data, error } = await client
+      .from('board_games')
+      .insert([gameData])
+      .select()
+      .single()
+    if (error) throw new Error(`创建桌游失败: ${error.message}`)
+    return { data }
+  }
+
+  async update(id: number, gameData: any) {
+    const client = getSupabaseClient()
+    const { data, error } = await client
+      .from('board_games')
+      .update(gameData)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw new Error(`更新桌游失败: ${error.message}`)
+    return { data }
+  }
+
+  async delete(id: number) {
+    const client = getSupabaseClient()
+    const { error } = await client
+      .from('board_games')
+      .update({ is_active: false })
+      .eq('id', id)
+    if (error) throw new Error(`删除桌游失败: ${error.message}`)
+    return { success: true }
+  }
 }
