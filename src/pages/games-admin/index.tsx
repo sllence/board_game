@@ -431,8 +431,8 @@ const GamesAdminPage: FC = () => {
       </ScrollView>
 
       {showModal && (
-        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
-          <View className="w-full bg-white rounded-t-2xl max-h-[85vh]">
+        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50">
+          <View className="w-full bg-white h-full">
             <View className="px-5 py-4 border-b border-gray-100 flex flex-row items-center justify-between">
               <Button size="sm" variant="ghost" onClick={() => setShowModal(false)}>
                 <Text className="text-gray-500">取消</Text>
@@ -445,7 +445,7 @@ const GamesAdminPage: FC = () => {
               </Button>
             </View>
 
-            <ScrollView className="px-5 py-4 max-h-[70vh]" scrollY>
+            <ScrollView className="px-5 py-4 " scrollY>
               <View className="mb-4">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">状态</Text>
                 <View className="flex flex-row gap-2">
