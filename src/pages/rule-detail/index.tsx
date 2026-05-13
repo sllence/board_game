@@ -1,4 +1,4 @@
-import { View, Text, RichText } from '@tarojs/components'
+import { View, Text, RichText, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
@@ -32,6 +32,7 @@ interface BoardGameDetail {
   tips?: string[]
   beginner_tips?: string
   rules?: string
+  image_url?: string,
   scoring_config: Record<string, unknown>
 }
 
@@ -161,6 +162,16 @@ const RuleDetailPage: FC = () => {
           </View>
         </View>
       </View>
+
+      {game.image_url && (
+        <View className="px-4 -mt-4">
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-0">
+              <Image src={game.image_url} className="w-full h-48" mode="aspectFill" />
+            </CardContent>
+          </Card>
+        </View>
+      )}
 
       {/* 简介卡片 */}
       <View className="px-4 -mt-4">
