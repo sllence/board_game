@@ -3,7 +3,6 @@ import { View, Text, ScrollView, Image, Textarea as TaroTextarea } from '@tarojs
 /* eslint-enable no-restricted-syntax */
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -62,12 +61,20 @@ const DIFFICULTY_OPTIONS = [
   { value: 4, label: '困难' },
   { value: 5, label: '专家' }
 ]
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: '全部' },
+  { value: 'online', label: '上线' },
+  { value: 'preview', label: '预览' },
+  { value: 'offline', label: '下线' }
+]
 
 const GamesAdminPage: FC = () => {
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingGame, setEditingGame] = useState<BoardGame | null>(null)
+  const [searchText, setSearchText] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [formData, setFormData] = useState<GameFormData>({
     name: '',
     icon_key: '🎲',
@@ -315,17 +322,6 @@ const GamesAdminPage: FC = () => {
     }))
   }
 
-  const getDifficultyText = (difficulty: number): string => {
-    const map: Record<number, string> = { 1: '入门', 2: '简单', 3: '中等', 4: '困难', 5: '专家' }
-    return map[difficulty] || '中等'
-  }
-
-  const getDifficultyColor = (difficulty: number): string => {
-    const map: Record<number, string> = {
-      1: '#22c55e', 2: '#84cc16', 3: '#eab308', 4: '#f97316', 5: '#ef4444'
-    }
-    return map[difficulty] || '#eab308'
-  }
 
   const getStatusText = (status?: string): string => {
     const map: Record<string, string> = { online: '上线', preview: '预览', offline: '下线' }
@@ -336,6 +332,18 @@ const GamesAdminPage: FC = () => {
     const map: Record<string, string> = { online: '#22c55e', preview: '#eab308', offline: '#ef4444' }
     return map[status || 'online'] || '#22c55e'
   }
+
+  const getStatusBgColor = (status?: string): string => {
+    const map: Record<string, string> = { online: '#f0fdf4', preview: '#fefce8', offline: '#fef2f2' }
+    return map[status || 'online'] || '#f0fdf4'
+  }
+
+  // 搜索过滤
+  const filteredGames = games.filter((game) => {
+    const matchName = !searchText || game.name.toLowerCase().includes(searchText.toLowerCase())
+    const matchStatus = !statusFilter || game.status === statusFilter
+    return matchName && matchStatus
+  })
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50">
@@ -352,6 +360,40 @@ const GamesAdminPage: FC = () => {
             <Text className="text-sm font-medium text-white">+ 添加</Text>
           </Button>
         </View>
+
+        {/* Search Bar */}
+        <View className="mt-4 flex flex-row gap-2">
+          <View className="flex-1 bg-gray-100 rounded-xl px-4 py-3">
+            <Input
+              className="w-full bg-transparent text-sm"
+              placeholder="搜索桌游名称..."
+              value={searchText}
+              onInput={(e) => setSearchText(e.detail.value)}
+            />
+          </View>
+        </View>
+
+        {/* Status Filter */}
+        <View className="mt-3 flex flex-row gap-2">
+          {STATUS_FILTER_OPTIONS.map((opt) => (
+            <View
+              key={opt.value}
+              className={`rounded-full px-4 py-2 ${
+                statusFilter === opt.value
+                  ? 'bg-gray-900'
+                  : 'bg-gray-100'
+              }`}
+              onClick={() => setStatusFilter(opt.value)}
+            >
+              <Text className={`text-xs ${
+                statusFilter === opt.value ? 'text-white' : 'text-gray-600'
+              }`}
+              >
+                {opt.label}
+              </Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       {/* Game List */}
@@ -361,89 +403,50 @@ const GamesAdminPage: FC = () => {
             <Text className="text-gray-400">加载中...</Text>
           </View>
         ) : (
-          games.map((game) => (
-            <Card key={game.id} className="mb-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              {/* Cover Image */}
-              {game.image_url ? (
-                <View style={{ width: '100%', height: '160px' }}>
-                  <Image src={game.image_url} style={{ width: '100%', height: '100%' }} mode="aspectFill" />
-                </View>
-              ) : (
-                <View className="w-full h-24 bg-gray-100 flex items-center justify-center">
-                  <Text className="text-5xl">{game.icon_key || '🎲'}</Text>
-                </View>
-              )}
-
-              <CardContent className="p-4">
-                {/* Title Row */}
-                <View className="flex flex-row items-center justify-between mb-2">
-                  <Text className="text-lg font-bold text-gray-900">{game.name}</Text>
+          filteredGames.map((game) => (
+            <View
+              key={game.id}
+              className="mb-3 bg-white rounded-2xl border border-gray-100 shadow-sm"
+            >
+              <View className="flex flex-row items-center justify-between px-4 py-4">
+                {/* Left: Name + Status */}
+                <View className="flex flex-row items-center gap-3 flex-1">
                   <View
                     className="rounded-full px-3 py-1"
-                    style={{ backgroundColor: `${getStatusColor(game.status)}15` }}
+                    style={{ backgroundColor: getStatusBgColor(game.status) }}
                   >
-                    <Text style={{ color: getStatusColor(game.status), fontSize: '12px' }}>
+                    <Text style={{ color: getStatusColor(game.status), fontSize: '12px', fontWeight: 600 }}>
                       {getStatusText(game.status)}
                     </Text>
                   </View>
+                  <Text className="text-base font-medium text-gray-900">{game.name}</Text>
                 </View>
 
-                {/* Tags */}
-                <View className="flex flex-row flex-wrap gap-2 mb-3">
-                  {game.scene.map((s) => (
-                    <View
-                      key={s}
-                      className="rounded-full px-3 py-1"
-                      style={{ backgroundColor: '#ede9fe' }}
-                    >
-                      <Text className="text-xs text-violet-600">{s}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                {/* Info Row */}
-                <View className="flex flex-row items-center gap-3 mb-4">
-                  <Text className="text-xs text-gray-500">👥 {game.min_players}-{game.max_players}人</Text>
-                  <Text className="text-xs text-gray-300">|</Text>
-                  <Text className="text-xs text-gray-500">⏱ {game.min_duration || 30}-{game.max_duration || 60}分钟</Text>
-                  <Text className="text-xs text-gray-300">|</Text>
+                {/* Right: Actions */}
+                <View className="flex flex-row items-center gap-2">
                   <View
-                    className="rounded-full px-2 py-1"
-                    style={{ backgroundColor: `${getDifficultyColor(game.difficulty)}15` }}
-                  >
-                    <Text style={{ color: getDifficultyColor(game.difficulty), fontSize: '11px' }}>
-                      {getDifficultyText(game.difficulty)}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Action Buttons */}
-                <View className="flex flex-row gap-2 pt-3 border-t border-gray-100">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
+                    className="px-3 py-2 rounded-lg bg-gray-50"
                     onClick={() => handleEditGame(game)}
                   >
-                    <Text className="text-sm text-gray-700">编辑</Text>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
+                    <Text className="text-sm text-gray-600">编辑</Text>
+                  </View>
+                  <View
+                    className="px-3 py-2 rounded-lg bg-red-50"
                     onClick={() => handleDeleteGame(game)}
                   >
                     <Text className="text-sm text-red-500">删除</Text>
-                  </Button>
+                  </View>
                 </View>
-              </CardContent>
-            </Card>
+              </View>
+            </View>
           ))
         )}
-        {!loading && games.length === 0 && (
+        {!loading && filteredGames.length === 0 && (
           <View className="flex flex-col items-center justify-center py-20">
             <Text className="text-4xl mb-3">🎲</Text>
-            <Text className="text-gray-400 text-sm">暂无桌游</Text>
+            <Text className="text-gray-400 text-sm">
+              {searchText || statusFilter ? '没有匹配的桌游' : '暂无桌游'}
+            </Text>
           </View>
         )}
       </ScrollView>
