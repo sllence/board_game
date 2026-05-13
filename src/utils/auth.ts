@@ -5,6 +5,16 @@ export const checkLogin = (): boolean => {
   return !!userInfo
 }
 
+export const getCurrentUser = (): { id: number; [key: string]: any } | null => {
+  try {
+    const userInfo = Taro.getStorageSync('userInfo')
+    if (!userInfo) return null
+    return JSON.parse(userInfo)
+  } catch {
+    return null
+  }
+}
+
 export const requireLogin = (callback: () => void): void => {
   if (checkLogin()) {
     callback()

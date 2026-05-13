@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Clock, History, Trophy } from 'lucide-react-taro'
-import { checkLogin } from '@/utils/auth'
+import { checkLogin, getCurrentUser } from '@/utils/auth'
 import type { FC } from 'react'
 
 interface PlayerInfo {
@@ -58,7 +58,11 @@ const HistoryPage: FC = () => {
   const fetchSessions = async () => {
     setLoading(true)
     try {
-      const res = await Network.request({ url: '/api/sessions/recent' })
+      const currentUser = getCurrentUser()
+      const url = currentUser?.id 
+        ? `/api/sessions/recent?user_id=${currentUser.id}`
+        : '/api/sessions/recent'
+      const res = await Network.request({ url })
       console.log('[HistoryPage] fetchSessions response:', res.data)
       setSessions(res.data?.data || [])
     } catch (err) {

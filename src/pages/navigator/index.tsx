@@ -3,7 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
-import { checkLogin } from '@/utils/auth'
+import { checkLogin, getCurrentUser } from '@/utils/auth'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -120,10 +120,12 @@ const NavigatorPage: FC = () => {
       return
     }
     try {
+      const currentUser = getCurrentUser()
       const res = await Network.request({
         url: '/api/sessions',
         method: 'POST',
         data: {
+          user_id: currentUser?.id,
           game_id: game.id,
           sessionName: `${game.name} 对局`,
           players: players.map((p) => p.name),
