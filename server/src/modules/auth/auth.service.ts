@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, BadRequestException } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
 
 @Injectable()
@@ -25,7 +25,8 @@ export class AuthService {
     console.log('[AuthService] code2Session response errcode:', data.errcode)
 
     if (data.errcode) {
-      throw new Error(`微信登录失败: ${data.errmsg || 'code2Session error'}`)
+      console.log('[AuthService] WeChat code2Session error:', data.errcode, data.errmsg)
+      throw new BadRequestException(`微信登录失败: ${data.errmsg || '无效的登录凭证'}`)
     }
 
     return {
@@ -53,7 +54,8 @@ export class AuthService {
     const data = await response.json()
 
     if (data.error) {
-      throw new Error(`抖音登录失败: ${data.message || 'code2Session error'}`)
+      console.log('[AuthService] TT code2Session error:', data.error, data.message)
+      throw new BadRequestException(`抖音登录失败: ${data.message || '无效的登录凭证'}`)
     }
 
     return { openid: data.openid }

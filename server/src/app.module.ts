@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
 import { AppController } from '@/app.controller'
 import { AppService } from '@/app.service'
 import { GamesModule } from '@/modules/games/games.module'
@@ -8,7 +9,10 @@ import { AiModule } from '@/modules/ai/ai.module'
 import { AuthModule } from '@/modules/auth/auth.module'
 
 @Module({
-  imports: [GamesModule, GuidesModule, SessionsModule, AiModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    GamesModule, GuidesModule, SessionsModule, AiModule, AuthModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
