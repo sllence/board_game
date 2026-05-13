@@ -40,7 +40,9 @@ const ProfilePage: FC = () => {
       const env = Taro.getEnv()
 
       if (env === Taro.ENV_TYPE.WEAPP || env === Taro.ENV_TYPE.TT) {
-        // 微信/抖音小程序：Taro.login 获取 code
+        // 微信/抖音小程序：Taro.login 获取 code（静默调用，不会弹窗）
+        const platformName = env === Taro.ENV_TYPE.WEAPP ? '微信' : '抖音'
+        Taro.showLoading({ title: `${platformName}登录中...` })
         const loginRes = await Taro.login()
         console.log('[ProfilePage] Taro.login code:', loginRes.code)
 
@@ -53,6 +55,7 @@ const ProfilePage: FC = () => {
             nickname: env === Taro.ENV_TYPE.WEAPP ? '微信用户' : '抖音用户',
           },
         })
+        Taro.hideLoading()
         console.log('[ProfilePage] login response:', res.data)
         user = res.data?.data
       } else {
