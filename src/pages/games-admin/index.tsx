@@ -336,17 +336,17 @@ const GamesAdminPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
-      <View className="px-5 pt-14 pb-4 bg-white border-b border-gray-100">
+    <View className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+      <View className="px-5 pt-14 pb-6 bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 border-b-0">
         <View className="flex flex-row items-center justify-between">
           <View className="flex flex-row items-center gap-3">
             <Button size="sm" variant="ghost" onClick={() => Taro.navigateBack()}>
-              <Text className="text-gray-600">← 返回</Text>
+              <Text className="text-white opacity-80">← 返回</Text>
             </Button>
-            <Text className="text-xl font-bold text-gray-900">桌游管理</Text>
+            <Text className="text-2xl font-black text-white tracking-tight">🎲 桌游管理</Text>
           </View>
           <Button size="sm" onClick={handleAddGame}>
-            <Text className="text-sm">+ 添加桌游</Text>
+            <Text className="text-sm font-bold text-white">+ 添加桌游</Text>
           </Button>
         </View>
       </View>
@@ -358,8 +358,8 @@ const GamesAdminPage: FC = () => {
           </View>
         ) : (
           games.map((game) => (
-            <Card key={game.id} className="border-0 shadow-sm mb-3">
-              <CardContent className="p-4">
+            <Card key={game.id} className="border-0 shadow-xl shadow-purple-100 mb-4 bg-white rounded-2xl overflow-hidden">
+              <CardContent className="p-5">
                 <View className="flex flex-row items-start justify-between">
                   <View className="flex flex-row items-start gap-3 flex-1">
                     {game.image_url ? (
