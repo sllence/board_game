@@ -1,4 +1,4 @@
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text, Image, Button as TaroButton, Input as TaroInput } from '@tarojs/components' // eslint-disable-line no-restricted-syntax
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,6 +18,9 @@ interface UserInfo {
 const ProfilePage: FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null)
+  const [tempNickname, setTempNickname] = useState<string | null>(null)
+  const [showProfileSetup, setShowProfileSetup] = useState(false)
 
   const isMiniApp = [Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv() as any)
 
@@ -50,13 +53,77 @@ const ProfilePage: FC = () => {
       const user = res.data.data
       setUserInfo(user)
       Taro.setStorageSync('userInfo', JSON.stringify(user))
-      Taro.showToast({ title: '登录成功', icon: 'success' })
+
+      if (!user.nickname || !user.avatar_url) {
+        setShowProfileSetup(true)
+      } else {
+        Taro.showToast({ title: '登录成功', icon: 'success' })
+      }
     } catch (err) {
       console.error('登录失败', err)
       Taro.showToast({ title: '登录失败', icon: 'none' })
     } finally {
       setIsLoggingIn(false)
     }
+  }
+
+  const handleChooseAvatar = async (e: any) => {
+    const tempFilePath = e.detail.avatarUrl
+    setTempAvatarUrl(tempFilePath)
+  }
+
+  const handleNicknameInput = (e: any) => {
+    setTempNickname(e.detail.value)
+  }
+
+  const handleConfirmProfile = async () => {
+    if (!tempNickname) {
+      Taro.showToast({ title: '请输入昵称', icon: 'none' })
+      return
+    }
+
+    setIsLoggingIn(true)
+    try {
+      let avatarUrl = userInfo?.avatar_url || ''
+
+      if (tempAvatarUrl) {
+        const uploadRes = await Network.uploadFile({
+          url: '/api/user/avatar',
+          filePath: tempAvatarUrl,
+          name: 'file'
+        }) as any
+        const uploadData = JSON.parse(uploadRes.data)
+        avatarUrl = uploadData.data.url
+      }
+
+      await Network.request({
+        url: '/api/user/profile',
+        method: 'PUT',
+        data: { nickname: tempNickname }
+      }) as any
+
+      const updatedUser = {
+        ...userInfo!,
+        nickname: tempNickname,
+        avatar_url: avatarUrl
+      }
+      setUserInfo(updatedUser)
+      Taro.setStorageSync('userInfo', JSON.stringify(updatedUser))
+      setShowProfileSetup(false)
+      Taro.showToast({ title: '保存成功', icon: 'success' })
+    } catch (err) {
+      console.error('保存失败', err)
+      Taro.showToast({ title: '保存失败', icon: 'none' })
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
+
+  const handleSkipProfile = () => {
+    setShowProfileSetup(false)
+    setTempAvatarUrl(null)
+    setTempNickname(null)
+    Taro.showToast({ title: '登录成功', icon: 'success' })
   }
 
   const MENU_ITEMS = [
@@ -189,6 +256,68 @@ const ProfilePage: FC = () => {
       <View className="flex items-center pb-8 pt-4">
         <Text className="block text-xs text-gray-300">桌游助手 v1.0.0</Text>
       </View>
+
+      {/* 设置头像昵称弹窗 - 首次登录时弹出 */}
+      {showProfileSetup && (
+        <View className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
+            <Text className="block text-lg font-bold text-gray-900 mb-2">完善个人信息</Text>
+            <Text className="block text-sm text-gray-500 mb-6">首次登录请设置头像和昵称</Text>
+            <View className="flex flex-col items-center mb-6">
+              <View className="flex items-center justify-center mb-3" style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+                {tempAvatarUrl ? (
+                  <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                ) : (
+                  <Text className="text-2xl">🎮</Text>
+                )}
+              </View>
+              {isMiniApp && (
+                <TaroButton
+                  openType="chooseAvatar"
+                  onChooseAvatar={handleChooseAvatar}
+                  className="w-auto h-8 px-4 text-sm text-indigo-600 bg-white border border-indigo-600 rounded-lg"
+                >
+                  <Text>选择头像</Text>
+                </TaroButton>
+              )}
+            </View>
+            <View className="mb-6">
+              <Text className="block text-sm font-medium text-gray-700 mb-2">昵称</Text>
+              {isMiniApp ? (
+                <TaroInput
+                  type="nickname"
+                  placeholder="请输入昵称"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl"
+                  onInput={handleNicknameInput}
+                  value={tempNickname || ''}
+                />
+              ) : (
+                <View className="w-full px-4 py-3 bg-gray-50 rounded-xl">
+                  <Text className="text-sm text-gray-400">请在小程序中设置</Text>
+                </View>
+              )}
+            </View>
+            <View className="flex flex-row gap-3">
+              <Button
+                variant="secondary"
+                size="lg"
+                className="flex-1"
+                onClick={handleSkipProfile}
+              >
+                <Text>跳过</Text>
+              </Button>
+              <Button
+                size="lg"
+                className="flex-1"
+                onClick={handleConfirmProfile}
+                disabled={isLoggingIn}
+              >
+                <Text>{isLoggingIn ? '保存中...' : '保存'}</Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   )
 }
