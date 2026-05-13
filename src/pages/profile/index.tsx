@@ -315,21 +315,40 @@ const ProfilePage: FC = () => {
             <Text className="block text-lg font-bold text-gray-900 mb-2">完善个人信息</Text>
             <Text className="block text-sm text-gray-500 mb-6">首次登录请设置头像和昵称</Text>
             <View className="flex flex-col items-center mb-6">
-              <View className="flex items-center justify-center mb-3" style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
-                {tempAvatarUrl ? (
-                  <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
-                ) : (
-                  <Text className="text-2xl">🎮</Text>
-                )}
-              </View>
-              {isMiniApp && (
+              {isMiniApp ? (
                 <TaroButton
                   openType="chooseAvatar"
                   onChooseAvatar={handleChooseAvatar}
-                  className="w-auto h-8 px-4 text-sm text-indigo-600 bg-white border border-indigo-600 rounded-lg"
+                  className="border-0 p-0 bg-transparent w-auto h-auto"
                 >
-                  <Text>选择头像</Text>
+                  <View 
+                    className="flex items-center justify-center relative"
+                    style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
+                  >
+                    {tempAvatarUrl ? (
+                      <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                    ) : (
+                      <Text className="text-2xl">🎮</Text>
+                    )}
+                    <View 
+                      className="absolute bottom-0 left-0 right-0 flex items-center justify-center"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.5)', height: '24px' }}
+                    >
+                      <Text className="text-white text-xs">点击更换</Text>
+                    </View>
+                  </View>
                 </TaroButton>
+              ) : (
+                <View 
+                  className="flex items-center justify-center"
+                  style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
+                >
+                  {tempAvatarUrl ? (
+                    <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                  ) : (
+                    <Text className="text-2xl">🎮</Text>
+                  )}
+                </View>
               )}
             </View>
             <View className="mb-6">
