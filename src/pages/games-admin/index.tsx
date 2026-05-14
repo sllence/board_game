@@ -361,7 +361,7 @@ const GamesAdminPage: FC = () => {
   })
 
   return (
-    <View className="flex flex-col min-h-screen bg-gray-50">
+    <View className="flex flex-col min-h-screen bg-gray-50 w-full max-w-full">
       {/* Header */}
       <View className="px-5 pt-14 pb-4 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
@@ -412,7 +412,7 @@ const GamesAdminPage: FC = () => {
       </View>
 
       {/* Game List */}
-      <ScrollView className="flex-1 px-4 py-4" scrollY>
+      <ScrollView className="flex-1 px-4 py-4 w-full" scrollY>
         {loading ? (
           <View className="flex items-center justify-center py-20">
             <Text className="text-gray-400">加载中...</Text>
@@ -464,8 +464,8 @@ const GamesAdminPage: FC = () => {
 
       {/* Edit Modal */}
       {showModal && (
-        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50">
-          <View className="w-full bg-white h-full flex flex-col">
+        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 w-full">
+          <View className="w-full max-w-full bg-white h-full flex flex-col">
             {/* Modal Header */}
             <View className="px-5 pt-14 pb-4 border-b border-gray-100 flex flex-row items-center justify-between">
               <Button size="sm" variant="ghost" onClick={() => setShowModal(false)}>
