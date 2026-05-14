@@ -361,7 +361,7 @@ const GamesAdminPage: FC = () => {
   })
 
   return (
-    <View className="flex flex-col min-h-screen bg-gray-50">
+    <View className="flex flex-col min-h-screen bg-gray-50" style={{ overflowX: 'hidden' }}>
       {/* Header */}
       <View className="px-5 pt-14 pb-4 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
@@ -464,8 +464,8 @@ const GamesAdminPage: FC = () => {
 
       {/* Edit Modal */}
       {showModal && (
-        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50">
-          <View className="w-full bg-white h-full flex flex-col">
+        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50" style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+          <View className="w-full bg-white h-full flex flex-col" style={{ maxWidth: '100vw' }}>
             {/* Modal Header */}
             <View className="px-5 pt-14 pb-4 border-b border-gray-100 flex flex-row items-center justify-between">
               <Button size="sm" variant="ghost" onClick={() => setShowModal(false)}>
@@ -488,7 +488,7 @@ const GamesAdminPage: FC = () => {
                   {STATUS_OPTIONS.map((opt) => (
                     <View
                       key={opt.value}
-                      className={`flex-1 rounded-xl p-3 border-2 cursor-pointer ${
+                      className={`flex-1 min-w-0 rounded-xl p-3 border-2 cursor-pointer ${
                         formData.status === opt.value
                           ? 'border-indigo-600 bg-indigo-50'
                           : 'border-gray-200 bg-gray-50'
