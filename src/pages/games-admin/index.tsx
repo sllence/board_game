@@ -424,23 +424,23 @@ const GamesAdminPage: FC = () => {
               className="mb-3 bg-white rounded-2xl border border-gray-100 shadow-sm"
               onClick={() => handleEditGame(game)}
             >
-              <View className="flex flex-row items-center justify-between px-4 py-4">
+              <View className="flex flex-row items-center justify-between px-4 py-4" style={{ minWidth: 0 }}>
                 {/* Left: Name + Status */}
-                <View className="flex flex-row items-center gap-3 flex-1">
+                <View className="flex flex-row items-center gap-3 flex-1" style={{ minWidth: 0, overflow: 'hidden' }}>
                   <View
-                    className="rounded-full px-3 py-1"
+                    className="rounded-full px-3 py-1 flex-shrink-0"
                     style={{ backgroundColor: getStatusBgColor(game.status) }}
                   >
                     <Text style={{ color: getStatusColor(game.status), fontSize: '12px', fontWeight: 600 }}>
                       {getStatusText(game.status)}
                     </Text>
                   </View>
-                  <Text className="text-base font-medium text-gray-900">{game.name}</Text>
+                  <Text className="text-base font-medium text-gray-900" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{game.name}</Text>
                 </View>
 
                 {/* Right: Delete Button */}
                 <View
-                  className="px-3 py-2 rounded-lg bg-red-50"
+                  className="px-3 py-2 rounded-lg bg-red-50 flex-shrink-0 ml-2"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleDeleteGame(game)
