@@ -64,9 +64,9 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = ({
 
   return (
     <View className="w-full mb-5">
-      <View className="flex flex-row items-center justify-between mb-2" style={{ minWidth: 0 }}>
-        <Text className="text-sm font-medium text-gray-700 flex-shrink-0">规则内容</Text>
-        <View className="flex flex-row gap-2 flex-shrink-0">
+      <View className="flex items-center justify-between mb-2">
+        <Text className="text-sm font-medium text-gray-700">规则内容</Text>
+        <View className="flex gap-2">
           <Button
             size="sm"
             variant="outline"
@@ -74,7 +74,7 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = ({
             disabled={uploading}
           >
             <Upload size={14} color="inherit" />
-            <Text className="text-xs">{uploading ? '上传中' : '插图'}</Text>
+            <Text className="text-xs">{uploading ? '上传中...' : '插入图片'}</Text>
           </Button>
           <Button
             size="sm"

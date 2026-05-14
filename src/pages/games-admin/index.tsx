@@ -361,7 +361,7 @@ const GamesAdminPage: FC = () => {
   })
 
   return (
-    <View className="flex flex-col min-h-screen bg-gray-50 w-full max-w-full">
+    <View className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
       <View className="px-5 pt-14 pb-4 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
@@ -412,7 +412,7 @@ const GamesAdminPage: FC = () => {
       </View>
 
       {/* Game List */}
-      <ScrollView className="flex-1 px-4 py-4 w-full" scrollY>
+      <ScrollView className="flex-1 px-4 py-4" scrollY>
         {loading ? (
           <View className="flex items-center justify-center py-20">
             <Text className="text-gray-400">加载中...</Text>
@@ -424,23 +424,23 @@ const GamesAdminPage: FC = () => {
               className="mb-3 bg-white rounded-2xl border border-gray-100 shadow-sm"
               onClick={() => handleEditGame(game)}
             >
-              <View className="flex flex-row items-center justify-between px-4 py-4" style={{ minWidth: 0 }}>
+              <View className="flex flex-row items-center justify-between px-4 py-4">
                 {/* Left: Name + Status */}
-                <View className="flex flex-row items-center gap-3 flex-1" style={{ minWidth: 0, overflow: 'hidden' }}>
+                <View className="flex flex-row items-center gap-3 flex-1">
                   <View
-                    className="rounded-full px-3 py-1 flex-shrink-0"
+                    className="rounded-full px-3 py-1"
                     style={{ backgroundColor: getStatusBgColor(game.status) }}
                   >
                     <Text style={{ color: getStatusColor(game.status), fontSize: '12px', fontWeight: 600 }}>
                       {getStatusText(game.status)}
                     </Text>
                   </View>
-                  <Text className="text-base font-medium text-gray-900" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{game.name}</Text>
+                  <Text className="text-base font-medium text-gray-900">{game.name}</Text>
                 </View>
 
                 {/* Right: Delete Button */}
                 <View
-                  className="px-3 py-2 rounded-lg bg-red-50 flex-shrink-0 ml-2"
+                  className="px-3 py-2 rounded-lg bg-red-50"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleDeleteGame(game)
@@ -464,8 +464,8 @@ const GamesAdminPage: FC = () => {
 
       {/* Edit Modal */}
       {showModal && (
-        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 w-full">
-          <View className="w-full max-w-full bg-white h-full flex flex-col">
+        <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50">
+          <View className="w-full bg-white h-full flex flex-col">
             {/* Modal Header */}
             <View className="px-5 pt-14 pb-4 border-b border-gray-100 flex flex-row items-center justify-between">
               <Button size="sm" variant="ghost" onClick={() => setShowModal(false)}>
