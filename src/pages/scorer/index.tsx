@@ -1,9 +1,10 @@
 import { View, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Calculator, Plus, Minus, User, RotateCcw } from 'lucide-react-taro'
+import { Calculator, Plus, Minus, User, RotateCcw, X, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface Player {
@@ -35,6 +36,10 @@ const ScorerPage: FC = () => {
     setPlayers(players.map((p, i) => (i === idx ? { ...p, score: p.score + delta } : p)))
   }
 
+  const removePlayer = (idx: number) => {
+    setPlayers(players.filter((_, i) => i !== idx))
+  }
+
   const resetScores = () => {
     setPlayers(players.map((p) => ({ ...p, score: 0 })))
   }
@@ -45,11 +50,19 @@ const ScorerPage: FC = () => {
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
       {/* 标题 */}
       <View className="px-5 pt-12 pb-4 bg-white">
-        <View className="flex flex-row items-center gap-3">
-          <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
-            <Calculator size={18} color="#fff" />
+        <View className="flex flex-row items-center justify-between">
+          <View className="flex flex-row items-center gap-3">
+            <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
+              <Calculator size={18} color="#fff" />
+            </View>
+            <Text className="block text-xl font-bold text-[#1e1b4b]">计分器</Text>
           </View>
-          <Text className="block text-xl font-bold text-[#1e1b4b]">计分器</Text>
+          {Taro.getCurrentPages().length > 1 && (
+            <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
+              <ArrowLeft size={14} color="#8b5cf6" />
+              <Text className="text-sm text-purple-500">返回对局</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -144,6 +157,12 @@ const ScorerPage: FC = () => {
                       onClick={() => changeScore(originalIdx, step)}
                     >
                       <Plus size={16} color="#fff" />
+                    </View>
+                    <View
+                      className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-50 cursor-pointer"
+                      onClick={() => removePlayer(originalIdx)}
+                    >
+                      <X size={14} color="#ef4444" />
                     </View>
                   </View>
                 </View>

@@ -1,8 +1,9 @@
 import { View, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Dices } from 'lucide-react-taro'
+import { Dices, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 const DICE_TYPES = [
@@ -51,11 +52,19 @@ const DicePage: FC = () => {
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
       {/* 标题 */}
       <View className="px-5 pt-12 pb-4 bg-white">
-        <View className="flex flex-row items-center gap-3">
-          <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-            <Dices size={18} color="#fff" />
+        <View className="flex flex-row items-center justify-between">
+          <View className="flex flex-row items-center gap-3">
+            <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+              <Dices size={18} color="#fff" />
+            </View>
+            <Text className="block text-xl font-bold text-[#1e1b4b]">骰子</Text>
           </View>
-          <Text className="block text-xl font-bold text-[#1e1b4b]">骰子</Text>
+          {Taro.getCurrentPages().length > 1 && (
+            <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
+              <ArrowLeft size={14} color="#6366f1" />
+              <Text className="text-sm text-indigo-500">返回对局</Text>
+            </View>
+          )}
         </View>
       </View>
 

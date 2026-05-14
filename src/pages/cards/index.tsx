@@ -1,10 +1,11 @@
 import { View, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Layers, Plus, X, Shuffle } from 'lucide-react-taro'
+import { Layers, Plus, X, Shuffle, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface CardItem {
@@ -89,11 +90,19 @@ const CardsPage: FC = () => {
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
       {/* 标题 */}
       <View className="px-5 pt-12 pb-4 bg-white">
-        <View className="flex flex-row items-center gap-3">
-          <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
-            <Layers size={18} color="#fff" />
+        <View className="flex flex-row items-center justify-between">
+          <View className="flex flex-row items-center gap-3">
+            <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+              <Layers size={18} color="#fff" />
+            </View>
+            <Text className="block text-xl font-bold text-[#1e1b4b]">抽牌</Text>
           </View>
-          <Text className="block text-xl font-bold text-[#1e1b4b]">抽牌</Text>
+          {Taro.getCurrentPages().length > 1 && (
+            <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
+              <ArrowLeft size={14} color="#f59e0b" />
+              <Text className="text-sm text-amber-500">返回对局</Text>
+            </View>
+          )}
         </View>
       </View>
 

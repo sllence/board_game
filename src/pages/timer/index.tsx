@@ -3,7 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Timer, Play, Pause, RotateCcw } from 'lucide-react-taro'
+import { Timer, Play, Pause, RotateCcw, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 const PRESETS = [
@@ -101,11 +101,19 @@ const TimerPage: FC = () => {
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
       {/* 标题 */}
       <View className="px-5 pt-12 pb-4 bg-white">
-        <View className="flex flex-row items-center gap-3">
-          <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
-            <Timer size={18} color="#fff" />
+        <View className="flex flex-row items-center justify-between">
+          <View className="flex flex-row items-center gap-3">
+            <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+              <Timer size={18} color="#fff" />
+            </View>
+            <Text className="block text-xl font-bold text-[#1e1b4b]">计时器</Text>
           </View>
-          <Text className="block text-xl font-bold text-[#1e1b4b]">计时器</Text>
+          {Taro.getCurrentPages().length > 1 && (
+            <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
+              <ArrowLeft size={14} color="#10b981" />
+              <Text className="text-sm text-emerald-500">返回对局</Text>
+            </View>
+          )}
         </View>
       </View>
 
