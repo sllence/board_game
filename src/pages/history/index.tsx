@@ -133,7 +133,7 @@ const HistoryPage: FC = () => {
           {STATUS_FILTERS.map((f) => (
             <View
               key={f.key}
-              className="rounded-full px-4 py-1.5 cursor-pointer"
+              className="rounded-full px-4 py-2 cursor-pointer"
               style={{
                 backgroundColor: statusFilter === f.key ? '#fff' : 'rgba(255,255,255,0.2)',
               }}

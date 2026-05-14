@@ -160,7 +160,7 @@ const RuleDetailPage: FC = () => {
           {(Array.isArray(game.type) ? game.type : [game.type]).map((t) => {
             const meta = TYPE_META[t]
             return meta ? (
-              <View key={t} className="rounded px-1.5 py-0.5" style={{ backgroundColor: meta.bg }}>
+              <View key={t} className="rounded px-2 py-1" style={{ backgroundColor: meta.bg }}>
                 <Text style={{ fontSize: 11, color: meta.color }}>{meta.emoji} {meta.label}</Text>
               </View>
             ) : null
@@ -168,7 +168,7 @@ const RuleDetailPage: FC = () => {
           {scenes.map((s) => {
             const meta = SCENE_META[s]
             return meta ? (
-              <View key={s} className="rounded px-1.5 py-0.5" style={{ backgroundColor: meta.bg }}>
+              <View key={s} className="rounded px-2 py-1" style={{ backgroundColor: meta.bg }}>
                 <Text style={{ fontSize: 11, color: meta.color }}>{meta.emoji} {meta.label}</Text>
               </View>
             ) : null

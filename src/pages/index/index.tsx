@@ -259,7 +259,7 @@ const IndexPage: FC = () => {
                         <Text className="block text-base font-bold text-[#1e1b4b]">{game.name}</Text>
                         {index === 0 && (
                           <View
-                            className="rounded-full px-2 py-0.5"
+                            className="rounded-full px-2 py-1"
                             style={{ backgroundColor: '#fef3c7' }}
                           >
                             <Text className="text-xs text-amber-600">🔥 热门</Text>
