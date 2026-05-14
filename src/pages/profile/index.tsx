@@ -23,6 +23,8 @@ const ProfilePage: FC = () => {
   const [tempNickname, setTempNickname] = useState<string | null>(null)
   const [showProfileSetup, setShowProfileSetup] = useState(false)
   const [showEditProfile, setShowEditProfile] = useState(false)
+  const [showH5Login, setShowH5Login] = useState(false)
+  const [h5Nickname, setH5Nickname] = useState('')
 
   const isMiniApp = [Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv() as any)
 
@@ -53,7 +55,7 @@ const ProfilePage: FC = () => {
       }) as any
 
       let user = res.data.data
-      
+
       // 检查本地是否有缓存的用户信息（头像和昵称）
       const cachedUserInfo = Taro.getStorageSync('userInfo')
       if (cachedUserInfo) {
@@ -71,7 +73,7 @@ const ProfilePage: FC = () => {
           // ignore parse error
         }
       }
-      
+
       setUserInfo(user)
       Taro.setStorageSync('userInfo', JSON.stringify(user))
 
@@ -81,6 +83,40 @@ const ProfilePage: FC = () => {
       } else {
         Taro.showToast({ title: '登录成功', icon: 'success' })
       }
+    } catch (err) {
+      console.error('登录失败', err)
+      Taro.showToast({ title: '登录失败', icon: 'none' })
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
+
+  const handleH5Login = async () => {
+    if (!h5Nickname.trim()) {
+      Taro.showToast({ title: '请输入昵称', icon: 'none' })
+      return
+    }
+
+    setIsLoggingIn(true)
+    try {
+      // H5 使用昵称作为登录凭证（开发环境）
+      const code = h5Nickname.trim()
+      const res = await Network.request({
+        url: '/api/auth/login',
+        method: 'POST',
+        data: {
+          code,
+          platform: 'h5',
+          nickname: h5Nickname.trim()
+        }
+      }) as any
+
+      const user = res.data.data
+      setUserInfo(user)
+      Taro.setStorageSync('userInfo', JSON.stringify(user))
+      setShowH5Login(false)
+      setH5Nickname('')
+      Taro.showToast({ title: '登录成功', icon: 'success' })
     } catch (err) {
       console.error('登录失败', err)
       Taro.showToast({ title: '登录失败', icon: 'none' })
@@ -275,7 +311,7 @@ const ProfilePage: FC = () => {
           <Text className="block text-2xl font-bold text-white text-center mb-2">欢迎来到桌游助手</Text>
           <Text className="block text-white text-center opacity-80 mb-8">登录后解锁更多功能</Text>
           <View className="flex flex-col gap-3">
-            {isMiniApp && (
+            {isMiniApp ? (
               <Button
                 size="lg"
                 className="w-full bg-white text-indigo-600 border-0"
@@ -284,12 +320,66 @@ const ProfilePage: FC = () => {
               >
                 <Text className="font-medium">{isLoggingIn ? '登录中...' : '微信一键登录'}</Text>
               </Button>
+            ) : (
+              <Button
+                size="lg"
+                className="w-full bg-white text-indigo-600 border-0"
+                onClick={() => setShowH5Login(true)}
+              >
+                <Text className="font-medium">快速登录</Text>
+              </Button>
             )}
           </View>
         </View>
         <View className="flex-1 flex items-center justify-center">
           <Text className="text-gray-400 text-xs">登录后可体验完整功能</Text>
         </View>
+
+        {/* H5 登录弹窗 */}
+        {showH5Login && (
+          <View className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <View className="bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
+              <Text className="block text-lg font-bold text-gray-900 mb-2">快速登录</Text>
+              <Text className="block text-sm text-gray-500 mb-6">输入昵称即可登录体验</Text>
+              <View className="mb-6">
+                <Text className="block text-sm font-medium text-gray-700 mb-2">昵称</Text>
+                <input
+                  type="text"
+                  placeholder="请输入昵称"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl border-0 outline-none"
+                  value={h5Nickname}
+                  onChange={(e) => setH5Nickname(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleH5Login()
+                    }
+                  }}
+                />
+              </View>
+              <View className="flex flex-row gap-3">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowH5Login(false)
+                    setH5Nickname('')
+                  }}
+                >
+                  <Text>取消</Text>
+                </Button>
+                <Button
+                  size="lg"
+                  className="flex-1"
+                  onClick={handleH5Login}
+                  disabled={isLoggingIn}
+                >
+                  <Text>{isLoggingIn ? '登录中...' : '登录'}</Text>
+                </Button>
+              </View>
+            </View>
+          </View>
+        )}
       </View>
     )
   }

@@ -11,14 +11,17 @@ import type { FC } from 'react'
 interface BoardGame {
   id: number
   name: string
-  type: string
+  type: string[]
   min_players: number
   max_players: number
-  duration: number
+  min_duration: number
+  max_duration: number
   difficulty: string
+  icon_key: string
   icon_bg: string
   icon_color: string
-  hero_bg: string
+  image_url?: string
+  status: string
 }
 
 interface GameSession {
@@ -123,13 +126,16 @@ const IndexPage: FC = () => {
   return (
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
       {/* Hero 区域 - 靛蓝渐变 */}
-      <View className="px-5 pt-14 pb-8" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
-        <View className="flex flex-row items-center gap-2 mb-2">
-          <Sparkles size={20} color="#fbbf24" />
-          <Text className="text-sm font-medium text-yellow-300">Board Game Buddy</Text>
+      <View className="px-5 pt-14 pb-10" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
+        <View className="flex flex-col items-start">
+          <View className="flex flex-row items-center gap-2 mb-3">
+            <Sparkles size={22} color="#fbbf24" />
+            <Text className="text-base font-bold text-yellow-300 tracking-wide">数智局伴</Text>
+          </View>
+          <Text className="block text-sm text-white text-opacity-90 leading-relaxed" style={{ letterSpacing: '0.5px' }}>
+            您的线下组局伴侣
+          </Text>
         </View>
-        <Text className="block text-2xl font-bold text-white">桌游助手</Text>
-        <Text className="block text-sm text-white text-opacity-80 mt-1">规则速查 · 辅助工具 · 对局记录</Text>
       </View>
 
       {/* 快捷工具 - Bento Grid 风格 */}
@@ -192,10 +198,13 @@ const IndexPage: FC = () => {
         </View>
       )}
 
-      {/* 热门桌游 - 渐变卡片 */}
+      {/* 热门桌游 - 优化后的卡片 */}
       <View className="px-4 mb-5">
         <View className="flex flex-row items-center justify-between mb-3">
-          <Text className="block text-base font-semibold text-[#1e1b4b]">热门桌游</Text>
+          <View className="flex flex-row items-center gap-2">
+            <Sparkles size={16} color="#4F46E5" />
+            <Text className="block text-base font-semibold text-[#1e1b4b]">热门桌游</Text>
+          </View>
           <View
             className="flex flex-row items-center gap-1 cursor-pointer"
             onClick={() => Taro.switchTab({ url: '/pages/games/index' })}
@@ -205,36 +214,85 @@ const IndexPage: FC = () => {
           </View>
         </View>
         <View className="flex flex-col gap-3">
-          {hotGames.slice(0, 4).map((game) => (
+          {hotGames.slice(0, 4).map((game, index) => (
             <View
               key={game.id}
               className="cursor-pointer"
               onClick={() => goToGame(game.id)}
             >
-              <View
-                className="rounded-2xl p-4 shadow-sm"
-                style={{ background: TYPE_GRADIENT[game.type] || TYPE_GRADIENT.strategy }}
-              >
-                <View className="flex flex-row items-center justify-between">
-                  <View className="flex-1">
-                    <Text className="block text-lg font-bold text-white">{game.name}</Text>
-                    <View className="flex flex-row items-center gap-3 mt-2">
-                      <View className="rounded-full px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-                        <Text className="text-xs text-white">{game.min_players}-{game.max_players}人</Text>
+              <Card className="border-0 shadow-sm overflow-hidden">
+                <View
+                  className="h-1"
+                  style={{ background: game.icon_bg || '#4F46E5' }}
+                />
+                <CardContent className="p-4">
+                  <View className="flex flex-row items-start gap-3">
+                    {/* 游戏图标 */}
+                    <View
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: game.icon_bg || '#4F46E5' }}
+                    >
+                      <Text className="text-2xl">{game.icon_key === 'castle' ? '🏰' : game.icon_key === 'gem' ? '💎' : game.icon_key === 'moon' ? '🌙' : game.icon_key === 'shield' ? '🛡️' : game.icon_key === 'landmark' ? '🏛️' : game.icon_key === 'wheat' ? '🌾' : '🎲'}</Text>
+                    </View>
+
+                    {/* 游戏信息 */}
+                    <View className="flex-1">
+                      <View className="flex flex-row items-center gap-2 mb-1">
+                        <Text className="block text-base font-bold text-[#1e1b4b]">{game.name}</Text>
+                        {index === 0 && (
+                          <View
+                            className="rounded-full px-2 py-0.5"
+                            style={{ backgroundColor: '#fef3c7' }}
+                          >
+                            <Text className="text-xs text-amber-600">🔥 热门</Text>
+                          </View>
+                        )}
                       </View>
-                      <View className="rounded-full px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-                        <Text className="text-xs text-white">{game.duration}分钟</Text>
+
+                      {/* 游戏标签 */}
+                      <View className="flex flex-row flex-wrap gap-2 mb-2">
+                        <View className="flex flex-row items-center gap-1">
+                          <Text className="text-xs text-gray-500">👥 {game.min_players}-{game.max_players}人</Text>
+                        </View>
+                        <Text className="text-xs text-gray-300">·</Text>
+                        <View className="flex flex-row items-center gap-1">
+                          <Text className="text-xs text-gray-500">⏱️ {game.min_duration}-{game.max_duration}分钟</Text>
+                        </View>
                       </View>
-                      <View className="rounded-full px-2 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-                        <Text className="text-xs text-white">{DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}</Text>
+
+                      {/* 难度标签 */}
+                      <View className="flex flex-row items-center gap-2">
+                        <View
+                          className="rounded-full px-2 py-1"
+                          style={{ backgroundColor: DIFFICULTY_MAP[game.difficulty]?.bg || '#f3f4f6' }}
+                        >
+                          <Text
+                            className="text-xs font-medium"
+                            style={{ color: DIFFICULTY_MAP[game.difficulty]?.color || '#6b7280' }}
+                          >
+                            {DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}
+                          </Text>
+                        </View>
+                        {game.type && game.type.length > 0 && (
+                          <View
+                            className="rounded-full px-2 py-1"
+                            style={{ backgroundColor: '#ede9fe' }}
+                          >
+                            <Text className="text-xs text-purple-600">
+                              {game.type[0] === 'strategy' ? '策略' : game.type[0] === 'roleplay' ? '角色扮演' : game.type[0] === 'management' ? '经营' : game.type[0] === 'auction' ? '拍卖' : game.type[0] === 'versus' ? '对抗' : game.type[0] === 'puzzle' ? '解谜' : game.type[0]}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                     </View>
+
+                    {/* 箭头 */}
+                    <View className="flex items-center justify-center pt-2">
+                      <ArrowRight size={16} color="#d1d5db" />
+                    </View>
                   </View>
-                  <View className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-                    <Text className="text-lg font-bold text-white">{game.name.charAt(0)}</Text>
-                  </View>
-                </View>
-              </View>
+                </CardContent>
+              </Card>
             </View>
           ))}
         </View>
