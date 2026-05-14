@@ -21,7 +21,7 @@ interface BoardGame {
   max_players: number
   min_duration?: number
   max_duration?: number
-  difficulty: number
+  difficulty: string
   intro?: string
   beginner_tips?: string
   rules?: string
@@ -39,7 +39,7 @@ interface GameFormData {
   max_players: number
   min_duration: number
   max_duration: number
-  difficulty: number
+  difficulty: string
   intro: string
   beginner_tips: string
   rules: string
@@ -47,19 +47,31 @@ interface GameFormData {
   status: string
 }
 
-const TYPE_OPTIONS = ['策略', '益智', '拍卖', '扮演', '经营', '合作', '对抗']
-const SCENE_OPTIONS = ['聚会', '团建', '亲子', '情侣', '酒局']
+const TYPE_OPTIONS = [
+  { label: '策略', value: 'strategy' },
+  { label: '益智', value: 'puzzle' },
+  { label: '拍卖', value: 'auction' },
+  { label: '扮演', value: 'roleplay' },
+  { label: '经营', value: 'management' },
+  { label: '合作', value: 'cooperative' },
+  { label: '对抗', value: 'versus' },
+]
+const SCENE_OPTIONS = [
+  { label: '聚会', value: 'gathering' },
+  { label: '团建', value: 'teambuilding' },
+  { label: '亲子', value: 'family' },
+  { label: '情侣', value: 'couple' },
+  { label: '酒局', value: 'drinking' },
+]
 const STATUS_OPTIONS = [
   { value: 'online', label: '上线', desc: '所有人可见' },
   { value: 'preview', label: '预览', desc: '仅管理员可见' },
   { value: 'offline', label: '下线', desc: '仅管理员可见' }
 ]
 const DIFFICULTY_OPTIONS = [
-  { value: 1, label: '入门' },
-  { value: 2, label: '简单' },
-  { value: 3, label: '中等' },
-  { value: 4, label: '困难' },
-  { value: 5, label: '专家' }
+  { value: 'easy', label: '简单' },
+  { value: 'medium', label: '中等' },
+  { value: 'hard', label: '困难' },
 ]
 const STATUS_FILTER_OPTIONS = [
   { value: '', label: '全部' },
@@ -85,7 +97,7 @@ const GamesAdminPage: FC = () => {
     max_players: 4,
     min_duration: 30,
     max_duration: 60,
-    difficulty: 3,
+    difficulty: 'medium',
     intro: '',
     beginner_tips: '',
     rules: '',
@@ -196,7 +208,7 @@ const GamesAdminPage: FC = () => {
         max_players: fullGame.max_players || 4,
         min_duration: fullGame.min_duration || 30,
         max_duration: fullGame.max_duration || 60,
-        difficulty: fullGame.difficulty || 3,
+        difficulty: fullGame.difficulty || 'medium',
         intro: fullGame.intro || '',
         beginner_tips: fullGame.beginner_tips || '',
         rules: fullGame.rules || '',
@@ -224,7 +236,7 @@ const GamesAdminPage: FC = () => {
       max_players: 4,
       min_duration: 30,
       max_duration: 60,
-      difficulty: 3,
+      difficulty: 'medium',
       intro: '',
       beginner_tips: '',
       rules: '',
@@ -546,21 +558,21 @@ const GamesAdminPage: FC = () => {
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">类型 *</Text>
                 <View className="flex flex-row flex-wrap gap-2">
-                  {TYPE_OPTIONS.map((type) => (
+                  {TYPE_OPTIONS.map((opt) => (
                     <View
-                      key={type}
+                      key={opt.value}
                       className={`rounded-full px-4 py-2 cursor-pointer ${
-                        formData.type.includes(type)
+                        formData.type.includes(opt.value)
                           ? 'bg-indigo-600'
                           : 'bg-gray-100'
                       }`}
-                      onClick={() => toggleType(type)}
+                      onClick={() => toggleType(opt.value)}
                     >
                       <Text className={`text-sm ${
-                        formData.type.includes(type) ? 'text-white' : 'text-gray-600'
+                        formData.type.includes(opt.value) ? 'text-white' : 'text-gray-600'
                       }`}
                       >
-                        {type}
+                        {opt.label}
                       </Text>
                     </View>
                   ))}
@@ -571,21 +583,21 @@ const GamesAdminPage: FC = () => {
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">场景</Text>
                 <View className="flex flex-row flex-wrap gap-2">
-                  {SCENE_OPTIONS.map((scene) => (
+                  {SCENE_OPTIONS.map((opt) => (
                     <View
-                      key={scene}
+                      key={opt.value}
                       className={`rounded-full px-4 py-2 cursor-pointer ${
-                        formData.scene.includes(scene)
+                        formData.scene.includes(opt.value)
                           ? 'bg-violet-600'
                           : 'bg-gray-100'
                       }`}
-                      onClick={() => toggleScene(scene)}
+                      onClick={() => toggleScene(opt.value)}
                     >
                       <Text className={`text-sm ${
-                        formData.scene.includes(scene) ? 'text-white' : 'text-gray-600'
+                        formData.scene.includes(opt.value) ? 'text-white' : 'text-gray-600'
                       }`}
                       >
-                        {scene}
+                        {opt.label}
                       </Text>
                     </View>
                   ))}

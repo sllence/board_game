@@ -40,7 +40,10 @@ export class SessionsController {
   }
 
   @Post(':id/finish')
-  async finish(@Param('id') id: string, @Body() body: { winner?: string }) {
-    return this.sessionsService.finish(Number(id), body.winner)
+  async finish(
+    @Param('id') id: string,
+    @Body() body: { winner?: string; scoring_snapshot?: any[]; duration_seconds?: number },
+  ) {
+    return this.sessionsService.finish(Number(id), body.winner, body.scoring_snapshot, body.duration_seconds)
   }
 }

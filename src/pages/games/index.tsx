@@ -126,7 +126,7 @@ const GamesPage: FC = () => {
     }
   }
 
-  useEffect(() => { fetchGames() }, [filters])
+  useEffect(() => { fetchGames() }, [filters, keyword])
 
   const handleSearch = () => { fetchGames() }
 

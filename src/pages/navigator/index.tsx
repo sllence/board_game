@@ -112,15 +112,14 @@ const NavigatorPage: FC = () => {
     return () => clearInterval(id)
   }, [timerRunning])
 
-  // 自动保存：玩家分数变化时保存到后端
+  // 自动保存：玩家分数变化时防抖保存（仅监听 players，不监听计时器）
   useEffect(() => {
     if (phase !== 'playing' || !sessionId || players.length === 0) return
-    // 防抖：避免频繁保存（2.5秒）
     const timeoutId = setTimeout(() => {
       saveSessionProgress()
     }, 2500)
     return () => clearTimeout(timeoutId)
-  }, [players, elapsedSeconds])
+  }, [players])
 
   const saveSessionProgress = async () => {
     if (!sessionId) return
@@ -231,7 +230,6 @@ const NavigatorPage: FC = () => {
 
   const finishGame = async () => {
     setTimerRunning(false)
-    setShowFinishDialog(true)
     if (sessionId) {
       try {
         const sorted = [...players].sort((a, b) => b.score - a.score)
@@ -240,15 +238,16 @@ const NavigatorPage: FC = () => {
           method: 'POST',
           data: {
             winner: sorted[0]?.name,
-            scoringSnapshot: players.map((p) => ({ name: p.name, score: p.score })),
+            scoring_snapshot: players.map((p) => ({ name: p.name, score: p.score })),
+            duration_seconds: elapsedSeconds,
           },
         })
-        console.log('[NavigatorPage] finishSession success')
       } catch (err) {
         console.error('[NavigatorPage] finishSession error:', err)
       }
     }
     setPhase('finished')
+    setShowFinishDialog(false)
   }
 
   const askAI = async () => {

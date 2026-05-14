@@ -411,13 +411,23 @@ const ProfilePage: FC = () => {
             <Button
               size="sm"
               onClick={() => {
-                setUserInfo(null)
-                Taro.removeStorageSync('userInfo')
-                Taro.showToast({ title: '已退出', icon: 'success' })
-                // 退出后跳转到首页
-                setTimeout(() => {
-                  Taro.switchTab({ url: '/pages/index/index' })
-                }, 500)
+                Taro.showModal({
+                  title: '退出登录',
+                  content: '确定要退出登录吗？',
+                  confirmText: '退出',
+                  cancelText: '取消',
+                  confirmColor: '#ef4444',
+                  success: (res) => {
+                    if (res.confirm) {
+                      setUserInfo(null)
+                      Taro.removeStorageSync('userInfo')
+                      Taro.showToast({ title: '已退出', icon: 'success' })
+                      setTimeout(() => {
+                        Taro.switchTab({ url: '/pages/index/index' })
+                      }, 500)
+                    }
+                  }
+                })
               }}
               className="border-0"
               style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
@@ -576,9 +586,13 @@ const ProfilePage: FC = () => {
                   value={tempNickname || ''}
                 />
               ) : (
-                <View className="w-full px-4 py-3 bg-gray-50 rounded-xl">
-                  <Text className="text-sm text-gray-400">请在小程序中设置</Text>
-                </View>
+                <input
+                  type="text"
+                  placeholder="请输入昵称"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl border-0 outline-none text-sm"
+                  value={tempNickname || ''}
+                  onChange={(e) => setTempNickname((e.target as HTMLInputElement).value)}
+                />
               )}
             </View>
             <View className="flex flex-row gap-3">
@@ -656,9 +670,13 @@ const ProfilePage: FC = () => {
                   value={tempNickname || ''}
                 />
               ) : (
-                <View className="w-full px-4 py-3 bg-gray-50 rounded-xl">
-                  <Text className="text-sm text-gray-400">请在小程序中设置</Text>
-                </View>
+                <input
+                  type="text"
+                  placeholder="请输入昵称"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-xl border-0 outline-none text-sm"
+                  value={tempNickname || ''}
+                  onChange={(e) => setTempNickname((e.target as HTMLInputElement).value)}
+                />
               )}
             </View>
             <View className="flex flex-row gap-3">

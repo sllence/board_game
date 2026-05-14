@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dices } from 'lucide-react-taro'
@@ -19,18 +19,27 @@ const DicePage: FC = () => {
   const [results, setResults] = useState<number[]>([])
   const [diceCount, setDiceCount] = useState(1)
   const [rolling, setRolling] = useState(false)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [])
 
   const roll = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
     setRolling(true)
     let count = 0
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       const newResults = Array.from({ length: diceCount }, () =>
         Math.floor(Math.random() * selectedDice.max) + 1
       )
       setResults(newResults)
       count++
       if (count >= 8) {
-        clearInterval(interval)
+        clearInterval(intervalRef.current!)
+        intervalRef.current = null
         setRolling(false)
       }
     }, 80)

@@ -108,7 +108,7 @@ export class GamesService {
     const client = getSupabaseClient()
     const { error } = await client
       .from('board_games')
-      .update({ is_active: false })
+      .update({ status: 'offline' })
       .eq('id', id)
     if (error) throw new Error(`删除桌游失败: ${error.message}`)
     return { success: true }
