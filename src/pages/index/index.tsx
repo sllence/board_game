@@ -43,10 +43,14 @@ const QUICK_TOOLS = [
   { key: 'scorer', label: '计分', icon: <Calculator size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', path: '/pages/scorer/index' },
 ]
 
-const TYPE_GRADIENT: Record<string, string> = {
-  strategy: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-  social: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
-  party: 'linear-gradient(135deg, #F97316 0%, #EF4444 100%)',
+const ICON_KEY_MAP: Record<string, string> = {
+  castle: '🏰', gem: '💎', moon: '🌙', shield: '🛡️',
+  landmark: '🏛️', wheat: '🌾',
+}
+
+const TYPE_LABEL_MAP: Record<string, string> = {
+  strategy: '策略', roleplay: '角色扮演', management: '经营',
+  auction: '拍卖', versus: '对抗', puzzle: '解谜', cooperative: '合作',
 }
 
 const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -232,7 +236,7 @@ const IndexPage: FC = () => {
                       className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: game.icon_bg || '#4F46E5' }}
                     >
-                      <Text className="text-2xl">{game.icon_key === 'castle' ? '🏰' : game.icon_key === 'gem' ? '💎' : game.icon_key === 'moon' ? '🌙' : game.icon_key === 'shield' ? '🛡️' : game.icon_key === 'landmark' ? '🏛️' : game.icon_key === 'wheat' ? '🌾' : '🎲'}</Text>
+                      <Text className="text-2xl">{ICON_KEY_MAP[game.icon_key] || '🎲'}</Text>
                     </View>
 
                     {/* 游戏信息 */}
@@ -279,7 +283,7 @@ const IndexPage: FC = () => {
                             style={{ backgroundColor: '#ede9fe' }}
                           >
                             <Text className="text-xs text-purple-600">
-                              {game.type[0] === 'strategy' ? '策略' : game.type[0] === 'roleplay' ? '角色扮演' : game.type[0] === 'management' ? '经营' : game.type[0] === 'auction' ? '拍卖' : game.type[0] === 'versus' ? '对抗' : game.type[0] === 'puzzle' ? '解谜' : game.type[0]}
+                              {TYPE_LABEL_MAP[game.type[0]] || game.type[0]}
                             </Text>
                           </View>
                         )}

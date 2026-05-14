@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +11,13 @@ const RandomPage: FC = () => {
   const [newName, setNewName] = useState('')
   const [result, setResult] = useState<string | null>(null)
   const [selecting, setSelecting] = useState(false)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [])
 
   const addName = () => {
     if (!newName.trim()) return
@@ -25,18 +32,21 @@ const RandomPage: FC = () => {
 
   const pickRandom = () => {
     if (names.length === 0) return
+    if (intervalRef.current) clearInterval(intervalRef.current)
     setSelecting(true)
     setResult(null)
 
     let count = 0
-    const interval = setInterval(() => {
-      setResult(names[Math.floor(Math.random() * names.length)])
+    intervalRef.current = setInterval(() => {
       count++
       if (count >= 12) {
-        clearInterval(interval)
+        clearInterval(intervalRef.current!)
+        intervalRef.current = null
         const finalIdx = Math.floor(Math.random() * names.length)
         setResult(names[finalIdx])
         setSelecting(false)
+      } else {
+        setResult(names[Math.floor(Math.random() * names.length)])
       }
     }, 80)
   }

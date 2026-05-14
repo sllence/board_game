@@ -7,22 +7,17 @@ import { Clock, History, Trophy } from 'lucide-react-taro'
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import type { FC } from 'react'
 
-interface PlayerInfo {
-  name: string
-  score: number
-}
-
 interface GameSession {
   id: number
   game_id: number
   session_name: string
-  players: PlayerInfo[]
+  players: string[]
   winner: string
-  rounds: number
-  duration: number
+  duration_seconds: number
   status: string
   scoring_snapshot: { name: string; score: number }[]
   created_at: string
+  game?: { id: number; name: string } | null
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -124,7 +119,7 @@ const HistoryPage: FC = () => {
           <View className="flex flex-col gap-3">
             {sessions.map((session) => {
               const statusInfo = STATUS_MAP[session.status] || { label: session.status, color: '#9ca3af', bg: '#f3f4f6' }
-              const playerList: PlayerInfo[] = Array.isArray(session.players) ? session.players : []
+              const playerList: string[] = Array.isArray(session.players) ? session.players : []
               const scores = Array.isArray(session.scoring_snapshot) ? session.scoring_snapshot : []
               const handleSessionClick = () => {
                 Taro.navigateTo({ url: `/pages/navigator/index?sessionId=${session.id}` })
@@ -134,7 +129,9 @@ const HistoryPage: FC = () => {
                   <CardContent className="p-4">
                     {/* 头部 */}
                     <View className="flex flex-row items-center justify-between mb-3">
-                      <Text className="block text-base font-semibold text-[#1e1b4b]">{session.session_name || '未命名对局'}</Text>
+                      <Text className="block text-base font-semibold text-[#1e1b4b]">
+                        {session.game?.name || session.session_name || '未命名对局'}
+                      </Text>
                       <View className="rounded-full px-2 py-1" style={{ backgroundColor: statusInfo.bg }}>
                         <Text className="text-xs font-medium" style={{ color: statusInfo.color }}>{statusInfo.label}</Text>
                       </View>
@@ -144,7 +141,7 @@ const HistoryPage: FC = () => {
                     <View className="flex flex-row items-center gap-3 mb-3">
                       <View className="flex flex-row items-center gap-1">
                         <Clock size={12} color="#9ca3af" />
-                        <Text className="text-xs text-gray-400">{formatDuration(session.duration)}</Text>
+                        <Text className="text-xs text-gray-400">{formatDuration(session.duration_seconds)}</Text>
                       </View>
                       <Text className="text-xs text-gray-400">{formatDate(session.created_at)}</Text>
                     </View>
@@ -152,9 +149,9 @@ const HistoryPage: FC = () => {
                     {/* 玩家列表 */}
                     {playerList.length > 0 && (
                       <View className="flex flex-row flex-wrap gap-2 mb-3">
-                        {playerList.map((p, idx) => (
+                        {playerList.map((name, idx) => (
                           <View key={idx} className="bg-gray-100 rounded-full px-3 py-1">
-                            <Text className="text-xs text-gray-600">{p.name}</Text>
+                            <Text className="text-xs text-gray-600">{name}</Text>
                           </View>
                         ))}
                       </View>

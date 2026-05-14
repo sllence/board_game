@@ -1,4 +1,5 @@
 import { View, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +23,11 @@ const TimerPage: FC = () => {
   const [remaining, setRemaining] = useState(60)
   const [running, setRunning] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const modeRef = useRef(mode)
+  const runningRef = useRef(running)
+
+  useEffect(() => { modeRef.current = mode }, [mode])
+  useEffect(() => { runningRef.current = running }, [running])
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -34,24 +40,24 @@ const TimerPage: FC = () => {
     return () => clearTimer()
   }, [clearTimer])
 
-  const tick = useCallback(() => {
-    setRemaining((prev) => {
-      if (mode === 'countdown') {
-        if (prev <= 1) {
-          clearTimer()
-          setRunning(false)
-          return 0
-        }
-        return prev - 1
-      }
-      return prev + 1
-    })
-  }, [mode, clearTimer])
-
   const start = () => {
     if (running) return
     setRunning(true)
-    timerRef.current = setInterval(tick, 1000)
+    timerRef.current = setInterval(() => {
+      setRemaining((prev) => {
+        if (modeRef.current === 'countdown') {
+          if (prev <= 1) {
+            clearTimer()
+            setRunning(false)
+            // 倒计时结束震动提醒
+            try { Taro.vibrateShort({ type: 'heavy' }) } catch { /* 部分环境不支持 */ }
+            return 0
+          }
+          return prev - 1
+        }
+        return prev + 1
+      })
+    }, 1000)
   }
 
   const pause = () => {
@@ -62,11 +68,7 @@ const TimerPage: FC = () => {
   const reset = () => {
     clearTimer()
     setRunning(false)
-    if (mode === 'countdown') {
-      setRemaining(totalSeconds)
-    } else {
-      setRemaining(0)
-    }
+    setRemaining(mode === 'countdown' ? totalSeconds : 0)
   }
 
   const selectPreset = (seconds: number) => {
@@ -80,11 +82,7 @@ const TimerPage: FC = () => {
     clearTimer()
     setRunning(false)
     setMode(newMode)
-    if (newMode === 'stopwatch') {
-      setRemaining(0)
-    } else {
-      setRemaining(totalSeconds)
-    }
+    setRemaining(newMode === 'stopwatch' ? 0 : totalSeconds)
   }
 
   const formatTime = (secs: number) => {
@@ -96,6 +94,8 @@ const TimerPage: FC = () => {
   const progress = mode === 'countdown' && totalSeconds > 0
     ? ((totalSeconds - remaining) / totalSeconds) * 100
     : 0
+
+  const isFinished = mode === 'countdown' && remaining === 0 && totalSeconds > 0
 
   return (
     <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
@@ -152,23 +152,23 @@ const TimerPage: FC = () => {
       <View className="flex-1 flex flex-col items-center justify-center px-5">
         <View
           className="relative w-52 h-52 rounded-full flex items-center justify-center bg-white"
-          style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+          style={{ boxShadow: isFinished ? '0 0 0 4px #f87171' : '0 4px 20px rgba(0,0,0,0.06)' }}
         >
-          {/* 进度指示 */}
+          {/* 倒计时进度填充 */}
           {mode === 'countdown' && running && progress > 0 && (
             <View
               className="absolute bottom-0 left-0 right-0 rounded-b-full"
               style={{ height: `${progress}%`, background: 'linear-gradient(180deg, transparent, rgba(79,70,229,0.08))' }}
             />
           )}
-          {mode === 'countdown' && !running && remaining === 0 && totalSeconds > 0 && (
-            <View className="absolute inset-0 rounded-full border-4 border-red-400" />
-          )}
           <View className="flex flex-col items-center relative">
-            <Text className="block text-5xl font-mono font-bold text-[#1e1b4b]">
+            <Text
+              className="block text-5xl font-mono font-bold"
+              style={{ color: isFinished ? '#ef4444' : '#1e1b4b' }}
+            >
               {formatTime(remaining)}
             </Text>
-            {mode === 'countdown' && remaining === 0 && totalSeconds > 0 && (
+            {isFinished && (
               <Text className="block text-sm text-red-500 font-medium mt-2">时间到！</Text>
             )}
           </View>
@@ -204,6 +204,7 @@ const TimerPage: FC = () => {
           <Button
             size="lg"
             onClick={start}
+            disabled={isFinished}
             className="rounded-2xl flex-1 max-w-48"
             style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}
           >
