@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
@@ -58,6 +58,7 @@ const TOOL_ITEMS = [
   { key: 'timer', label: '计时', icon: <Timer size={20} color="#10b981" />, path: '/pages/timer/index' },
   { key: 'cards', label: '抽牌', icon: <Layers size={20} color="#f59e0b" />, path: '/pages/cards/index' },
   { key: 'random', label: '选人', icon: <Shuffle size={20} color="#ef4444" />, path: '/pages/random/index' },
+  { key: 'scorer', label: '计分', icon: <Calculator size={20} color="#8b5cf6" />, path: '/pages/scorer/index' },
 ]
 
 const NavigatorPage: FC = () => {
@@ -271,8 +272,36 @@ const NavigatorPage: FC = () => {
   }
 
   const goToTool = (path: string) => {
+    // 跳转计分器时，把当前玩家和分数写入 storage 供计分器读取
+    if (path.includes('scorer') && players.length > 0) {
+      Taro.setStorageSync('scorer_session', JSON.stringify({
+        sessionId,
+        players: players.map((p) => ({ name: p.name, score: p.score })),
+      }))
+    }
     Taro.navigateTo({ url: path })
   }
+
+  // 从计分器返回后同步最新分数
+  useDidShow(() => {
+    if (phase !== 'playing') return
+    try {
+      const raw = Taro.getStorageSync('scorer_session')
+      if (!raw) return
+      const data = JSON.parse(raw)
+      if (data.sessionId !== sessionId) return
+      // 只同步分数，玩家顺序保持不变
+      setPlayers((prev) =>
+        prev.map((p) => {
+          const updated = data.players.find((dp: { name: string; score: number }) => dp.name === p.name)
+          return updated ? { ...p, score: updated.score } : p
+        })
+      )
+      Taro.removeStorageSync('scorer_session')
+    } catch {
+      // ignore
+    }
+  })
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60)

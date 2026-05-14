@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +25,18 @@ const ScorerPage: FC = () => {
   ])
   const [newPlayerName, setNewPlayerName] = useState('')
   const [step, setStep] = useState(1)
+  const [linkedSessionId, setLinkedSessionId] = useState<number | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = Taro.getStorageSync('scorer_session')
+      if (raw) {
+        const data = JSON.parse(raw)
+        setLinkedSessionId(data.sessionId)
+        setPlayers(data.players.map((p: { name: string; score: number }) => ({ name: p.name, score: p.score })))
+      }
+    } catch { /* ignore */ }
+  }, [])
 
   const addPlayer = () => {
     if (!newPlayerName.trim() || players.length >= 12) return
@@ -58,9 +70,23 @@ const ScorerPage: FC = () => {
             <Text className="block text-xl font-bold text-[#1e1b4b]">计分器</Text>
           </View>
           {Taro.getCurrentPages().length > 1 && (
-            <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
+            <View
+              className="flex flex-row items-center gap-1 cursor-pointer"
+              onClick={() => {
+                if (linkedSessionId !== null) {
+                  Taro.setStorageSync('scorer_session', JSON.stringify({
+                    sessionId: linkedSessionId,
+                    players: players.map((p) => ({ name: p.name, score: p.score })),
+                  }))
+                }
+                Taro.navigateBack()
+              }}
+            >
               <ArrowLeft size={14} color="#8b5cf6" />
               <Text className="text-sm text-purple-500">返回对局</Text>
+              {linkedSessionId !== null && (
+                <View className="ml-1 w-1.5 h-1.5 rounded-full bg-green-400" />
+              )}
             </View>
           )}
         </View>

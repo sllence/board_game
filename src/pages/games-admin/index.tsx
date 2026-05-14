@@ -1,5 +1,7 @@
 /* eslint-disable no-restricted-syntax */
+/* eslint-disable no-restricted-syntax */
 import { View, Text, ScrollView, Image, Textarea as TaroTextarea } from '@tarojs/components'
+/* eslint-enable no-restricted-syntax */
 /* eslint-enable no-restricted-syntax */
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
@@ -8,6 +10,7 @@ import { Input } from '@/components/ui/input'
 
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import { Network } from '@/network'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -23,7 +26,7 @@ interface BoardGame {
   max_duration?: number
   difficulty: string
   intro?: string
-  beginner_tips?: string
+  tips?: string[]
   rules?: string
   sort_order?: number
   status?: string
@@ -41,7 +44,7 @@ interface GameFormData {
   max_duration: number
   difficulty: string
   intro: string
-  beginner_tips: string
+  tips: string[]
   rules: string
   sort_order: number
   status: string
@@ -99,7 +102,7 @@ const GamesAdminPage: FC = () => {
     max_duration: 60,
     difficulty: 'medium',
     intro: '',
-    beginner_tips: '',
+    tips: [],
     rules: '',
     sort_order: 0,
     status: 'online'
@@ -210,7 +213,7 @@ const GamesAdminPage: FC = () => {
         max_duration: fullGame.max_duration || 60,
         difficulty: fullGame.difficulty || 'medium',
         intro: fullGame.intro || '',
-        beginner_tips: fullGame.beginner_tips || '',
+        tips: Array.isArray(fullGame.tips) ? fullGame.tips : [],
         rules: fullGame.rules || '',
         sort_order: fullGame.sort_order || 0,
         status: fullGame.status || 'online'
@@ -238,7 +241,7 @@ const GamesAdminPage: FC = () => {
       max_duration: 60,
       difficulty: 'medium',
       intro: '',
-      beginner_tips: '',
+      tips: [],
       rules: '',
       sort_order: 0,
       status: 'online'
@@ -419,6 +422,7 @@ const GamesAdminPage: FC = () => {
             <View
               key={game.id}
               className="mb-3 bg-white rounded-2xl border border-gray-100 shadow-sm"
+              onClick={() => handleEditGame(game)}
             >
               <View className="flex flex-row items-center justify-between px-4 py-4">
                 {/* Left: Name + Status */}
@@ -434,20 +438,15 @@ const GamesAdminPage: FC = () => {
                   <Text className="text-base font-medium text-gray-900">{game.name}</Text>
                 </View>
 
-                {/* Right: Actions */}
-                <View className="flex flex-row items-center gap-2">
-                  <View
-                    className="px-3 py-2 rounded-lg bg-gray-50"
-                    onClick={() => handleEditGame(game)}
-                  >
-                    <Text className="text-sm text-gray-600">编辑</Text>
-                  </View>
-                  <View
-                    className="px-3 py-2 rounded-lg bg-red-50"
-                    onClick={() => handleDeleteGame(game)}
-                  >
-                    <Text className="text-sm text-red-500">删除</Text>
-                  </View>
+                {/* Right: Delete Button */}
+                <View
+                  className="px-3 py-2 rounded-lg bg-red-50"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteGame(game)
+                  }}
+                >
+                  <Text className="text-sm text-red-500">删除</Text>
                 </View>
               </View>
             </View>
@@ -468,7 +467,7 @@ const GamesAdminPage: FC = () => {
         <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50">
           <View className="w-full bg-white h-full flex flex-col">
             {/* Modal Header */}
-            <View className="px-5 py-4 border-b border-gray-100 flex flex-row items-center justify-between">
+            <View className="px-5 pt-14 pb-4 border-b border-gray-100 flex flex-row items-center justify-between">
               <Button size="sm" variant="ghost" onClick={() => setShowModal(false)}>
                 <Text className="text-gray-500">取消</Text>
               </Button>
@@ -481,7 +480,7 @@ const GamesAdminPage: FC = () => {
             </View>
 
             {/* Modal Body */}
-            <ScrollView className="flex-1 px-5 py-4" scrollY style={{ flex: 1, minHeight: 0 }}>
+            <ScrollView className="flex-1 px-5 py-4" scrollY style={{ flex: 1, minHeight: 0, paddingBottom: 'env(safe-area-inset-bottom, 24px)' }}>
               {/* Status */}
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">状态</Text>
@@ -514,7 +513,7 @@ const GamesAdminPage: FC = () => {
                 <View className="flex flex-row items-center gap-4">
                   <View style={{ width: '80px', height: '80px', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
                     {formData.image_url ? (
-                      <Image src={formData.image_url} style={{ width: '100%', height: '100%' }} mode="aspectFill" />
+                      <Image src={formData.image_url} style={{ width: '100%', height: '100%' }} mode="aspectFill" onError={(e) => { e.stopPropagation() }} />
                     ) : (
                       <View className="flex items-center justify-center h-full">
                         <Text className="text-3xl">{formData.icon_key || '🎲'}</Text>
@@ -692,9 +691,11 @@ const GamesAdminPage: FC = () => {
               {/* Intro */}
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">简介</Text>
+                {/* eslint-disable-next-line no-restricted-syntax */}
                 <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                  <Input
+                  <TaroTextarea
                     className="w-full bg-transparent"
+                    style={{ height: '72px' }}
                     placeholder="请输入桌游简介"
                     value={formData.intro}
                     onInput={(e) => setFormData(prev => ({ ...prev, intro: e.detail.value }))}
@@ -702,36 +703,43 @@ const GamesAdminPage: FC = () => {
                 </View>
               </View>
 
-              {/* Beginner Tips */}
+              {/* Tips */}
               <View className="mb-5">
-                <Text className="block text-sm font-medium text-gray-700 mb-2">新手提示</Text>
-                {/* eslint-disable-next-line no-restricted-syntax */}
-                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                  <TaroTextarea
-                    autoHeight
-                    className="w-full bg-transparent"
-                    placeholder="请输入新手提示"
-                    value={formData.beginner_tips}
-                    onInput={(e) => setFormData(prev => ({ ...prev, beginner_tips: e.detail.value }))}
-                  />
-                </View>
+                <Text className="block text-sm font-medium text-gray-700 mb-2">小贴士</Text>
+                {formData.tips.map((tip, idx) => (
+                  <View key={idx} className="flex flex-row items-center gap-2 mb-2">
+                    <View className="flex-1 bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
+                      <Input
+                        className="w-full bg-transparent"
+                        placeholder={`第 ${idx + 1} 条贴士`}
+                        value={tip}
+                        onInput={(e) => {
+                          const next = [...formData.tips]
+                          next[idx] = e.detail.value
+                          setFormData(prev => ({ ...prev, tips: next }))
+                        }}
+                      />
+                    </View>
+                    <View
+                      className="px-3 py-3 rounded-xl bg-red-50"
+                      onClick={() => setFormData(prev => ({ ...prev, tips: prev.tips.filter((_, i) => i !== idx) }))}
+                    >
+                      <Text className="text-sm text-red-500">删除</Text>
+                    </View>
+                  </View>
+                ))}
+                <Button size="sm" variant="outline" onClick={() => setFormData(prev => ({ ...prev, tips: [...prev.tips, ''] }))}>
+                  <Text className="text-sm text-gray-700">+ 添加贴士</Text>
+                </Button>
               </View>
 
               {/* Rules */}
-              <View className="mb-5">
-                {/* eslint-disable-next-line no-restricted-syntax */}
-                <Text className="block text-sm font-medium text-gray-700 mb-2">游戏规则</Text>
-                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                  {/* eslint-disable-next-line no-restricted-syntax */}
-                  <TaroTextarea
-                    className="w-full bg-transparent"
-                    autoHeight
-                    placeholder="请输入游戏规则（支持换行）"
-                    value={formData.rules}
-                    onInput={(e) => setFormData(prev => ({ ...prev, rules: e.detail.value }))}
-                  />
-                </View>
-              </View>
+              <MarkdownEditor
+                value={formData.rules}
+                onChange={(value) => setFormData(prev => ({ ...prev, rules: value }))}
+                placeholder="请输入游戏规则，支持 Markdown 语法..."
+                minHeight={300}
+              />
 
               {/* Sort Order */}
               <View className="mb-5">
@@ -746,6 +754,7 @@ const GamesAdminPage: FC = () => {
                   />
                 </View>
               </View>
+              <View style={{ height: 40 }} />
             </ScrollView>
           </View>
         </View>

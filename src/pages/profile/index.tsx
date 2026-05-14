@@ -391,7 +391,7 @@ const ProfilePage: FC = () => {
         <View className="flex flex-row items-center gap-4">
           <View className="flex items-center justify-center" style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.2)' }}>
             {userInfo?.avatar_url ? (
-              <Image src={userInfo.avatar_url} style={{ width: '64px', height: '64px', borderRadius: '50%' }} />
+              <Image src={userInfo.avatar_url} style={{ width: '64px', height: '64px', borderRadius: '50%' }} onError={(e) => { e.stopPropagation() }} />
             ) : (
               <Text className="text-2xl">🎮</Text>
             )}
@@ -550,7 +550,7 @@ const ProfilePage: FC = () => {
                     style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
                   >
                     {tempAvatarUrl ? (
-                      <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                      <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} onError={(e) => { e.stopPropagation() }} />
                     ) : (
                       <Text className="text-2xl">🎮</Text>
                     )}
@@ -634,7 +634,7 @@ const ProfilePage: FC = () => {
                     style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
                   >
                     {tempAvatarUrl ? (
-                      <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                      <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} onError={(e) => { e.stopPropagation() }} />
                     ) : (
                       <Text className="text-2xl">🎮</Text>
                     )}

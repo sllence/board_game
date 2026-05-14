@@ -1,6 +1,7 @@
 import { View, Text, RichText, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import { markdownToRichText } from '@/lib/markdown'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,7 +18,7 @@ interface Section {
 interface BoardGameDetail {
   id: number
   name: string
-  type: string
+  type: string | string[]
   min_players: number
   max_players: number
   duration?: number
@@ -30,9 +31,9 @@ interface BoardGameDetail {
   intro: string
   sections?: Section[]
   tips?: string[]
-  beginner_tips?: string
   rules?: string
-  image_url?: string,
+  image_url?: string
+  scene?: string | string[]
   scoring_config: Record<string, unknown>
 }
 
@@ -50,16 +51,31 @@ const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string 
   hard: { label: '困难', color: '#dc2626', bg: '#fef2f2' },
 }
 
-const TYPE_MAP: Record<string, string> = {
-  strategy: '策略',
-  social: '社交',
-  party: '聚会',
+const TYPE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
+  strategy: { label: '策略', emoji: '♟️', color: '#4F46E5', bg: '#eef2ff' },
+  puzzle: { label: '益智', emoji: '🧩', color: '#0EA5E9', bg: '#f0f9ff' },
+  auction: { label: '拍卖', emoji: '🔨', color: '#F59E0B', bg: '#fffbeb' },
+  roleplay: { label: '扮演', emoji: '🎭', color: '#8B5CF6', bg: '#faf5ff' },
+  management: { label: '经营', emoji: '🏗️', color: '#10B981', bg: '#ecfdf5' },
+  cooperative: { label: '合作', emoji: '🤝', color: '#06B6D4', bg: '#ecfeff' },
+  versus: { label: '对抗', emoji: '⚔️', color: '#EF4444', bg: '#fef2f2' },
+  social: { label: '社交', emoji: '💬', color: '#F59E0B', bg: '#fffbeb' },
+  party: { label: '聚会', emoji: '🎉', color: '#8B5CF6', bg: '#faf5ff' },
+}
+
+const SCENE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
+  gathering: { emoji: '🎉', label: '聚会', color: '#7c3aed', bg: '#f5f3ff' },
+  teambuilding: { emoji: '🏢', label: '团建', color: '#0891b2', bg: '#ecfeff' },
+  family: { emoji: '👨‍👩‍👧', label: '亲子', color: '#059669', bg: '#ecfdf5' },
+  couple: { emoji: '💑', label: '情侣', color: '#e11d48', bg: '#fff1f2' },
+  drinking: { emoji: '🍻', label: '酒局', color: '#d97706', bg: '#fffbeb' },
 }
 
 const RuleDetailPage: FC = () => {
   const [game, setGame] = useState<BoardGameDetail | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const [loading, setLoading] = useState(true)
+  const [rulesExpanded, setRulesExpanded] = useState(false)
 
   useEffect(() => {
     const instance = Taro.getCurrentInstance()
@@ -103,12 +119,8 @@ const RuleDetailPage: FC = () => {
     Taro.navigateTo({ url: `/pages/guide-detail/index?id=${guideId}` })
   }
 
-  // 转换简单文本为富文本格式，支持换行
-  const convertToRichText = (text: string): string => {
-    if (!text) return ''
-    // 简单的文本转换：把换行符转换成<br/>，保持基本格式
-    return text.replace(/\n/g, '<br/>')
-  }
+  // 转换 Markdown 为富文本格式，注入内联样式供 RichText 渲染
+  const convertToRichText = (text: string) => markdownToRichText(text)
 
   if (loading) {
     return (
@@ -128,6 +140,7 @@ const RuleDetailPage: FC = () => {
 
   const sections: Section[] = Array.isArray(game.sections) ? game.sections : []
   const tips: string[] = Array.isArray(game.tips) ? game.tips : []
+  const scenes: string[] = Array.isArray(game.scene) ? game.scene : game.scene ? [game.scene] : []
   const diffInfo = DIFFICULTY_MAP[game.difficulty] || { label: game.difficulty, color: '#6b7280', bg: '#f3f4f6' }
   
   // 显示时长：优先用新字段，否则用旧字段
@@ -143,13 +156,23 @@ const RuleDetailPage: FC = () => {
         style={{ background: game.hero_bg || 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
       >
         <Text className="block text-2xl font-bold text-white">{game.name}</Text>
-        <View className="flex flex-row items-center gap-2 mt-2">
-          <View className="rounded-full px-3 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-            <Text className="text-xs text-white font-medium">{TYPE_MAP[game.type] || game.type}</Text>
-          </View>
-          <View className="rounded-full px-3 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-            <Text className="text-xs text-white font-medium" style={{ color: diffInfo.color }}>{diffInfo.label}</Text>
-          </View>
+        <View className="flex flex-row flex-wrap items-center gap-2 mt-3">
+          {(Array.isArray(game.type) ? game.type : [game.type]).map((t) => {
+            const meta = TYPE_META[t]
+            return meta ? (
+              <View key={t} className="rounded px-1.5 py-0.5" style={{ backgroundColor: meta.bg }}>
+                <Text style={{ fontSize: 11, color: meta.color }}>{meta.emoji} {meta.label}</Text>
+              </View>
+            ) : null
+          })}
+          {scenes.map((s) => {
+            const meta = SCENE_META[s]
+            return meta ? (
+              <View key={s} className="rounded px-1.5 py-0.5" style={{ backgroundColor: meta.bg }}>
+                <Text style={{ fontSize: 11, color: meta.color }}>{meta.emoji} {meta.label}</Text>
+              </View>
+            ) : null
+          })}
         </View>
         <View className="flex flex-row items-center gap-5 mt-4">
           <View className="flex flex-row items-center gap-1">
@@ -160,6 +183,10 @@ const RuleDetailPage: FC = () => {
             <Clock size={14} color="rgba(255,255,255,0.9)" />
             <Text className="text-sm text-white font-medium">{displayDuration}分钟</Text>
           </View>
+          <View className="flex flex-row items-center gap-1">
+            <Star size={14} color="rgba(255,255,255,0.9)" />
+            <Text className="text-sm text-white font-medium">{diffInfo.label}难度</Text>
+          </View>
         </View>
       </View>
 
@@ -167,7 +194,7 @@ const RuleDetailPage: FC = () => {
         <View className="px-4 -mt-4">
           <Card className="border-0 shadow-lg">
             <CardContent className="p-0">
-              <Image src={game.image_url} className="w-full h-48" mode="aspectFill" />
+              <Image src={game.image_url} className="w-full h-48" mode="aspectFill" onError={(e) => { e.stopPropagation() }} />
             </CardContent>
           </Card>
         </View>
@@ -185,72 +212,72 @@ const RuleDetailPage: FC = () => {
       {/* 游戏规则 - 新的统一字段 */}
       {game.rules && (
         <View className="px-4 mt-5">
-          <View className="flex flex-row items-center gap-2 mb-3">
-            <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-              <BookOpen size={14} color="#fff" />
+          <View
+            className="flex flex-row items-center justify-between mb-3"
+            onClick={() => setRulesExpanded(v => !v)}
+          >
+            <View className="flex flex-row items-center gap-2">
+              <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                <BookOpen size={14} color="#fff" />
+              </View>
+              <Text className="block text-base font-semibold text-[#1e1b4b]">游戏规则</Text>
             </View>
-            <Text className="block text-base font-semibold text-[#1e1b4b]">游戏规则</Text>
+            <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
           </View>
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4">
-              <RichText nodes={convertToRichText(game.rules)} />
-            </CardContent>
-          </Card>
+          {rulesExpanded && (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4">
+                <RichText nodes={convertToRichText(game.rules)} />
+              </CardContent>
+            </Card>
+          )}
         </View>
       )}
 
       {/* 旧的规则章节 - 保持向后兼容 */}
       {!game.rules && sections.length > 0 && (
         <View className="px-4 mt-5">
-          <View className="flex flex-row items-center gap-2 mb-3">
-            <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-              <BookOpen size={14} color="#fff" />
+          <View
+            className="flex flex-row items-center justify-between mb-3"
+            onClick={() => setRulesExpanded(v => !v)}
+          >
+            <View className="flex flex-row items-center gap-2">
+              <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                <BookOpen size={14} color="#fff" />
+              </View>
+              <Text className="block text-base font-semibold text-[#1e1b4b]">游戏规则</Text>
             </View>
-            <Text className="block text-base font-semibold text-[#1e1b4b]">游戏规则</Text>
+            <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
           </View>
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-0">
-              <Accordion type="multiple" defaultValue={sections.map((_, i) => `section-${i}`)}>
-                {sections.map((section, idx) => (
-                  <AccordionItem key={idx} value={`section-${idx}`}>
-                    <AccordionTrigger>
-                      <View className="flex flex-row items-center gap-2">
-                        <View className="w-5 h-5 rounded flex items-center justify-center bg-indigo-100">
-                          <Text className="text-xs font-bold text-indigo-600">{idx + 1}</Text>
+          {rulesExpanded && (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-0">
+                <Accordion type="multiple" defaultValue={sections.map((_, i) => `section-${i}`)}>
+                  {sections.map((section, idx) => (
+                    <AccordionItem key={idx} value={`section-${idx}`}>
+                      <AccordionTrigger>
+                        <View className="flex flex-row items-center gap-2">
+                          <View className="w-5 h-5 rounded flex items-center justify-center bg-indigo-100">
+                            <Text className="text-xs font-bold text-indigo-600">{idx + 1}</Text>
+                          </View>
+                          <Text className="text-sm font-medium text-[#1e1b4b]">{section.title}</Text>
                         </View>
-                        <Text className="text-sm font-medium text-[#1e1b4b]">{section.title}</Text>
-                      </View>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <Text className="block text-sm text-gray-500 leading-relaxed whitespace-pre-line pl-7">
-                        {section.content}
-                      </Text>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <Text className="block text-sm text-gray-500 leading-relaxed whitespace-pre-line pl-7">
+                          {section.content}
+                        </Text>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </CardContent>
+            </Card>
+          )}
         </View>
       )}
 
-      {/* 新手提示 - 新字段 */}
-      {game.beginner_tips && (
-        <View className="px-4 mt-5">
-          <View className="flex flex-row items-center gap-2 mb-3">
-            <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
-              <Lightbulb size={14} color="#fff" />
-            </View>
-            <Text className="block text-base font-semibold text-[#1e1b4b]">新手提示</Text>
-          </View>
-          <View className="bg-amber-50 rounded-xl px-4 py-3">
-            <Text className="block text-sm text-amber-900">{game.beginner_tips}</Text>
-          </View>
-        </View>
-      )}
-
-      {/* 旧的小贴士 - 保持向后兼容 */}
-      {!game.beginner_tips && tips.length > 0 && (
+      {tips.length > 0 && (
         <View className="px-4 mt-5">
           <View className="flex flex-row items-center gap-2 mb-3">
             <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>

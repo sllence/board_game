@@ -83,7 +83,6 @@ const HistoryPage: FC = () => {
       // 后端 findAll 返回最多 50 条，前端做分页切片
       const res = await Network.request({ url: `/api/sessions?${params}` })
       const all: GameSession[] = res.data?.data || []
-      const start = (pageNum - 1) * PAGE_SIZE
       const slice = all.slice(0, pageNum * PAGE_SIZE)
       setSessions(slice)
       setHasMore(all.length > pageNum * PAGE_SIZE)

@@ -21,6 +21,7 @@ interface BoardGame {
   icon_bg: string
   icon_color: string
   image_url?: string
+  scene?: string[]
   status: string
 }
 
@@ -48,9 +49,22 @@ const ICON_KEY_MAP: Record<string, string> = {
   landmark: '🏛️', wheat: '🌾',
 }
 
-const TYPE_LABEL_MAP: Record<string, string> = {
-  strategy: '策略', roleplay: '角色扮演', management: '经营',
-  auction: '拍卖', versus: '对抗', puzzle: '解谜', cooperative: '合作',
+const TYPE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
+  strategy: { label: '策略', emoji: '♟️', color: '#4F46E5', bg: '#eef2ff' },
+  puzzle: { label: '益智', emoji: '🧩', color: '#0EA5E9', bg: '#f0f9ff' },
+  auction: { label: '拍卖', emoji: '🔨', color: '#F59E0B', bg: '#fffbeb' },
+  roleplay: { label: '扮演', emoji: '🎭', color: '#8B5CF6', bg: '#faf5ff' },
+  management: { label: '经营', emoji: '🏗️', color: '#10B981', bg: '#ecfdf5' },
+  cooperative: { label: '合作', emoji: '🤝', color: '#06B6D4', bg: '#ecfeff' },
+  versus: { label: '对抗', emoji: '⚔️', color: '#EF4444', bg: '#fef2f2' },
+}
+
+const SCENE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
+  gathering: { emoji: '🎉', label: '聚会', color: '#7c3aed', bg: '#f5f3ff' },
+  teambuilding: { emoji: '🏢', label: '团建', color: '#0891b2', bg: '#ecfeff' },
+  family: { emoji: '👨‍👩‍👧', label: '亲子', color: '#059669', bg: '#ecfdf5' },
+  couple: { emoji: '💑', label: '情侣', color: '#e11d48', bg: '#fff1f2' },
+  drinking: { emoji: '🍻', label: '酒局', color: '#d97706', bg: '#fffbeb' },
 }
 
 const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -253,40 +267,35 @@ const IndexPage: FC = () => {
                         )}
                       </View>
 
-                      {/* 游戏标签 */}
-                      <View className="flex flex-row flex-wrap gap-2 mb-2">
-                        <View className="flex flex-row items-center gap-1">
-                          <Text className="text-xs text-gray-500">👥 {game.min_players}-{game.max_players}人</Text>
-                        </View>
+                      {/* 基础信息 */}
+                      <View className="flex flex-row items-center gap-2 mb-2">
+                        <Text className="text-xs text-gray-500">👥 {game.min_players}-{game.max_players}人</Text>
                         <Text className="text-xs text-gray-300">·</Text>
-                        <View className="flex flex-row items-center gap-1">
-                          <Text className="text-xs text-gray-500">⏱️ {game.min_duration}-{game.max_duration}分钟</Text>
-                        </View>
+                        <Text className="text-xs text-gray-500">⏱️ {game.min_duration}-{game.max_duration}分钟</Text>
+                        <Text className="text-xs text-gray-300">·</Text>
+                        <Text style={{ fontSize: 11, color: DIFFICULTY_MAP[game.difficulty]?.color || '#6b7280' }}>
+                          {DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}
+                        </Text>
                       </View>
 
-                      {/* 难度标签 */}
-                      <View className="flex flex-row items-center gap-2">
-                        <View
-                          className="rounded-full px-2 py-1"
-                          style={{ backgroundColor: DIFFICULTY_MAP[game.difficulty]?.bg || '#f3f4f6' }}
-                        >
-                          <Text
-                            className="text-xs font-medium"
-                            style={{ color: DIFFICULTY_MAP[game.difficulty]?.color || '#6b7280' }}
-                          >
-                            {DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}
-                          </Text>
-                        </View>
-                        {game.type && game.type.length > 0 && (
-                          <View
-                            className="rounded-full px-2 py-1"
-                            style={{ backgroundColor: '#ede9fe' }}
-                          >
-                            <Text className="text-xs text-purple-600">
-                              {TYPE_LABEL_MAP[game.type[0]] || game.type[0]}
-                            </Text>
-                          </View>
-                        )}
+                      {/* 类型 + 场景标签 */}
+                      <View className="flex flex-row flex-wrap items-center gap-1">
+                        {game.type?.map((t) => {
+                          const meta = TYPE_META[t]
+                          return meta ? (
+                            <View key={t} className="rounded" style={{ backgroundColor: meta.bg, paddingLeft: 4, paddingRight: 4, paddingTop: 0, paddingBottom: 1 }}>
+                              <Text style={{ fontSize: 10, color: meta.color, lineHeight: 1 }}>{meta.emoji} {meta.label}</Text>
+                            </View>
+                          ) : null
+                        })}
+                        {game.scene?.map((s) => {
+                          const meta = SCENE_META[s]
+                          return meta ? (
+                            <View key={s} className="rounded" style={{ backgroundColor: meta.bg, paddingLeft: 4, paddingRight: 4, paddingTop: 0, paddingBottom: 1 }}>
+                              <Text style={{ fontSize: 10, color: meta.color, lineHeight: 1 }}>{meta.emoji} {meta.label}</Text>
+                            </View>
+                          ) : null
+                        })}
                       </View>
                     </View>
 

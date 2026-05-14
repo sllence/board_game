@@ -34,7 +34,7 @@ export class SessionsService {
     const client = getSupabaseClient()
     let query = client
       .from('game_sessions')
-      .select('id, game_id, session_name, players, winner, rounds, duration_seconds, status, started_at, finished_at, created_at, game:board_games(id, name)')
+      .select('id, game_id, session_name, players, winner, rounds, duration, status, started_at, finished_at, created_at, game:board_games(id, name)')
       .order('created_at', { ascending: false })
       .limit(50)
 
@@ -51,7 +51,7 @@ export class SessionsService {
     const client = getSupabaseClient()
     let query = client
       .from('game_sessions')
-      .select('id, game_id, session_name, players, winner, duration_seconds, status, created_at, game:board_games(id, name)')
+      .select('id, game_id, session_name, players, winner, duration, status, created_at, game:board_games(id, name)')
       .order('created_at', { ascending: false })
       .limit(5)
 
@@ -101,7 +101,7 @@ export class SessionsService {
       finished_at: new Date().toISOString(),
     }
     if (scoringSnapshot) updateData.scoring_snapshot = scoringSnapshot
-    if (durationSeconds !== undefined) updateData.duration_seconds = durationSeconds
+    if (durationSeconds !== undefined) updateData.duration = durationSeconds
 
     const { data, error } = await client
       .from('game_sessions')

@@ -327,8 +327,8 @@ const GamesPage: FC = () => {
                               <Text className="text-xs text-gray-400">⏱ {game.duration}min</Text>
                             </View>
                           </View>
-                          <View className="rounded-full px-2 py-1 flex-shrink-0" style={{ backgroundColor: difficultyInfo.bg }}>
-                            <Text className="text-xs" style={{ color: difficultyInfo.color }}>{difficultyInfo.emoji} {difficultyInfo.label}</Text>
+                          <View className="rounded px-1.5 py-0.5 flex-shrink-0" style={{ backgroundColor: difficultyInfo.bg }}>
+                            <Text style={{ fontSize: 11, color: difficultyInfo.color }}>{difficultyInfo.emoji} {difficultyInfo.label}</Text>
                           </View>
                         </View>
                         <Text className="block text-xs text-gray-400 mt-1 line-clamp-1">{game.intro}</Text>
@@ -338,16 +338,16 @@ const GamesPage: FC = () => {
                           {game.type?.map((t) => {
                             const meta = TYPE_META[t]
                             return meta ? (
-                              <View key={t} className="rounded-full px-2 py-1" style={{ backgroundColor: meta.bg }}>
-                                <Text className="text-xs" style={{ color: meta.color }}>{meta.emoji} {meta.label}</Text>
+                              <View key={t} className="rounded px-1.5 py-0.5" style={{ backgroundColor: meta.bg }}>
+                                <Text style={{ fontSize: 11, color: meta.color }}>{meta.emoji} {meta.label}</Text>
                               </View>
                             ) : null
                           })}
                           {game.scene?.map((s) => {
                             const meta = SCENE_META[s]
                             return meta ? (
-                              <View key={s} className="rounded-full px-2 py-1" style={{ backgroundColor: meta.bg }}>
-                                <Text className="text-xs" style={{ color: meta.color }}>{meta.emoji} {meta.label}</Text>
+                              <View key={s} className="rounded px-1.5 py-0.5" style={{ backgroundColor: meta.bg }}>
+                                <Text style={{ fontSize: 11, color: meta.color }}>{meta.emoji} {meta.label}</Text>
                               </View>
                             ) : null
                           })}
