@@ -183,8 +183,14 @@ const WheelSpinPage: FC = () => {
     const targetAngle = winnerSector.startDeg + (winnerSector.endDeg - winnerSector.startDeg) / 2
     const extraSpins = 5 + Math.random() * 3
     const currentRotation = rotation % 360
-    const needed = (360 - (currentRotation + targetAngle) % 360) % 360
-    const delta = needed === 0 ? 360 : needed
+    // 指针固定在屏幕上方（12点钟方向），对应 Canvas 坐标系 270°
+    // 转盘顺时针旋转 X 度后，指针指向 Canvas 角度 (270 - X) % 360
+    // 要让指针指向 winner 扇区中点 targetAngle，需满足：
+    // (270 - targetRotation) % 360 = targetAngle
+    // => targetRotation % 360 = (270 - targetAngle) % 360
+    const desiredRotation = (270 - targetAngle + 360) % 360
+    let delta = (desiredRotation - currentRotation + 360) % 360
+    if (delta === 0) delta = 360
     const targetRotation = rotation + extraSpins * 360 + delta
 
     const startTime = Date.now()
@@ -214,7 +220,8 @@ const WheelSpinPage: FC = () => {
             if (w) {
               wheelRef.current = w
               setWheel(w)
-              drawWheel()
+              // 不调用 drawWheel()：保持当前扇区布局不变，
+              // 避免指针角度（按旧布局计算）和新扇区大小对不上
             }
             const h = historyRes.data?.data
             if (Array.isArray(h)) {
