@@ -179,14 +179,7 @@ const WheelManagePage: FC = () => {
               <CardContent className="p-0">
                 <View className="p-4" onClick={() => handleSpin(wheel.id)}>
                   <View className="flex flex-row items-center justify-between mb-3">
-                    <View className="flex flex-row items-center gap-2">
-                      <Text className="text-base font-semibold text-gray-900">{wheel.title}</Text>
-                      {!wheel.is_owner && (
-                        <View className="px-2 py-1 rounded-full bg-amber-50">
-                          <Text className="text-xs font-medium text-amber-600">收藏</Text>
-                        </View>
-                      )}
-                    </View>
+                    <Text className="text-base font-semibold text-gray-900">{wheel.title}</Text>
                     <View className="flex flex-row gap-1" onClick={(e) => e.stopPropagation()}>
                       {wheel.is_owner ? (
                         <>
@@ -232,15 +225,16 @@ const WheelManagePage: FC = () => {
                       </View>
                     )}
                   </View>
-                  {wheel.type === 'inventory' && (
-                    <View className="flex flex-row flex-wrap gap-2 mt-2">
-                      {wheel.items.map((item, idx) => (
-                        <Text key={idx} className="text-xs text-gray-500">
-                          {item.label}: 剩{item.inventory || 0}
-                        </Text>
-                      ))}
-                    </View>
-                  )}
+                  <View className="flex flex-row items-center justify-between mt-2">
+                    <Text className="text-xs text-gray-400">
+                      {wheel.created_at ? new Date(wheel.created_at).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : ''}
+                    </Text>
+                    {!wheel.is_owner && (
+                      <View className="px-2 py-0 rounded-full bg-amber-50">
+                        <Text className="text-xs font-medium text-amber-600">收藏</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </CardContent>
             </Card>
