@@ -1,4 +1,5 @@
 import { View, Text, Canvas, ScrollView } from '@tarojs/components'
+import { toast } from '@/components/ui/toast'
 import Taro, { useDidShow, useReady } from '@tarojs/taro'
 import { useState, useCallback, useRef } from 'react'
 import { Network } from '@/network'
@@ -22,7 +23,6 @@ const WheelSpinPage: FC = () => {
   const [rotation, setRotation] = useState(0)
   const [spinning, setSpinning] = useState(false)
   const [result, setResult] = useState('')
-  const [showResult, setShowResult] = useState(false)
   const [history, setHistory] = useState<{ id: number; result: string; created_at: string }[]>([])
   const ctxRef = useRef<any>(null)
   const wheelRef = useRef<Wheel | null>(null)
@@ -121,7 +121,6 @@ const WheelSpinPage: FC = () => {
         if (resetResult) {
           setRotation(0)
           setResult('')
-          setShowResult(false)
         }
         setTimeout(() => drawWheel(), 50)
       }
@@ -160,7 +159,6 @@ const WheelSpinPage: FC = () => {
   const handleSpin = async () => {
     if (spinning || !wheel) return
     setSpinning(true)
-    setShowResult(false)
 
     let winnerIndex = 0
     let winnerLabel = ''
@@ -205,9 +203,9 @@ const WheelSpinPage: FC = () => {
         requestAnimationFrame(animate)
       } else {
         setSpinning(false)
-        setResult(winnerLabel)
-        setShowResult(true)
-        // 刷新转盘数据和历史记录（库存模式需要更新库存），保留结果
+        // 弹出庆祝提示框，2秒后自动消失
+        toast(`🎉 结果是：${winnerLabel}`, { duration: 2000 })
+        // 刷新转盘数据和历史记录（库存模式需要更新库存）
         Promise.all([
           Network.request({ url: `/api/wheels/${wheel.id}` }),
           Network.request({ url: `/api/wheels/${wheel.id}/history` }),
@@ -287,17 +285,6 @@ const WheelSpinPage: FC = () => {
                 zIndex: 10,
               }}
             />
-          </View>
-
-          <View className="mt-3 px-6 py-3 rounded-2xl bg-white shadow-sm border border-gray-100 h-20 flex flex-col items-center justify-center">
-            {showResult ? (
-              <>
-                <Text className="block text-sm text-gray-500 text-center">结果是</Text>
-                <Text className="block text-xl font-bold text-indigo-600 text-center mt-1">{result}</Text>
-              </>
-            ) : (
-              <Text className="block text-sm text-gray-400 text-center">点击转动获取结果</Text>
-            )}
           </View>
 
           {wheel?.type === 'inventory' && (
