@@ -97,7 +97,7 @@ export class WheelService {
       isFavorited = !!favData
     }
 
-    const creatorNickname = Array.isArray(data?.users) ? data.users[0]?.nickname : data?.users?.nickname || null
+    const creatorNickname = Array.isArray((data as any)?.users) ? (data as any).users[0]?.nickname : (data as any)?.users?.nickname || null
     const result = { ...data, is_owner: !data?.user_id || data?.user_id === userId, is_favorited: isFavorited, creator_nickname: creatorNickname }
     delete (result as any).users
     return { data: result }
