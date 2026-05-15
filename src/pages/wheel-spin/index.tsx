@@ -24,11 +24,13 @@ const WheelSpinPage: FC = () => {
   const [result, setResult] = useState('')
   const [showResult, setShowResult] = useState(false)
   const ctxRef = useRef<any>(null)
+  const wheelRef = useRef<Wheel | null>(null)
 
   const drawWheel = useCallback(() => {
-    if (!wheel || !ctxRef.current) return
+    const currentWheel = wheelRef.current
+    if (!currentWheel || !ctxRef.current) return
     const ctx = ctxRef.current
-    const items = wheel.items
+    const items = currentWheel.items
     const count = items.length
     const anglePer = (Math.PI * 2) / count
 
@@ -56,7 +58,7 @@ const WheelSpinPage: FC = () => {
       ctx.font = 'bold 13px sans-serif'
       const label = items[i].label.length > 5 ? items[i].label.slice(0, 5) + '..' : items[i].label
       ctx.fillText(label, RADIUS - 16, -3)
-      if (wheel?.type === 'inventory') {
+      if (currentWheel.type === 'inventory') {
         ctx.font = '10px sans-serif'
         ctx.fillStyle = 'rgba(255,255,255,0.8)'
         const invText = `${items[i].inventory || 0}/${items[i].total || 0}`
@@ -81,7 +83,7 @@ const WheelSpinPage: FC = () => {
     ctx.arc(CENTER, CENTER, 8, 0, Math.PI * 2)
     ctx.fillStyle = '#4F46E5'
     ctx.fill()
-  }, [wheel])
+  }, [])
 
   useReady(() => {
     const query = Taro.createSelectorQuery()
@@ -97,7 +99,9 @@ const WheelSpinPage: FC = () => {
           canvas.height = CANVAS_SIZE * dpr
           ctx.scale(dpr, dpr)
           ctxRef.current = ctx
-          drawWheel()
+          if (wheelRef.current) {
+            drawWheel()
+          }
         }
       })
   })
@@ -115,13 +119,14 @@ const WheelSpinPage: FC = () => {
       const res = await Network.request({ url: `/api/wheels/${id}` })
       const w = res.data?.data
       if (w) {
+        wheelRef.current = w
         setWheel(w)
         if (resetResult) {
           setRotation(0)
           setResult('')
           setShowResult(false)
         }
-        setTimeout(() => drawWheel(), 100)
+        setTimeout(() => drawWheel(), 50)
       }
     } catch (e) {
       console.error('[WheelSpin] fetch error:', e)
@@ -176,7 +181,16 @@ const WheelSpinPage: FC = () => {
         setResult(winnerLabel)
         setShowResult(true)
         // 刷新转盘数据（库存模式需要更新库存），保留结果
-        fetchWheel(wheel.id, false)
+        Network.request({ url: `/api/wheels/${wheel.id}` })
+          .then((res) => {
+            const w = res.data?.data
+            if (w) {
+              wheelRef.current = w
+              setWheel(w)
+              drawWheel()
+            }
+          })
+          .catch((e) => console.error('[WheelSpin] refresh error:', e))
       }
     }
 
