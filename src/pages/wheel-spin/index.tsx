@@ -21,6 +21,7 @@ const WheelSpinPage: FC = () => {
   const [wheel, setWheel] = useState<Wheel | null>(null)
   const [rotation, setRotation] = useState(0)
   const [spinning, setSpinning] = useState(false)
+  const [started, setStarted] = useState(false)
   const [result, setResult] = useState('')
   const [showResult, setShowResult] = useState(false)
   const ctxRef = useRef<any>(null)
@@ -110,15 +111,17 @@ const WheelSpinPage: FC = () => {
     }
   })
 
-  const fetchWheel = async (id: number) => {
+  const fetchWheel = async (id: number, resetResult = true) => {
     try {
       const res = await Network.request({ url: `/api/wheels/${id}` })
       const w = res.data?.data
       if (w) {
         setWheel(w)
-        setRotation(0)
-        setResult('')
-        setShowResult(false)
+        if (resetResult) {
+          setRotation(0)
+          setResult('')
+          setShowResult(false)
+        }
         setTimeout(() => drawWheel(), 100)
       }
     } catch (e) {
@@ -128,6 +131,10 @@ const WheelSpinPage: FC = () => {
 
   const handleSpin = async () => {
     if (spinning || !wheel) return
+    if (!started) {
+      setStarted(true)
+      return
+    }
     setSpinning(true)
     setShowResult(false)
 
@@ -173,8 +180,8 @@ const WheelSpinPage: FC = () => {
         setSpinning(false)
         setResult(winnerLabel)
         setShowResult(true)
-        // 刷新转盘数据（库存模式需要更新库存）
-        fetchWheel(wheel.id)
+        // 刷新转盘数据（库存模式需要更新库存），保留结果
+        fetchWheel(wheel.id, false)
       }
     }
 
@@ -216,6 +223,7 @@ const WheelSpinPage: FC = () => {
               height: CANVAS_SIZE,
               transform: `rotate(${rotation}deg)`,
               transition: spinning ? 'none' : 'transform 0.3s ease-out',
+              opacity: started ? 1 : 0.3,
             }}
           />
           <View
@@ -232,16 +240,24 @@ const WheelSpinPage: FC = () => {
               zIndex: 10,
             }}
           />
+          {!started && (
+            <View
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ borderRadius: CANVAS_SIZE / 2, backgroundColor: 'rgba(0,0,0,0.45)' }}
+            >
+              <Text className="text-5xl text-white font-bold">?</Text>
+            </View>
+          )}
         </View>
 
-        {showResult && (
+        {showResult && started && (
           <View className="mt-6 px-6 py-4 rounded-2xl bg-white shadow-sm border border-gray-100">
             <Text className="block text-sm text-gray-500 text-center">结果是</Text>
             <Text className="block text-2xl font-bold text-indigo-600 text-center mt-1">{result}</Text>
           </View>
         )}
 
-        {wheel?.type === 'inventory' && (
+        {wheel?.type === 'inventory' && started && (
           <View className="w-full px-5 mt-4">
             <Text className="block text-sm font-medium text-gray-700 mb-2">剩余库存</Text>
             <View className="flex flex-row flex-wrap gap-2">
@@ -275,7 +291,9 @@ const WheelSpinPage: FC = () => {
             disabled={spinning}
           >
             <RotateCcw size={18} color="#fff" />
-            <Text className="text-white ml-1">{spinning ? '转动中...' : '开始转动'}</Text>
+            <Text className="text-white ml-1">
+              {spinning ? '转动中...' : started ? '再次转动' : '开始'}
+            </Text>
           </Button>
         </View>
 
