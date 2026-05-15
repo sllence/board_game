@@ -25,6 +25,8 @@ const WheelSpinPage: FC = () => {
   const [history, setHistory] = useState<{ id: number; result: string; created_at: string }[]>([])
   const ctxRef = useRef<any>(null)
   const wheelRef = useRef<Wheel | null>(null)
+  // 存储当前 Canvas 绘制时使用的扇区角度，确保转动计算与视觉一致
+  const sectorAnglesRef = useRef<{ startDeg: number; endDeg: number }[]>([])
 
   const drawWheel = useCallback(() => {
     const currentWheel = wheelRef.current
@@ -34,6 +36,7 @@ const WheelSpinPage: FC = () => {
     const sectorAngles = getSectorAngles(currentWheel)
 
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+    sectorAnglesRef.current = sectorAngles
 
     for (let i = 0; i < items.length; i++) {
       const startDeg = sectorAngles[i].startDeg
@@ -178,17 +181,19 @@ const WheelSpinPage: FC = () => {
       return
     }
 
-    const angles = getSectorAngles(wheel)
+    // 使用当前 Canvas 绘制时的扇区角度（而非最新的 wheel 数据），
+    // 避免库存转盘二次转动时数据已更新但 Canvas 未重绘导致角度不匹配
+    const angles = sectorAnglesRef.current.length > 0 ? sectorAnglesRef.current : getSectorAngles(wheel)
     const winnerSector = angles[winnerIndex]
     const targetAngle = winnerSector.startDeg + (winnerSector.endDeg - winnerSector.startDeg) / 2
+    console.log('[WheelSpin] winnerIndex:', winnerIndex, 'winnerLabel:', winnerLabel, 'targetAngle:', targetAngle, 'angles:', JSON.stringify(angles))
     const extraSpins = 5 + Math.random() * 3
     const currentRotation = rotation % 360
-    // 指针固定在屏幕上方（12点钟方向），对应 Canvas 坐标系 270°
-    // 转盘顺时针旋转 X 度后，指针指向 Canvas 角度 (270 - X) % 360
-    // 要让指针指向 winner 扇区中点 targetAngle，需满足：
-    // (270 - targetRotation) % 360 = targetAngle
-    // => targetRotation % 360 = (270 - targetAngle) % 360
-    const desiredRotation = (270 - targetAngle + 360) % 360
+    // getSectorAngles 的 0° 对应屏幕上方（指针位置），因为 Canvas 绘制时减了 π/2
+    // CSS rotate(R) 顺时针旋转 R 度后，指针指向原始角度 (360 - R%360) % 360
+    // 要让指针指向 targetAngle：(360 - R%360) % 360 = targetAngle
+    // => R%360 = (360 - targetAngle) % 360
+    const desiredRotation = (360 - targetAngle + 360) % 360
     let delta = (desiredRotation - currentRotation + 360) % 360
     if (delta === 0) delta = 360
     const targetRotation = rotation + extraSpins * 360 + delta
