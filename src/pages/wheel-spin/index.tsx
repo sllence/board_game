@@ -247,7 +247,7 @@ const WheelSpinPage: FC = () => {
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50" style={{ overflowX: 'hidden' }}>
-      <View className="px-5 pt-10 pb-3 bg-white border-b border-gray-100">
+      <View className="px-5 pt-8 pb-2 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
           <Text className="text-lg font-bold text-gray-900">{wheel?.title || '转盘'}</Text>
           <View
@@ -259,7 +259,7 @@ const WheelSpinPage: FC = () => {
         </View>
       </View>
 
-      <View className="flex flex-col" style={{ height: '100vh' }}>
+      <View className="flex flex-col">
         <View className="flex flex-col items-center flex-shrink-0 pt-6 pb-3">
           <View className="relative" style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}>
             <Canvas
@@ -337,7 +337,7 @@ const WheelSpinPage: FC = () => {
         </View>
 
         {history.length > 0 && (
-          <View className="flex-1 flex flex-col min-h-0 px-5 pt-2 pb-4">
+          <View className="flex flex-col flex-shrink-0 px-5 pt-2 pb-4" style={{ height: '340px' }}>
             <Text className="block text-sm font-medium text-gray-700 mb-2 flex-shrink-0">历史记录</Text>
             <ScrollView className="flex-1" scrollY style={{ overflowY: 'auto' }}>
               <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
