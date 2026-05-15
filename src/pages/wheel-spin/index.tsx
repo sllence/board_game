@@ -3,7 +3,7 @@ import Taro, { useDidShow, useReady } from '@tarojs/taro'
 import { useState, useCallback, useRef } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
-import { History, RotateCcw, Share2 } from 'lucide-react-taro'
+import { RotateCcw, Share2 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface Wheel {
@@ -23,6 +23,7 @@ const WheelSpinPage: FC = () => {
   const [spinning, setSpinning] = useState(false)
   const [result, setResult] = useState('')
   const [showResult, setShowResult] = useState(false)
+  const [history, setHistory] = useState<{ id: number; result: string; created_at: string }[]>([])
   const ctxRef = useRef<any>(null)
   const wheelRef = useRef<Wheel | null>(null)
 
@@ -109,8 +110,11 @@ const WheelSpinPage: FC = () => {
 
   const fetchWheel = async (id: number, resetResult = true) => {
     try {
-      const res = await Network.request({ url: `/api/wheels/${id}` })
-      const w = res.data?.data
+      const [wheelRes, historyRes] = await Promise.all([
+        Network.request({ url: `/api/wheels/${id}` }),
+        Network.request({ url: `/api/wheels/${id}/history` }),
+      ])
+      const w = wheelRes.data?.data
       if (w) {
         wheelRef.current = w
         setWheel(w)
@@ -120,6 +124,10 @@ const WheelSpinPage: FC = () => {
           setShowResult(false)
         }
         setTimeout(() => drawWheel(), 50)
+      }
+      const h = historyRes.data?.data
+      if (Array.isArray(h)) {
+        setHistory(h)
       }
     } catch (e) {
       console.error('[WheelSpin] fetch error:', e)
@@ -199,14 +207,21 @@ const WheelSpinPage: FC = () => {
         setSpinning(false)
         setResult(winnerLabel)
         setShowResult(true)
-        // 刷新转盘数据（库存模式需要更新库存），保留结果
-        Network.request({ url: `/api/wheels/${wheel.id}` })
-          .then((res) => {
-            const w = res.data?.data
+        // 刷新转盘数据和历史记录（库存模式需要更新库存），保留结果
+        Promise.all([
+          Network.request({ url: `/api/wheels/${wheel.id}` }),
+          Network.request({ url: `/api/wheels/${wheel.id}/history` }),
+        ])
+          .then(([wheelRes, historyRes]) => {
+            const w = wheelRes.data?.data
             if (w) {
               wheelRef.current = w
               setWheel(w)
               drawWheel()
+            }
+            const h = historyRes.data?.data
+            if (Array.isArray(h)) {
+              setHistory(h)
             }
           })
           .catch((e) => console.error('[WheelSpin] refresh error:', e))
@@ -214,11 +229,6 @@ const WheelSpinPage: FC = () => {
     }
 
     requestAnimationFrame(animate)
-  }
-
-  const handleHistory = () => {
-    if (!wheel) return
-    Taro.navigateTo({ url: `/pages/wheel-history/index?id=${wheel.id}` })
   }
 
   const handleShare = () => {
@@ -238,7 +248,15 @@ const WheelSpinPage: FC = () => {
   return (
     <View className="flex flex-col min-h-screen bg-gray-50" style={{ overflowX: 'hidden' }}>
       <View className="px-5 pt-12 pb-4 bg-white border-b border-gray-100">
-        <Text className="text-lg font-bold text-gray-900">{wheel?.title || '转盘'}</Text>
+        <View className="flex flex-row items-center justify-between">
+          <Text className="text-lg font-bold text-gray-900">{wheel?.title || '转盘'}</Text>
+          <View
+            className="flex flex-row items-center justify-center w-9 h-9 rounded-full bg-gray-100 active:bg-gray-200"
+            onClick={handleShare}
+          >
+            <Share2 size={18} color="#6B7280" />
+          </View>
+        </View>
       </View>
 
       <View className="flex flex-col items-center py-8">
@@ -318,22 +336,34 @@ const WheelSpinPage: FC = () => {
           </Button>
         </View>
 
-        <View className="flex flex-row gap-3 mt-4">
-          <View
-            className="flex flex-row items-center gap-1 px-4 py-2 rounded-lg bg-white border border-gray-200"
-            onClick={handleHistory}
-          >
-            <History size={16} color="#6B7280" />
-            <Text className="text-sm text-gray-600">历史记录</Text>
+        {history.length > 0 && (
+          <View className="w-full px-5 mt-8">
+            <Text className="block text-sm font-medium text-gray-700 mb-3">历史记录</Text>
+            <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              {history.map((item, idx) => (
+                <View
+                  key={item.id}
+                  className={`flex flex-row items-center justify-between px-4 py-3 ${
+                    idx !== history.length - 1 ? 'border-b border-gray-100' : ''
+                  }`}
+                >
+                  <View className="flex flex-row items-center gap-2">
+                    <Text className="text-xs text-gray-400 w-5">{idx + 1}</Text>
+                    <Text className="text-sm text-gray-800">{item.result}</Text>
+                  </View>
+                  <Text className="text-xs text-gray-400">
+                    {new Date(item.created_at).toLocaleString('zh-CN', {
+                      month: 'numeric',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <View
-            className="flex flex-row items-center gap-1 px-4 py-2 rounded-lg bg-white border border-gray-200"
-            onClick={handleShare}
-          >
-            <Share2 size={16} color="#6B7280" />
-            <Text className="text-sm text-gray-600">分享</Text>
-          </View>
-        </View>
+        )}
       </View>
     </View>
   )
