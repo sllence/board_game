@@ -20,9 +20,14 @@ export class WheelController {
     return this.wheelService.findAll(userId ? Number(userId) : undefined)
   }
 
+  @Get('favorites')
+  async findFavorites(@Query('user_id') userId: string) {
+    return this.wheelService.findFavorites(Number(userId))
+  }
+
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.wheelService.findOne(Number(id))
+  async findOne(@Param('id') id: string, @Query('user_id') userId?: string) {
+    return this.wheelService.findOne(Number(id), userId ? Number(userId) : undefined)
   }
 
   @Put(':id')
@@ -39,6 +44,11 @@ export class WheelController {
     return this.wheelService.remove(Number(id))
   }
 
+  @Post(':id/duplicate')
+  async duplicate(@Param('id') id: string, @Body() body?: { user_id?: number }) {
+    return this.wheelService.duplicate(Number(id), body?.user_id)
+  }
+
   @Post(':id/spin')
   async spin(@Param('id') id: string) {
     return this.wheelService.spin(Number(id))
@@ -47,5 +57,20 @@ export class WheelController {
   @Get(':id/history')
   async getHistory(@Param('id') id: string) {
     return this.wheelService.findHistory(Number(id))
+  }
+
+  @Post(':id/favorite')
+  async favorite(@Param('id') id: string, @Body() body: { user_id: number }) {
+    return this.wheelService.favorite(Number(id), body.user_id)
+  }
+
+  @Delete(':id/favorite')
+  async unfavorite(@Param('id') id: string, @Query('user_id') userId: string) {
+    return this.wheelService.unfavorite(Number(id), Number(userId))
+  }
+
+  @Get(':id/is-favorited')
+  async isFavorited(@Param('id') id: string, @Query('user_id') userId: string) {
+    return this.wheelService.isFavorited(Number(id), Number(userId))
   }
 }

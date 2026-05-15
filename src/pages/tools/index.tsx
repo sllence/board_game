@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Dices, Timer, Layers, Shuffle, Calculator, Target } from 'lucide-react-taro'
+import { Dices, Timer, Layers, Shuffle, Calculator, Target, Bookmark } from 'lucide-react-taro'
 import type { FC, ReactNode } from 'react'
 
 interface ToolItem {
@@ -53,6 +53,16 @@ const TOOL_GROUPS: ToolGroup[] = [
         iconBg: '#ede9fe',
         iconColor: '#6366f1',
         path: '/pages/wheel-manage/index',
+        soon: false,
+      },
+      {
+        key: 'wheel-favorites',
+        name: '收藏的转盘',
+        desc: '查看收藏的转盘',
+        icon: <Bookmark size={20} color="#D97706" />,
+        iconBg: '#FEF3C7',
+        iconColor: '#D97706',
+        path: '/pages/wheel-favorites/index',
         soon: false,
       },
     ],

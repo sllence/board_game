@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Settings, Trash2, Share2, ChevronRight, Target } from 'lucide-react-taro'
+import { Settings, Trash2, Share2, ChevronRight, Target, Bookmark } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 const WHEEL_COLORS = [
@@ -19,18 +19,57 @@ interface Wheel {
   items: any[]
   created_at: string
   updated_at: string
+  is_owner?: boolean
+  is_favorited?: boolean
 }
 
 const WheelManagePage: FC = () => {
   const [wheels, setWheels] = useState<Wheel[]>([])
   const [loading, setLoading] = useState(false)
 
+  const getUserId = (): number | undefined => {
+    try {
+      const cached = Taro.getStorageSync('userInfo')
+      if (cached) {
+        const user = JSON.parse(cached)
+        return user.id
+      }
+    } catch { /* ignore */ }
+    return undefined
+  }
+
   const fetchWheels = async () => {
     setLoading(true)
     try {
-      const res = await Network.request({ url: '/api/wheels' })
+      const userId = getUserId()
+      // 获取用户自己创建的转盘
+      const res = await Network.request({
+        url: userId ? `/api/wheels?user_id=${userId}` : '/api/wheels',
+      })
       console.log('[WheelManage] fetch wheels:', res.data)
-      setWheels(res.data?.data || [])
+      const myWheels: Wheel[] = res.data?.data || []
+
+      // 获取收藏的转盘
+      let favWheels: Wheel[] = []
+      if (userId) {
+        try {
+          const favRes = await Network.request({
+            url: `/api/wheels/favorites?user_id=${userId}`,
+          })
+          favWheels = (favRes.data?.data || []).map((w: Wheel) => ({
+            ...w,
+            is_favorited: true,
+            is_owner: false,
+          }))
+        } catch (e) {
+          console.error('[WheelManage] fetch favorites error:', e)
+        }
+      }
+
+      // 合并：自己的转盘 + 收藏的转盘（去重）
+      const myIds = new Set(myWheels.map(w => w.id))
+      const combined = [...myWheels, ...favWheels.filter(w => !myIds.has(w.id))]
+      setWheels(combined)
     } catch (e) {
       console.error('[WheelManage] fetch error:', e)
       Taro.showToast({ title: '加载失败', icon: 'none' })
@@ -47,15 +86,23 @@ const WheelManagePage: FC = () => {
     Taro.navigateTo({ url: '/pages/wheel-edit/index' })
   }
 
-  const handleEdit = (id: number) => {
-    Taro.navigateTo({ url: `/pages/wheel-edit/index?id=${id}` })
+  const handleEdit = (wheel: Wheel) => {
+    if (!wheel.is_owner) {
+      Taro.showToast({ title: '收藏的转盘不可编辑', icon: 'none' })
+      return
+    }
+    Taro.navigateTo({ url: `/pages/wheel-edit/index?id=${wheel.id}` })
   }
 
   const handleSpin = (id: number) => {
     Taro.navigateTo({ url: `/pages/wheel-spin/index?id=${id}` })
   }
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (wheel: Wheel) => {
+    if (!wheel.is_owner) {
+      Taro.showToast({ title: '收藏的转盘不可删除', icon: 'none' })
+      return
+    }
     Taro.showModal({
       title: '确认删除',
       content: '删除后无法恢复，是否继续？',
@@ -63,7 +110,7 @@ const WheelManagePage: FC = () => {
       success: async (res) => {
         if (res.confirm) {
           try {
-            await Network.request({ url: `/api/wheels/${id}`, method: 'DELETE' })
+            await Network.request({ url: `/api/wheels/${wheel.id}`, method: 'DELETE' })
             Taro.showToast({ title: '已删除', icon: 'success' })
             fetchWheels()
           } catch (e) {
@@ -75,16 +122,30 @@ const WheelManagePage: FC = () => {
     })
   }
 
-  const handleShare = (wheel: Wheel) => {
-    const shareData = {
-      title: wheel.title,
-      items: wheel.items,
+  const handleUnfavorite = async (wheel: Wheel) => {
+    const userId = getUserId()
+    if (!userId) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
     }
-    const shareStr = JSON.stringify(shareData)
-    Taro.setClipboardData({
-      data: shareStr,
-      success: () => {
-        Taro.showToast({ title: '转盘数据已复制', icon: 'success' })
+    Taro.showModal({
+      title: '取消收藏',
+      content: '确定要取消收藏这个转盘吗？',
+      confirmColor: '#EF4444',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await Network.request({
+              url: `/api/wheels/${wheel.id}/favorite?user_id=${userId}`,
+              method: 'DELETE',
+            })
+            Taro.showToast({ title: '已取消收藏', icon: 'success' })
+            fetchWheels()
+          } catch (e) {
+            console.error('[WheelManage] unfavorite error:', e)
+            Taro.showToast({ title: '操作失败', icon: 'none' })
+          }
+        }
       },
     })
   }
@@ -135,26 +196,42 @@ const WheelManagePage: FC = () => {
                           {wheel.type === 'inventory' ? '库存' : '概率'}
                         </Text>
                       </View>
+                      {!wheel.is_owner && (
+                        <View className="px-2 py-1 rounded-full bg-amber-50">
+                          <Text className="text-xs font-medium text-amber-600">收藏</Text>
+                        </View>
+                      )}
                     </View>
                     <View className="flex flex-row gap-1">
-                      <View
-                        className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
-                        onClick={() => handleEdit(wheel.id)}
-                      >
-                        <Settings size={16} color="#6B7280" />
-                      </View>
-                      <View
-                        className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
-                        onClick={() => handleShare(wheel)}
-                      >
-                        <Share2 size={16} color="#6B7280" />
-                      </View>
-                      <View
-                        className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50"
-                        onClick={() => handleDelete(wheel.id)}
-                      >
-                        <Trash2 size={16} color="#EF4444" />
-                      </View>
+                      {wheel.is_owner ? (
+                        <>
+                          <View
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
+                            onClick={() => handleEdit(wheel)}
+                          >
+                            <Settings size={16} color="#6B7280" />
+                          </View>
+                          <View
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
+                            onClick={() => handleSpin(wheel.id)}
+                          >
+                            <Share2 size={16} color="#6B7280" />
+                          </View>
+                          <View
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50"
+                            onClick={() => handleDelete(wheel)}
+                          >
+                            <Trash2 size={16} color="#EF4444" />
+                          </View>
+                        </>
+                      ) : (
+                        <View
+                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50"
+                          onClick={() => handleUnfavorite(wheel)}
+                        >
+                          <Bookmark size={16} color="#EF4444" />
+                        </View>
+                      )}
                     </View>
                   </View>
 

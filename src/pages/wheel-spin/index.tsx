@@ -1,9 +1,9 @@
 import { View, Text, Canvas, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow, useReady } from '@tarojs/taro'
+import Taro, { useDidShow, useReady, useShareAppMessage } from '@tarojs/taro'
 import { useState, useCallback, useRef } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
-import { RotateCcw, Share2 } from 'lucide-react-taro'
+import { RotateCcw, Share2, Bookmark, BookmarkCheck } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 interface Wheel {
@@ -11,6 +11,8 @@ interface Wheel {
   title: string
   type: 'probability' | 'inventory'
   items: any[]
+  is_owner?: boolean
+  is_favorited?: boolean
 }
 
 const CANVAS_SIZE = 220
@@ -23,10 +25,23 @@ const WheelSpinPage: FC = () => {
   const [spinning, setSpinning] = useState(false)
   const [result, setResult] = useState('')
   const [history, setHistory] = useState<{ id: number; result: string; created_at: string }[]>([])
+  const [isFavorited, setIsFavorited] = useState(false)
+  const [isOwner, setIsOwner] = useState(true)
   const ctxRef = useRef<any>(null)
   const wheelRef = useRef<Wheel | null>(null)
   // 存储当前 Canvas 绘制时使用的扇区角度，确保转动计算与视觉一致
   const sectorAnglesRef = useRef<{ startDeg: number; endDeg: number }[]>([])
+
+  const getUserId = (): number | undefined => {
+    try {
+      const cached = Taro.getStorageSync('userInfo')
+      if (cached) {
+        const user = JSON.parse(cached)
+        return user.id
+      }
+    } catch { /* ignore */ }
+    return undefined
+  }
 
   const drawWheel = useCallback(() => {
     const currentWheel = wheelRef.current
@@ -103,6 +118,10 @@ const WheelSpinPage: FC = () => {
   })
 
   useDidShow(() => {
+    // 确保小程序端分享菜单开启
+    if ([Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv() as any)) {
+      Taro.showShareMenu({ withShareTicket: true })
+    }
     const instance = Taro.getCurrentInstance()
     const id = instance.router?.params?.id
     if (id) {
@@ -110,16 +129,33 @@ const WheelSpinPage: FC = () => {
     }
   })
 
+  // 配置微信分享
+  useShareAppMessage(() => {
+    if (!wheel) {
+      return {
+        title: '来玩转盘吧！',
+        path: `/pages/wheel-spin/index?id=0`,
+      }
+    }
+    return {
+      title: `来玩「${wheel.title}」转盘吧！`,
+      path: `/pages/wheel-spin/index?id=${wheel.id}`,
+    }
+  })
+
   const fetchWheel = async (id: number, resetResult = true) => {
     try {
+      const userId = getUserId()
       const [wheelRes, historyRes] = await Promise.all([
-        Network.request({ url: `/api/wheels/${id}` }),
+        Network.request({ url: userId ? `/api/wheels/${id}?user_id=${userId}` : `/api/wheels/${id}` }),
         Network.request({ url: `/api/wheels/${id}/history` }),
       ])
       const w = wheelRes.data?.data
       if (w) {
         wheelRef.current = w
         setWheel(w)
+        setIsOwner(w.is_owner !== false)
+        setIsFavorited(!!w.is_favorited)
         if (resetResult) {
           setRotation(0)
           setResult('')
@@ -240,30 +276,89 @@ const WheelSpinPage: FC = () => {
     requestAnimationFrame(animate)
   }
 
-  const handleShare = () => {
-    if (!wheel) return
-    const shareData = {
-      title: wheel.title,
-      items: wheel.items,
+  const handleFavorite = async () => {
+    const userId = getUserId()
+    if (!userId) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
     }
-    Taro.setClipboardData({
-      data: JSON.stringify(shareData),
-      success: () => {
-        Taro.showToast({ title: '转盘数据已复制', icon: 'success' })
-      },
-    })
+    if (!wheel) return
+
+    try {
+      if (isFavorited) {
+        await Network.request({
+          url: `/api/wheels/${wheel.id}/favorite?user_id=${userId}`,
+          method: 'DELETE',
+        })
+        setIsFavorited(false)
+        Taro.showToast({ title: '已取消收藏', icon: 'success' })
+      } else {
+        await Network.request({
+          url: `/api/wheels/${wheel.id}/favorite`,
+          method: 'POST',
+          data: { user_id: userId },
+        })
+        setIsFavorited(true)
+        Taro.showToast({ title: '已收藏', icon: 'success' })
+      }
+    } catch (e) {
+      console.error('[WheelSpin] favorite error:', e)
+      Taro.showToast({ title: '操作失败', icon: 'none' })
+    }
   }
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50" style={{ overflowX: 'hidden' }}>
       <View className="px-5 pt-2 pb-2 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
-          <Text className="text-lg font-bold text-gray-900">{wheel?.title || '转盘'}</Text>
-          <View
-            className="flex flex-row items-center justify-center w-9 h-9 rounded-full bg-gray-100 active:bg-gray-200"
-            onClick={handleShare}
-          >
-            <Share2 size={18} color="#6B7280" />
+          <View className="flex flex-row items-center gap-2">
+            <Text className="text-lg font-bold text-gray-900">{wheel?.title || '转盘'}</Text>
+            {!isOwner && (
+              <View className="px-2 py-1 rounded-full bg-amber-50">
+                <Text className="text-xs font-medium text-amber-600">收藏</Text>
+              </View>
+            )}
+          </View>
+          <View className="flex flex-row items-center gap-2">
+            {/* 收藏按钮 */}
+            <View
+              className="flex flex-row items-center justify-center w-9 h-9 rounded-full active:bg-gray-200"
+              style={{ backgroundColor: isFavorited ? '#FEF3C7' : '#F3F4F6' }}
+              onClick={handleFavorite}
+            >
+              {isFavorited ? (
+                <BookmarkCheck size={18} color="#D97706" />
+              ) : (
+                <Bookmark size={18} color="#6B7280" />
+              )}
+            </View>
+            {/* 分享按钮 - 小程序点击提示从右上角转发，H5 复制链接 */}
+            {[Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv() as any) ? (
+              <View
+                className="flex flex-row items-center justify-center w-9 h-9 rounded-full bg-gray-100 active:bg-gray-200"
+                onClick={() => {
+                  Taro.showToast({ title: '点击右上角 ··· 转发', icon: 'none', duration: 2000 })
+                }}
+              >
+                <Share2 size={18} color="#6B7280" />
+              </View>
+            ) : (
+              <View
+                className="flex flex-row items-center justify-center w-9 h-9 rounded-full bg-gray-100 active:bg-gray-200"
+                onClick={() => {
+                  if (!wheel) return
+                  const url = `${window.location.origin}/pages/wheel-spin/index?id=${wheel.id}`
+                  Taro.setClipboardData({
+                    data: url,
+                    success: () => {
+                      Taro.showToast({ title: '链接已复制', icon: 'success' })
+                    },
+                  })
+                }}
+              >
+                <Share2 size={18} color="#6B7280" />
+              </View>
+            )}
           </View>
         </View>
       </View>

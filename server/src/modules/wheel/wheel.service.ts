@@ -42,7 +42,7 @@ export class WheelService {
     const client = getSupabaseClient()
     let query = client
       .from('wheels')
-      .select('id, title, type, items, created_at, updated_at')
+      .select('id, title, type, items, created_at, updated_at, user_id')
       .order('updated_at', { ascending: false })
 
     if (userId) {
@@ -51,18 +51,50 @@ export class WheelService {
 
     const { data, error } = await query
     if (error) throw new Error(`查询转盘列表失败: ${error.message}`)
-    return { data }
+
+    // 查询用户收藏的转盘 ID
+    let favoritedIds: Set<number> = new Set()
+    if (userId) {
+      const { data: favData } = await client
+        .from('wheel_favorites')
+        .select('wheel_id')
+        .eq('user_id', userId)
+      if (favData) {
+        favoritedIds = new Set(favData.map((f: any) => f.wheel_id))
+      }
+    }
+
+    const result = (data || []).map((item: any) => ({
+      ...item,
+      is_owner: item.user_id === userId,
+      is_favorited: favoritedIds.has(item.id),
+    }))
+
+    return { data: result }
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId?: number) {
     const client = getSupabaseClient()
     const { data, error } = await client
       .from('wheels')
-      .select('id, title, type, items, created_at, updated_at')
+      .select('id, title, type, items, created_at, updated_at, user_id')
       .eq('id', id)
       .maybeSingle()
     if (error) throw new Error(`查询转盘失败: ${error.message}`)
-    return { data }
+
+    // 查询是否已收藏
+    let isFavorited = false
+    if (userId) {
+      const { data: favData } = await client
+        .from('wheel_favorites')
+        .select('id')
+        .eq('wheel_id', id)
+        .eq('user_id', userId)
+        .maybeSingle()
+      isFavorited = !!favData
+    }
+
+    return { data: { ...data, is_owner: data?.user_id === userId, is_favorited: isFavorited } }
   }
 
   async update(id: number, body: {
@@ -174,5 +206,93 @@ export class WheelService {
       .limit(100)
     if (error) throw new Error(`查询历史失败: ${error.message}`)
     return { data }
+  }
+
+  async duplicate(wheelId: number, userId?: number) {
+    const client = getSupabaseClient()
+    const { data: wheel, error: wheelError } = await client
+      .from('wheels')
+      .select('title, type, items')
+      .eq('id', wheelId)
+      .maybeSingle()
+    if (wheelError || !wheel) throw new Error('转盘不存在')
+
+    const { data, error } = await client
+      .from('wheels')
+      .insert({
+        user_id: userId || null,
+        title: wheel.title,
+        type: wheel.type,
+        items: wheel.items,
+      })
+      .select()
+      .maybeSingle()
+    if (error) throw new Error(`复制转盘失败: ${error.message}`)
+    return { data }
+  }
+
+  // 收藏转盘
+  async favorite(wheelId: number, userId: number) {
+    const client = getSupabaseClient()
+    const { data, error } = await client
+      .from('wheel_favorites')
+      .insert({ wheel_id: wheelId, user_id: userId })
+      .select()
+      .maybeSingle()
+    if (error) {
+      if (error.code === '23505') {
+        // 已收藏，忽略
+        return { data: { wheel_id: wheelId, user_id: userId } }
+      }
+      throw new Error(`收藏失败: ${error.message}`)
+    }
+    return { data }
+  }
+
+  // 取消收藏
+  async unfavorite(wheelId: number, userId: number) {
+    const client = getSupabaseClient()
+    const { error } = await client
+      .from('wheel_favorites')
+      .delete()
+      .eq('wheel_id', wheelId)
+      .eq('user_id', userId)
+    if (error) throw new Error(`取消收藏失败: ${error.message}`)
+    return { success: true }
+  }
+
+  // 查询用户收藏的转盘列表
+  async findFavorites(userId: number) {
+    const client = getSupabaseClient()
+    const { data, error } = await client
+      .from('wheel_favorites')
+      .select('id, wheel_id, created_at, wheels(id, title, type, items, created_at, updated_at)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    if (error) throw new Error(`查询收藏列表失败: ${error.message}`)
+    // 展平 wheels 数据
+    const result = (data || []).map((item: any) => ({
+      id: item.wheels?.id,
+      title: item.wheels?.title,
+      type: item.wheels?.type,
+      items: item.wheels?.items,
+      created_at: item.wheels?.created_at,
+      updated_at: item.wheels?.updated_at,
+      is_favorited: true,
+    })).filter((item: any) => item.id != null)
+    return { data: result }
+  }
+
+  // 查询用户是否收藏了某个转盘
+  async isFavorited(wheelId: number, userId: number) {
+    const client = getSupabaseClient()
+    const { data, error } = await client
+      .from('wheel_favorites')
+      .select('id')
+      .eq('wheel_id', wheelId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (error) throw new Error(`查询收藏状态失败: ${error.message}`)
+    return { data: { is_favorited: !!data } }
   }
 }

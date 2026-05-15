@@ -18,6 +18,7 @@ export default defineAppConfig({
     'pages/wheel-edit/index',
     'pages/wheel-spin/index',
     'pages/wheel-history/index',
+    'pages/wheel-favorites/index',
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -293,7 +293,7 @@ const ProfilePage: FC = () => {
   }
 
   const MENU_ITEMS = [
-    { emoji: '❤️', name: '我的收藏', desc: '收藏的桌游和攻略', soon: true },
+    { emoji: '❤️', name: '我的收藏', desc: '收藏的转盘', soon: false, path: '/pages/wheel-favorites/index' },
     { emoji: '⚙️', name: '设置', desc: '主题、通知等偏好', soon: true },
   ]
 
@@ -506,7 +506,19 @@ const ProfilePage: FC = () => {
         ))}
         {/* 普通菜单 */}
         {MENU_ITEMS.map((item) => (
-          <Card key={item.name} className="border-0 shadow-sm mb-3">
+          <Card
+            key={item.name}
+            className="border-0 shadow-sm mb-3"
+            onClick={() => {
+              if (item.soon) {
+                Taro.showToast({ title: '功能开发中', icon: 'none' })
+                return
+              }
+              if (item.path) {
+                Taro.navigateTo({ url: item.path })
+              }
+            }}
+          >
             <CardContent className="flex flex-row items-center p-4">
               <Text className="text-xl mr-3">{item.emoji}</Text>
               <View className="flex-1">
