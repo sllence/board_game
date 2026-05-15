@@ -293,7 +293,7 @@ const ProfilePage: FC = () => {
   }
 
   const MENU_ITEMS = [
-    { emoji: '❤️', name: '我的收藏', desc: '收藏的转盘', soon: false, path: '/pages/wheel-favorites/index' },
+    { emoji: '❤️', name: '我的收藏', desc: '对局与转盘', soon: false, path: '/pages/wheel-favorites/index' },
     { emoji: '⚙️', name: '设置', desc: '主题、通知等偏好', soon: true },
   ]
 

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Query, Body } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Param, Query, Body } from '@nestjs/common'
 import { SessionsService } from './sessions.service'
 
 @Controller('sessions')
@@ -29,6 +29,11 @@ export class SessionsController {
     return this.sessionsService.findRecent(userId ? Number(userId) : undefined)
   }
 
+  @Get('favorites')
+  async getFavorites(@Query('user_id') userId: string) {
+    return this.sessionsService.getFavoriteSessions(Number(userId))
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.sessionsService.findOne(Number(id))
@@ -37,6 +42,21 @@ export class SessionsController {
   @Put(':id')
   async update(@Param('id') id: string, @Body() body: any) {
     return this.sessionsService.update(Number(id), body)
+  }
+
+  @Post(':id/favorite')
+  async favorite(@Param('id') id: string, @Body() body: { user_id: number }) {
+    return this.sessionsService.favoriteSession(Number(id), body.user_id)
+  }
+
+  @Delete(':id/favorite')
+  async unfavorite(@Param('id') id: string, @Query('user_id') userId: string) {
+    return this.sessionsService.unfavoriteSession(Number(id), Number(userId))
+  }
+
+  @Get(':id/is-favorited')
+  async isFavorited(@Param('id') id: string, @Query('user_id') userId: string) {
+    return this.sessionsService.isSessionFavorited(Number(id), Number(userId))
   }
 
   @Post(':id/finish')

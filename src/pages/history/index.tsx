@@ -3,7 +3,7 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
-import { Clock, History, Trophy } from 'lucide-react-taro'
+import { Clock, History, Trophy, Bookmark } from 'lucide-react-taro'
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import type { FC } from 'react'
 
@@ -18,6 +18,7 @@ interface GameSession {
   scoring_snapshot: { name: string; score: number }[]
   created_at: string
   game?: { id: number; name: string } | null
+  is_favorited?: boolean
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -106,6 +107,36 @@ const HistoryPage: FC = () => {
     fetchSessions(statusFilter, page + 1)
   }
 
+  const toggleFavorite = async (session: GameSession, e?: any) => {
+    if (e) e.stopPropagation()
+    const currentUser = getCurrentUser()
+    if (!currentUser?.id) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    try {
+      if (session.is_favorited) {
+        await Network.request({
+          url: `/api/sessions/${session.id}/favorite?user_id=${currentUser.id}`,
+          method: 'DELETE',
+        })
+        Taro.showToast({ title: '已取消收藏', icon: 'none' })
+      } else {
+        await Network.request({
+          url: `/api/sessions/${session.id}/favorite`,
+          method: 'POST',
+          data: { user_id: currentUser.id },
+        })
+        Taro.showToast({ title: '已收藏', icon: 'success' })
+      }
+      setSessions((prev) =>
+        prev.map((s) => (s.id === session.id ? { ...s, is_favorited: !s.is_favorited } : s))
+      )
+    } catch (err) {
+      console.error('[HistoryPage] toggleFavorite error:', err)
+    }
+  }
+
   const formatDuration = (seconds: number) => {
     if (!seconds) return '-'
     const m = Math.floor(seconds / 60)
@@ -184,8 +215,17 @@ const HistoryPage: FC = () => {
                       <Text className="block text-base font-semibold text-[#1e1b4b] flex-1 mr-2">
                         {session.game?.name || session.session_name || '未命名对局'}
                       </Text>
-                      <View className="rounded-full px-2 py-1 flex-shrink-0" style={{ backgroundColor: statusInfo.bg }}>
-                        <Text className="text-xs font-medium" style={{ color: statusInfo.color }}>{statusInfo.label}</Text>
+                      <View className="flex flex-row items-center gap-2 flex-shrink-0">
+                        <View
+                          className="w-7 h-7 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: session.is_favorited ? '#FEF3C7' : '#f3f4f6' }}
+                          onClick={(e) => toggleFavorite(session, e)}
+                        >
+                          <Bookmark size={14} color={session.is_favorited ? '#D97706' : '#9ca3af'} />
+                        </View>
+                        <View className="rounded-full px-2 py-1" style={{ backgroundColor: statusInfo.bg }}>
+                          <Text className="text-xs font-medium" style={{ color: statusInfo.color }}>{statusInfo.label}</Text>
+                        </View>
                       </View>
                     </View>
 

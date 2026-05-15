@@ -44,7 +44,24 @@ export class SessionsService {
 
     const { data, error } = await query
     if (error) throw new Error(`查询对局列表失败: ${error.message}`)
-    return { data }
+
+    // 如果有 user_id，批量查询收藏状态
+    let favSet = new Set<number>()
+    if (filters.user_id) {
+      const userId = Number(filters.user_id)
+      const { data: favData } = await client
+        .from('favorites')
+        .select('game_id')
+        .eq('user_id', userId)
+      if (favData) favSet = new Set(favData.map((f: any) => f.game_id))
+    }
+
+    const result = (data || []).map((item: any) => ({
+      ...item,
+      is_favorited: favSet.has(item.id),
+    }))
+
+    return { data: result }
   }
 
   async findRecent(userId?: number) {
@@ -83,6 +100,72 @@ export class SessionsService {
       .maybeSingle()
     if (error) throw new Error(`更新对局失败: ${error.message}`)
     return { data }
+  }
+
+  async favoriteSession(sessionId: number, userId: number) {
+    const client = getSupabaseClient()
+    const { data, error } = await client
+      .from('favorites')
+      .upsert({ game_id: sessionId, user_id: userId }, { onConflict: 'user_id,game_id' })
+      .select()
+      .maybeSingle()
+    if (error) throw new Error(`收藏对局失败: ${error.message}`)
+    return { data }
+  }
+
+  async unfavoriteSession(sessionId: number, userId: number) {
+    const client = getSupabaseClient()
+    const { error } = await client
+      .from('favorites')
+      .delete()
+      .eq('game_id', sessionId)
+      .eq('user_id', userId)
+    if (error) throw new Error(`取消收藏对局失败: ${error.message}`)
+    return { data: null }
+  }
+
+  async getFavoriteSessions(userId: number) {
+    const client = getSupabaseClient()
+    // 先获取收藏记录
+    const { data: favData, error: favError } = await client
+      .from('favorites')
+      .select('id, game_id, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    if (favError) throw new Error(`查询收藏对局失败: ${favError.message}`)
+    if (!favData || favData.length === 0) return { data: [] }
+
+    // 再批量查询对应的对局
+    const gameIds = favData.map((f: any) => f.game_id)
+    const { data: sessions, error: sessionError } = await client
+      .from('game_sessions')
+      .select('id, game_id, session_name, players, winner, duration, status, created_at, game:board_games(id, name)')
+      .in('id', gameIds)
+    if (sessionError) throw new Error(`查询收藏对局失败: ${sessionError.message}`)
+
+    // 合并数据，按收藏时间排序
+    const favMap = new Map(favData.map((f: any) => [f.game_id, f]))
+    const result = (sessions || []).map((s: any) => ({
+      ...s,
+      favorite_id: favMap.get(s.id)?.id,
+      favorited_at: favMap.get(s.id)?.created_at,
+      is_favorited: true,
+    }))
+    // 按 favorited_at 排序
+    result.sort((a: any, b: any) => new Date(b.favorited_at).getTime() - new Date(a.favorited_at).getTime())
+    return { data: result }
+  }
+
+  async isSessionFavorited(sessionId: number, userId: number) {
+    const client = getSupabaseClient()
+    const { data, error } = await client
+      .from('favorites')
+      .select('id')
+      .eq('game_id', sessionId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (error) throw new Error(`查询收藏状态失败: ${error.message}`)
+    return { data: { is_favorited: !!data } }
   }
 
   async finish(id: number, winner?: string, scoringSnapshot?: any[], durationSeconds?: number) {

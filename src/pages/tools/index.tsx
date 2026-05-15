@@ -56,9 +56,9 @@ const TOOL_GROUPS: ToolGroup[] = [
         soon: false,
       },
       {
-        key: 'wheel-favorites',
-        name: '收藏的转盘',
-        desc: '查看收藏的转盘',
+        key: 'favorites',
+        name: '我的收藏',
+        desc: '收藏的对局和转盘',
         icon: <Bookmark size={20} color="#D97706" />,
         iconBg: '#FEF3C7',
         iconColor: '#D97706',
