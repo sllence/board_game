@@ -286,7 +286,7 @@ const WheelSpinPage: FC = () => {
             />
             {/* 中心结果展示 */}
             <View
-              className="absolute rounded-full bg-white shadow-md flex flex-col items-center justify-center"
+              className="absolute rounded-full bg-white shadow-md flex items-center justify-center"
               style={{
                 top: '50%',
                 left: '50%',
@@ -296,12 +296,11 @@ const WheelSpinPage: FC = () => {
                 zIndex: 10,
               }}
             >
-              <Text className="text-xs text-gray-400">结果</Text>
               <Text
                 className="text-sm font-bold text-gray-900 text-center px-2"
                 style={{ maxWidth: CANVAS_SIZE * 0.28 }}
               >
-                {result || '?'}
+                {spinning ? '?' : (result || '?')}
               </Text>
             </View>
           </View>
