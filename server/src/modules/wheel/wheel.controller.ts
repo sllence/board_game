@@ -9,7 +9,8 @@ export class WheelController {
   async create(@Body() body: {
     user_id?: number
     title: string
-    items: { label: string; color?: string }[]
+    type: 'probability' | 'inventory'
+    items: any[]
   }) {
     return this.wheelService.create(body)
   }
@@ -27,7 +28,8 @@ export class WheelController {
   @Put(':id')
   async update(@Param('id') id: string, @Body() body: {
     title?: string
-    items?: { label: string; color?: string }[]
+    type?: 'probability' | 'inventory'
+    items?: any[]
   }) {
     return this.wheelService.update(Number(id), body)
   }
@@ -38,11 +40,8 @@ export class WheelController {
   }
 
   @Post(':id/spin')
-  async spin(
-    @Param('id') id: string,
-    @Body() body: { result: string },
-  ) {
-    return this.wheelService.recordHistory(Number(id), body.result)
+  async spin(@Param('id') id: string) {
+    return this.wheelService.spin(Number(id))
   }
 
   @Get(':id/history')

@@ -6,15 +6,11 @@ import { Button } from '@/components/ui/button'
 import { History, RotateCcw, Share2 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
-interface WheelItem {
-  label: string
-  color?: string
-}
-
 interface Wheel {
   id: number
   title: string
-  items: WheelItem[]
+  type: 'probability' | 'inventory'
+  items: any[]
 }
 
 const CANVAS_SIZE = 280
@@ -57,9 +53,19 @@ const WheelSpinPage: FC = () => {
       ctx.rotate(startAngle + anglePer / 2)
       ctx.textAlign = 'right'
       ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 14px sans-serif'
-      const text = items[i].label.length > 6 ? items[i].label.slice(0, 6) + '...' : items[i].label
-      ctx.fillText(text, RADIUS - 16, 5)
+      ctx.font = 'bold 13px sans-serif'
+      const label = items[i].label.length > 5 ? items[i].label.slice(0, 5) + '..' : items[i].label
+      ctx.fillText(label, RADIUS - 16, -3)
+      if (wheel?.type === 'inventory') {
+        ctx.font = '10px sans-serif'
+        ctx.fillStyle = 'rgba(255,255,255,0.8)'
+        const invText = `${items[i].inventory || 0}/${items[i].total || 0}`
+        ctx.fillText(invText, RADIUS - 16, 10)
+      } else if (items[i].weight && items[i].weight !== 1) {
+        ctx.font = '10px sans-serif'
+        ctx.fillStyle = 'rgba(255,255,255,0.8)'
+        ctx.fillText(`权重${items[i].weight}`, RADIUS - 16, 10)
+      }
       ctx.restore()
     }
 
@@ -120,14 +126,35 @@ const WheelSpinPage: FC = () => {
     }
   }
 
-  const handleSpin = () => {
+  const handleSpin = async () => {
     if (spinning || !wheel) return
     setSpinning(true)
     setShowResult(false)
 
+    let winnerIndex = 0
+    let winnerLabel = ''
+
+    try {
+      const res = await Network.request({
+        url: `/api/wheels/${wheel.id}/spin`,
+        method: 'POST',
+      })
+      console.log('[WheelSpin] spin result:', res.data)
+      const spinData = res.data?.data
+      winnerIndex = spinData?.index || 0
+      winnerLabel = spinData?.result || ''
+    } catch (e) {
+      console.error('[WheelSpin] spin error:', e)
+      Taro.showToast({ title: '转动失败', icon: 'none' })
+      setSpinning(false)
+      return
+    }
+
+    const count = wheel.items.length
+    const anglePer = 360 / count
+    const targetAngle = winnerIndex * anglePer + anglePer / 2
     const extraSpins = 5 + Math.random() * 3
-    const randomAngle = Math.random() * 360
-    const targetRotation = rotation + extraSpins * 360 + randomAngle
+    const targetRotation = rotation + extraSpins * 360 + (360 - targetAngle)
 
     const startTime = Date.now()
     const duration = 3000
@@ -144,29 +171,14 @@ const WheelSpinPage: FC = () => {
         requestAnimationFrame(animate)
       } else {
         setSpinning(false)
-        const finalAngle = (360 - (currentRot % 360)) % 360
-        const index = Math.floor((finalAngle / 360) * wheel.items.length) % wheel.items.length
-        const winner = wheel.items[index].label
-        setResult(winner)
+        setResult(winnerLabel)
         setShowResult(true)
-        recordHistory(winner)
+        // 刷新转盘数据（库存模式需要更新库存）
+        fetchWheel(wheel.id)
       }
     }
 
     requestAnimationFrame(animate)
-  }
-
-  const recordHistory = async (winner: string) => {
-    if (!wheel) return
-    try {
-      await Network.request({
-        url: `/api/wheels/${wheel.id}/spin`,
-        method: 'POST',
-        data: { result: winner },
-      })
-    } catch (e) {
-      console.error('[WheelSpin] record history error:', e)
-    }
   }
 
   const handleHistory = () => {
@@ -226,6 +238,33 @@ const WheelSpinPage: FC = () => {
           <View className="mt-6 px-6 py-4 rounded-2xl bg-white shadow-sm border border-gray-100">
             <Text className="block text-sm text-gray-500 text-center">结果是</Text>
             <Text className="block text-2xl font-bold text-indigo-600 text-center mt-1">{result}</Text>
+          </View>
+        )}
+
+        {wheel?.type === 'inventory' && (
+          <View className="w-full px-5 mt-4">
+            <Text className="block text-sm font-medium text-gray-700 mb-2">剩余库存</Text>
+            <View className="flex flex-row flex-wrap gap-2">
+              {wheel.items.map((item, idx) => (
+                <View
+                  key={idx}
+                  className="px-3 py-1 rounded-lg flex flex-row items-center gap-1"
+                  style={{ backgroundColor: item.color ? item.color + '20' : '#F3F4F6' }}
+                >
+                  <View
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: item.color || '#4F46E5' }}
+                  />
+                  <Text className="text-xs text-gray-700">{item.label}</Text>
+                  <Text
+                    className="text-xs font-medium"
+                    style={{ color: (item.inventory || 0) === 0 ? '#EF4444' : '#166534' }}
+                  >
+                    {item.inventory || 0}/{item.total || 0}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         )}
 

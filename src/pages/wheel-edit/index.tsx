@@ -13,17 +13,28 @@ const WHEEL_COLORS = [
   '#00B894', '#E17055', '#74B9FF', '#A29BFE', '#FD79A8',
 ]
 
-interface WheelItem {
+interface ProbWheelItem {
   label: string
   color?: string
+  weight: number
 }
+
+interface InvWheelItem {
+  label: string
+  color?: string
+  inventory: number
+  total: number
+}
+
+type WheelItem = ProbWheelItem | InvWheelItem
 
 const WheelEditPage: FC = () => {
   const [wheelId, setWheelId] = useState<number | null>(null)
   const [title, setTitle] = useState('')
+  const [type, setType] = useState<'probability' | 'inventory'>('probability')
   const [items, setItems] = useState<WheelItem[]>([
-    { label: '', color: WHEEL_COLORS[0] },
-    { label: '', color: WHEEL_COLORS[1] },
+    { label: '', color: WHEEL_COLORS[0], weight: 1 },
+    { label: '', color: WHEEL_COLORS[1], weight: 1 },
   ])
   const [saving, setSaving] = useState(false)
 
@@ -43,6 +54,7 @@ const WheelEditPage: FC = () => {
       const wheel = res.data?.data
       if (wheel) {
         setTitle(wheel.title)
+        setType(wheel.type || 'probability')
         setItems(wheel.items?.length > 0 ? wheel.items : [])
       }
     } catch (e) {
@@ -53,7 +65,11 @@ const WheelEditPage: FC = () => {
 
   const handleAddItem = () => {
     const color = WHEEL_COLORS[items.length % WHEEL_COLORS.length]
-    setItems([...items, { label: '', color }])
+    if (type === 'inventory') {
+      setItems([...items, { label: '', color, inventory: 1, total: 1 }])
+    } else {
+      setItems([...items, { label: '', color, weight: 1 }])
+    }
   }
 
   const handleRemoveItem = (index: number) => {
@@ -85,11 +101,15 @@ const WheelEditPage: FC = () => {
 
     setSaving(true)
     try {
-      const payload = {
+      const payload: any = {
         title: title.trim(),
+        type,
         items: validItems.map((item, idx) => ({
           label: item.label.trim(),
           color: item.color || WHEEL_COLORS[idx % WHEEL_COLORS.length],
+          ...(type === 'inventory'
+            ? { inventory: (item as InvWheelItem).inventory || 1, total: (item as InvWheelItem).total || 1 }
+            : { weight: (item as ProbWheelItem).weight || 1 }),
         })),
       }
 
@@ -139,6 +159,53 @@ const WheelEditPage: FC = () => {
         </View>
 
         <View className="mb-4">
+          <Text className="block text-sm font-medium text-gray-700 mb-2">转盘类型</Text>
+          <View className="flex flex-row gap-2">
+            <View
+              className="flex-1 py-3 rounded-xl border-2 flex items-center justify-center"
+              style={{
+                borderColor: type === 'probability' ? '#4F46E5' : '#E5E7EB',
+                backgroundColor: type === 'probability' ? '#EEF2FF' : '#FFFFFF',
+              }}
+              onClick={() => {
+                setType('probability')
+                setItems(items.map((i) => ({ label: i.label, color: i.color, weight: 1 })))
+              }}
+            >
+              <Text
+                className="text-sm font-medium"
+                style={{ color: type === 'probability' ? '#4F46E5' : '#374151' }}
+              >
+                概率转盘
+              </Text>
+            </View>
+            <View
+              className="flex-1 py-3 rounded-xl border-2 flex items-center justify-center"
+              style={{
+                borderColor: type === 'inventory' ? '#4F46E5' : '#E5E7EB',
+                backgroundColor: type === 'inventory' ? '#EEF2FF' : '#FFFFFF',
+              }}
+              onClick={() => {
+                setType('inventory')
+                setItems(items.map((i) => ({ label: i.label, color: i.color, inventory: 1, total: 1 })))
+              }}
+            >
+              <Text
+                className="text-sm font-medium"
+                style={{ color: type === 'inventory' ? '#4F46E5' : '#374151' }}
+              >
+                库存转盘
+              </Text>
+            </View>
+          </View>
+          <Text className="block text-xs text-gray-400 mt-2">
+            {type === 'probability'
+              ? '按设定的概率权重进行随机抽取'
+              : '按剩余库存数量动态计算概率，抽中后减少库存'}
+          </Text>
+        </View>
+
+        <View className="mb-4">
           <View className="flex flex-row items-center justify-between mb-2">
             <Text className="text-sm font-medium text-gray-700">选项</Text>
             <Text className="text-xs text-gray-400">{items.filter((i) => i.label.trim()).length} / {items.length}</Text>
@@ -154,7 +221,7 @@ const WheelEditPage: FC = () => {
                   className="w-4 h-4 rounded-full flex-shrink-0"
                   style={{ backgroundColor: item.color || WHEEL_COLORS[index % WHEEL_COLORS.length] }}
                 />
-                <View className="flex-1">
+                <View className="flex-1 min-w-0">
                   <Input
                     className="border-0 bg-transparent"
                     placeholder={`选项 ${index + 1}`}
@@ -162,8 +229,48 @@ const WheelEditPage: FC = () => {
                     onInput={(e) => handleItemChange(index, e.detail.value)}
                   />
                 </View>
+                {type === 'probability' ? (
+                  <View className="flex flex-row items-center gap-1 flex-shrink-0">
+                    <Text className="text-xs text-gray-400">权重</Text>
+                    <Input
+                      className="w-12 text-center bg-gray-50 rounded-lg"
+                      type="number"
+                      value={String((item as ProbWheelItem).weight || 1)}
+                      onInput={(e) => {
+                        const newItems = [...items]
+                        newItems[index] = { ...newItems[index], weight: Number(e.detail.value) || 1 }
+                        setItems(newItems)
+                      }}
+                    />
+                  </View>
+                ) : (
+                  <View className="flex flex-row items-center gap-1 flex-shrink-0">
+                    <Input
+                      className="w-10 text-center bg-gray-50 rounded-lg"
+                      type="number"
+                      value={String((item as InvWheelItem).inventory || 0)}
+                      onInput={(e) => {
+                        const newItems = [...items]
+                        const inv = Number(e.detail.value) || 0
+                        newItems[index] = { ...newItems[index], inventory: inv, total: Math.max(inv, (newItems[index] as InvWheelItem).total || 0) }
+                        setItems(newItems)
+                      }}
+                    />
+                    <Text className="text-xs text-gray-400">/</Text>
+                    <Input
+                      className="w-10 text-center bg-gray-50 rounded-lg"
+                      type="number"
+                      value={String((item as InvWheelItem).total || 0)}
+                      onInput={(e) => {
+                        const newItems = [...items]
+                        newItems[index] = { ...newItems[index], total: Number(e.detail.value) || 0 }
+                        setItems(newItems)
+                      }}
+                    />
+                  </View>
+                )}
                 <View
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   onClick={() => handleRemoveItem(index)}
                 >
                   <Trash2 size={16} color="#EF4444" />

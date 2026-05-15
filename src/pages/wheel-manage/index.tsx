@@ -15,7 +15,8 @@ const WHEEL_COLORS = [
 interface Wheel {
   id: number
   title: string
-  items: { label: string; color?: string }[]
+  type: 'probability' | 'inventory'
+  items: any[]
   created_at: string
   updated_at: string
 }
@@ -117,7 +118,24 @@ const WheelManagePage: FC = () => {
               <CardContent className="p-0">
                 <View className="p-4">
                   <View className="flex flex-row items-center justify-between mb-3">
-                    <Text className="text-base font-semibold text-gray-900">{wheel.title}</Text>
+                    <View className="flex flex-row items-center gap-2">
+                      <Text className="text-base font-semibold text-gray-900">{wheel.title}</Text>
+                      <View
+                        className="px-2 py-1 rounded-full"
+                        style={{
+                          backgroundColor: wheel.type === 'inventory' ? '#DCFCE7' : '#DBEAFE',
+                        }}
+                      >
+                        <Text
+                          className="text-xs font-medium"
+                          style={{
+                            color: wheel.type === 'inventory' ? '#166534' : '#1E40AF',
+                          }}
+                        >
+                          {wheel.type === 'inventory' ? '库存' : '概率'}
+                        </Text>
+                      </View>
+                    </View>
                     <View className="flex flex-row gap-1">
                       <View
                         className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
@@ -140,7 +158,7 @@ const WheelManagePage: FC = () => {
                     </View>
                   </View>
 
-                  <View className="flex flex-row flex-wrap gap-2 mb-3">
+                  <View className="flex flex-row flex-wrap gap-2 mb-2">
                     {wheel.items.slice(0, 6).map((item, idx) => (
                       <View
                         key={idx}
@@ -158,6 +176,15 @@ const WheelManagePage: FC = () => {
                       </View>
                     )}
                   </View>
+                  {wheel.type === 'inventory' && (
+                    <View className="flex flex-row flex-wrap gap-2 mb-3">
+                      {wheel.items.map((item, idx) => (
+                        <Text key={idx} className="text-xs text-gray-500">
+                          {item.label}: 剩{item.inventory || 0}/{item.total || 0}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
 
                   <View
                     className="flex flex-row items-center justify-center py-2 rounded-lg bg-indigo-50"
