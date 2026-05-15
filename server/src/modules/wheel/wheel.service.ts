@@ -170,7 +170,7 @@ export class WheelService {
       .from('wheel_history')
       .select('id, result, created_at')
       .eq('wheel_id', wheelId)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
       .limit(100)
     if (error) throw new Error(`查询历史失败: ${error.message}`)
     return { data }
