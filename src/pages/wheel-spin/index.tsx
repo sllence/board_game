@@ -1,4 +1,4 @@
-import { View, Text, Canvas } from '@tarojs/components'
+import { View, Text, Canvas, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow, useReady } from '@tarojs/taro'
 import { useState, useCallback, useRef } from 'react'
 import { Network } from '@/network'
@@ -259,109 +259,111 @@ const WheelSpinPage: FC = () => {
         </View>
       </View>
 
-      <View className="flex flex-col items-center py-8">
-        <View className="relative" style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}>
-          <Canvas
-            type="2d"
-            id="wheelCanvas"
-            style={{
-              width: CANVAS_SIZE,
-              height: CANVAS_SIZE,
-              transform: `rotate(${rotation}deg)`,
-              transition: spinning ? 'none' : 'transform 0.3s ease-out',
+      <View className="flex flex-col" style={{ height: '100vh' }}>
+        <View className="flex flex-col items-center flex-shrink-0 pt-6 pb-3">
+          <View className="relative" style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}>
+            <Canvas
+              type="2d"
+              id="wheelCanvas"
+              style={{
+                width: CANVAS_SIZE,
+                height: CANVAS_SIZE,
+                transform: `rotate(${rotation}deg)`,
+                transition: spinning ? 'none' : 'transform 0.3s ease-out',
 
-            }}
-          />
-          <View
-            className="absolute"
-            style={{
-              top: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 0,
-              height: 0,
-              borderLeft: '10px solid transparent',
-              borderRight: '10px solid transparent',
-              borderTop: '20px solid #EF4444',
-              zIndex: 10,
-            }}
-          />
-
-        </View>
-
-        {showResult && (
-          <View className="mt-6 px-6 py-4 rounded-2xl bg-white shadow-sm border border-gray-100">
-            <Text className="block text-sm text-gray-500 text-center">结果是</Text>
-            <Text className="block text-2xl font-bold text-indigo-600 text-center mt-1">{result}</Text>
+              }}
+            />
+            <View
+              className="absolute"
+              style={{
+                top: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 0,
+                height: 0,
+                borderLeft: '10px solid transparent',
+                borderRight: '10px solid transparent',
+                borderTop: '20px solid #EF4444',
+                zIndex: 10,
+              }}
+            />
           </View>
-        )}
 
-        {wheel?.type === 'inventory' && (
-          <View className="w-full px-5 mt-4">
-            <Text className="block text-sm font-medium text-gray-700 mb-2">剩余库存</Text>
-            <View className="flex flex-row flex-wrap gap-2">
-              {wheel.items.map((item, idx) => (
-                <View
-                  key={idx}
-                  className="px-3 py-1 rounded-lg flex flex-row items-center gap-1"
-                  style={{ backgroundColor: item.color ? item.color + '20' : '#F3F4F6' }}
-                >
-                  <View
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: item.color || '#4F46E5' }}
-                  />
-                  <Text className="text-xs text-gray-700">{item.label}</Text>
-                  <Text
-                    className="text-xs font-medium"
-                    style={{ color: (item.inventory || 0) === 0 ? '#EF4444' : '#166534' }}
-                  >
-                    {item.inventory || 0}
-                  </Text>
-                </View>
-              ))}
+          {showResult && (
+            <View className="mt-3 px-6 py-3 rounded-2xl bg-white shadow-sm border border-gray-100">
+              <Text className="block text-sm text-gray-500 text-center">结果是</Text>
+              <Text className="block text-xl font-bold text-indigo-600 text-center mt-1">{result}</Text>
             </View>
-          </View>
-        )}
+          )}
 
-        <View className="flex flex-row gap-3 mt-8">
-          <Button
-            className="px-6 py-3"
-            onClick={handleSpin}
-            disabled={spinning}
-          >
-            <RotateCcw size={18} color="#fff" />
-            <Text className="text-white ml-1">
-              {spinning ? '转动中...' : result ? '再次转动' : '开始转动'}
-            </Text>
-          </Button>
+          {wheel?.type === 'inventory' && (
+            <View className="w-full px-5 mt-3">
+              <View className="flex flex-row flex-wrap gap-2 justify-center">
+                {wheel.items.map((item, idx) => (
+                  <View
+                    key={idx}
+                    className="px-3 py-1 rounded-lg flex flex-row items-center gap-1"
+                    style={{ backgroundColor: item.color ? item.color + '20' : '#F3F4F6' }}
+                  >
+                    <View
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: item.color || '#4F46E5' }}
+                    />
+                    <Text className="text-xs text-gray-700">{item.label}</Text>
+                    <Text
+                      className="text-xs font-medium"
+                      style={{ color: (item.inventory || 0) === 0 ? '#EF4444' : '#166534' }}
+                    >
+                      {item.inventory || 0}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          <View className="flex flex-row gap-3 mt-3">
+            <Button
+              className="px-6 py-3"
+              onClick={handleSpin}
+              disabled={spinning}
+            >
+              <RotateCcw size={18} color="#fff" />
+              <Text className="text-white ml-1">
+                {spinning ? '转动中...' : result ? '再次转动' : '开始转动'}
+              </Text>
+            </Button>
+          </View>
         </View>
 
         {history.length > 0 && (
-          <View className="w-full px-5 mt-8">
-            <Text className="block text-sm font-medium text-gray-700 mb-3">历史记录</Text>
-            <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              {history.map((item, idx) => (
-                <View
-                  key={item.id}
-                  className={`flex flex-row items-center justify-between px-4 py-3 ${
-                    idx !== history.length - 1 ? 'border-b border-gray-100' : ''
-                  }`}
-                >
-                  <View className="flex flex-row items-center gap-2">
-                    <Text className="text-xs text-gray-400 w-5">{history.length - idx}</Text>
-                    <Text className="text-sm text-gray-800">{item.result}</Text>
+          <View className="flex-1 flex flex-col min-h-0 px-5 pt-2 pb-4">
+            <Text className="block text-sm font-medium text-gray-700 mb-2 flex-shrink-0">历史记录</Text>
+            <ScrollView className="flex-1" scrollY style={{ overflowY: 'auto' }}>
+              <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                {history.map((item, idx) => (
+                  <View
+                    key={item.id}
+                    className={`flex flex-row items-center justify-between px-4 py-3 ${
+                      idx !== history.length - 1 ? 'border-b border-gray-100' : ''
+                    }`}
+                  >
+                    <View className="flex flex-row items-center gap-2">
+                      <Text className="text-xs text-gray-400 w-5">{history.length - idx}</Text>
+                      <Text className="text-sm text-gray-800">{item.result}</Text>
+                    </View>
+                    <Text className="text-xs text-gray-400">
+                      {(() => {
+                        const s = item.created_at.replace('T', ' ').replace('Z', '').split('.')[0]
+                        const d = new Date(s)
+                        if (Number.isNaN(d.getTime())) return item.created_at.slice(0, 16).replace('T', ' ')
+                        return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`
+                      })()}
+                    </Text>
                   </View>
-                  <Text className="text-xs text-gray-400">
-                    {(() => {
-                      const s = item.created_at.replace('T', ' ').replace('Z', '').split('.')[0]
-                      const d = new Date(s)
-                      if (Number.isNaN(d.getTime())) return item.created_at.slice(0, 16).replace('T', ' ')
-                      return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`
-                    })()}
-                  </Text>
-                </View>
-              ))}
-            </View>
+                ))}
+              </View>
+            </ScrollView>
           </View>
         )}
       </View>
