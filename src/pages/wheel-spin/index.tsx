@@ -352,12 +352,12 @@ const WheelSpinPage: FC = () => {
                     <Text className="text-sm text-gray-800">{item.result}</Text>
                   </View>
                   <Text className="text-xs text-gray-400">
-                    {new Date(item.created_at).toLocaleString('zh-CN', {
-                      month: 'numeric',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    {(() => {
+                      const s = item.created_at.replace('T', ' ').replace('Z', '').split('.')[0]
+                      const d = new Date(s)
+                      if (Number.isNaN(d.getTime())) return item.created_at.slice(0, 16).replace('T', ' ')
+                      return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`
+                    })()}
                   </Text>
                 </View>
               ))}
