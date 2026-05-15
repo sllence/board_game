@@ -42,7 +42,7 @@ export class WheelService {
     const client = getSupabaseClient()
     let query = client
       .from('wheels')
-      .select('id, title, type, items, created_at, updated_at, user_id')
+      .select('id, title, type, items, created_at, updated_at, user_id, users(nickname)')
       .order('updated_at', { ascending: false })
 
     if (userId) {
@@ -68,7 +68,10 @@ export class WheelService {
       ...item,
       is_owner: !item.user_id || item.user_id === userId,
       is_favorited: favoritedIds.has(item.id),
+      creator_nickname: item.users?.nickname || null,
     }))
+    // 移除 users 字段
+    result.forEach((r: any) => { delete r.users })
 
     return { data: result }
   }
@@ -77,7 +80,7 @@ export class WheelService {
     const client = getSupabaseClient()
     const { data, error } = await client
       .from('wheels')
-      .select('id, title, type, items, created_at, updated_at, user_id')
+      .select('id, title, type, items, created_at, updated_at, user_id, users(nickname)')
       .eq('id', id)
       .maybeSingle()
     if (error) throw new Error(`查询转盘失败: ${error.message}`)
@@ -94,7 +97,10 @@ export class WheelService {
       isFavorited = !!favData
     }
 
-    return { data: { ...data, is_owner: !data?.user_id || data?.user_id === userId, is_favorited: isFavorited } }
+    const creatorNickname = Array.isArray(data?.users) ? data.users[0]?.nickname : data?.users?.nickname || null
+    const result = { ...data, is_owner: !data?.user_id || data?.user_id === userId, is_favorited: isFavorited, creator_nickname: creatorNickname }
+    delete (result as any).users
+    return { data: result }
   }
 
   async update(id: number, body: {

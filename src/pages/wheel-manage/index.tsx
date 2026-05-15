@@ -16,6 +16,7 @@ interface Wheel {
   updated_at: string
   is_owner?: boolean
   is_favorited?: boolean
+  creator_nickname?: string | null
 }
 
 const WheelManagePage: FC = () => {
@@ -215,11 +216,16 @@ const WheelManagePage: FC = () => {
                     <Text className="text-xs text-gray-400">
                       {wheel.created_at ? new Date(wheel.created_at).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : ''}
                     </Text>
-                    {wheel.is_favorited && (
-                      <View className="px-2 py-0 rounded-full bg-amber-50">
-                        <Text className="text-xs font-medium text-amber-600">收藏</Text>
-                      </View>
-                    )}
+                    <View className="flex flex-row items-center gap-1">
+                      {wheel.creator_nickname && !wheel.is_owner && (
+                        <Text className="text-xs text-gray-400">by {wheel.creator_nickname}</Text>
+                      )}
+                      {wheel.is_favorited && (
+                        <View className="px-2 py-0 rounded-full bg-amber-50">
+                          <Text className="text-xs font-medium text-amber-600">收藏</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </View>
               </CardContent>
