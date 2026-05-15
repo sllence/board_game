@@ -247,7 +247,7 @@ const WheelSpinPage: FC = () => {
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50" style={{ overflowX: 'hidden' }}>
-      <View className="px-5 pt-8 pb-2 bg-white border-b border-gray-100">
+      <View className="px-5 pt-2 pb-2 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
           <Text className="text-lg font-bold text-gray-900">{wheel?.title || '转盘'}</Text>
           <View
@@ -289,12 +289,16 @@ const WheelSpinPage: FC = () => {
             />
           </View>
 
-          {showResult && (
-            <View className="mt-3 px-6 py-3 rounded-2xl bg-white shadow-sm border border-gray-100">
-              <Text className="block text-sm text-gray-500 text-center">结果是</Text>
-              <Text className="block text-xl font-bold text-indigo-600 text-center mt-1">{result}</Text>
-            </View>
-          )}
+          <View className="mt-3 px-6 py-3 rounded-2xl bg-white shadow-sm border border-gray-100 h-20 flex flex-col items-center justify-center">
+            {showResult ? (
+              <>
+                <Text className="block text-sm text-gray-500 text-center">结果是</Text>
+                <Text className="block text-xl font-bold text-indigo-600 text-center mt-1">{result}</Text>
+              </>
+            ) : (
+              <Text className="block text-sm text-gray-400 text-center">点击转动获取结果</Text>
+            )}
+          </View>
 
           {wheel?.type === 'inventory' && (
             <View className="w-full px-5 mt-3">
@@ -337,7 +341,7 @@ const WheelSpinPage: FC = () => {
         </View>
 
         {history.length > 0 && (
-          <View className="flex flex-col flex-shrink-0 px-5 pt-2 pb-4" style={{ height: '340px' }}>
+          <View className="flex flex-col flex-shrink-0 px-5 pt-2 pb-4" style={{ height: '300px' }}>
             <Text className="block text-sm font-medium text-gray-700 mb-2 flex-shrink-0">历史记录</Text>
             <ScrollView className="flex-1" scrollY style={{ overflowY: 'auto' }}>
               <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
