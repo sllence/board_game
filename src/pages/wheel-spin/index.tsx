@@ -13,7 +13,7 @@ interface Wheel {
   items: any[]
 }
 
-const CANVAS_SIZE = 280
+const CANVAS_SIZE = 220
 const CENTER = CANVAS_SIZE / 2
 const RADIUS = CENTER - 10
 
@@ -247,7 +247,7 @@ const WheelSpinPage: FC = () => {
 
   return (
     <View className="flex flex-col min-h-screen bg-gray-50" style={{ overflowX: 'hidden' }}>
-      <View className="px-5 pt-12 pb-4 bg-white border-b border-gray-100">
+      <View className="px-5 pt-10 pb-3 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
           <Text className="text-lg font-bold text-gray-900">{wheel?.title || '转盘'}</Text>
           <View
