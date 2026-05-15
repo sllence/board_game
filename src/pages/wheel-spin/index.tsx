@@ -1,5 +1,4 @@
 import { View, Text, Canvas, ScrollView } from '@tarojs/components'
-import { toast } from '@/components/ui/toast'
 import Taro, { useDidShow, useReady } from '@tarojs/taro'
 import { useState, useCallback, useRef } from 'react'
 import { Network } from '@/network'
@@ -203,8 +202,8 @@ const WheelSpinPage: FC = () => {
         requestAnimationFrame(animate)
       } else {
         setSpinning(false)
-        // 弹出庆祝提示框，2秒后自动消失
-        toast(`🎉 结果是：${winnerLabel}`, { duration: 2000 })
+        // 在转盘中心展示结果
+        setResult(winnerLabel)
         // 刷新转盘数据和历史记录（库存模式需要更新库存）
         Promise.all([
           Network.request({ url: `/api/wheels/${wheel.id}` }),
@@ -285,6 +284,26 @@ const WheelSpinPage: FC = () => {
                 zIndex: 10,
               }}
             />
+            {/* 中心结果展示 */}
+            <View
+              className="absolute rounded-full bg-white shadow-md flex flex-col items-center justify-center"
+              style={{
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: CANVAS_SIZE * 0.32,
+                height: CANVAS_SIZE * 0.32,
+                zIndex: 10,
+              }}
+            >
+              <Text className="text-xs text-gray-400">结果</Text>
+              <Text
+                className="text-sm font-bold text-gray-900 text-center px-2"
+                style={{ maxWidth: CANVAS_SIZE * 0.28 }}
+              >
+                {result || '?'}
+              </Text>
+            </View>
           </View>
 
           {wheel?.type === 'inventory' && (
