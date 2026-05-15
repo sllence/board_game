@@ -52,7 +52,7 @@ const TOOL_GROUPS: ToolGroup[] = [
         icon: <Target size={20} color="#6366f1" />,
         iconBg: '#ede9fe',
         iconColor: '#6366f1',
-        path: '/pages/wheel/index',
+        path: '/pages/wheel-manage/index',
         soon: false,
       },
     ],
@@ -140,10 +140,10 @@ const ToolsPage: FC = () => {
                   </View>
                   <View className="flex flex-col flex-1">
                     <Text className="text-sm font-semibold text-gray-800">{tool.name}</Text>
-                    <Text className="text-xs text-gray-400 mt-0.5">{tool.desc}</Text>
+                    <Text className="text-xs text-gray-400 mt-1">{tool.desc}</Text>
                   </View>
                   {tool.soon ? (
-                    <View className="rounded-full px-2 py-0.5 bg-gray-100">
+                    <View className="rounded-full px-2 py-1 bg-gray-100">
                       <Text className="text-xs text-gray-400">即将上线</Text>
                     </View>
                   ) : (
