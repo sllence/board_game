@@ -7,11 +7,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Settings, Trash2, Bookmark, Target } from 'lucide-react-taro'
 import type { FC } from 'react'
 
-const WHEEL_COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-  '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B500', '#6C5CE7',
-]
-
 interface Wheel {
   id: number
   title: string
@@ -207,25 +202,7 @@ const WheelManagePage: FC = () => {
                     </View>
                   </View>
 
-                  <View className="flex flex-row flex-wrap gap-2">
-                    {wheel.items.slice(0, 6).map((item, idx) => (
-                      <View
-                        key={idx}
-                        className="px-2 py-1 rounded-md"
-                        style={{
-                          backgroundColor: item.color || WHEEL_COLORS[idx % WHEEL_COLORS.length],
-                        }}
-                      >
-                        <Text className="text-xs text-white">{item.label}</Text>
-                      </View>
-                    ))}
-                    {wheel.items.length > 6 && (
-                      <View className="px-2 py-1 rounded-md bg-gray-100">
-                        <Text className="text-xs text-gray-500">+{wheel.items.length - 6}</Text>
-                      </View>
-                    )}
-                  </View>
-                  <View className="flex flex-row items-center justify-between mt-2">
+                  <View className="flex flex-row items-center justify-between">
                     <Text className="text-xs text-gray-400">
                       {wheel.created_at ? new Date(wheel.created_at).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : ''}
                     </Text>
