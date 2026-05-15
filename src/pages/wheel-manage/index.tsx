@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Settings, Trash2, Share2, ChevronRight, Target, Bookmark } from 'lucide-react-taro'
+import { Settings, Trash2, Bookmark, Target } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 const WHEEL_COLORS = [
@@ -177,32 +177,17 @@ const WheelManagePage: FC = () => {
           {wheels.map((wheel) => (
             <Card key={wheel.id} className="rounded-xl overflow-hidden">
               <CardContent className="p-0">
-                <View className="p-4">
+                <View className="p-4" onClick={() => handleSpin(wheel.id)}>
                   <View className="flex flex-row items-center justify-between mb-3">
                     <View className="flex flex-row items-center gap-2">
                       <Text className="text-base font-semibold text-gray-900">{wheel.title}</Text>
-                      <View
-                        className="px-2 py-1 rounded-full"
-                        style={{
-                          backgroundColor: wheel.type === 'inventory' ? '#DCFCE7' : '#DBEAFE',
-                        }}
-                      >
-                        <Text
-                          className="text-xs font-medium"
-                          style={{
-                            color: wheel.type === 'inventory' ? '#166534' : '#1E40AF',
-                          }}
-                        >
-                          {wheel.type === 'inventory' ? '库存' : '概率'}
-                        </Text>
-                      </View>
                       {!wheel.is_owner && (
                         <View className="px-2 py-1 rounded-full bg-amber-50">
                           <Text className="text-xs font-medium text-amber-600">收藏</Text>
                         </View>
                       )}
                     </View>
-                    <View className="flex flex-row gap-1">
+                    <View className="flex flex-row gap-1" onClick={(e) => e.stopPropagation()}>
                       {wheel.is_owner ? (
                         <>
                           <View
@@ -210,12 +195,6 @@ const WheelManagePage: FC = () => {
                             onClick={() => handleEdit(wheel)}
                           >
                             <Settings size={16} color="#6B7280" />
-                          </View>
-                          <View
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
-                            onClick={() => handleSpin(wheel.id)}
-                          >
-                            <Share2 size={16} color="#6B7280" />
                           </View>
                           <View
                             className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50"
@@ -235,7 +214,7 @@ const WheelManagePage: FC = () => {
                     </View>
                   </View>
 
-                  <View className="flex flex-row flex-wrap gap-2 mb-2">
+                  <View className="flex flex-row flex-wrap gap-2">
                     {wheel.items.slice(0, 6).map((item, idx) => (
                       <View
                         key={idx}
@@ -254,7 +233,7 @@ const WheelManagePage: FC = () => {
                     )}
                   </View>
                   {wheel.type === 'inventory' && (
-                    <View className="flex flex-row flex-wrap gap-2 mb-3">
+                    <View className="flex flex-row flex-wrap gap-2 mt-2">
                       {wheel.items.map((item, idx) => (
                         <Text key={idx} className="text-xs text-gray-500">
                           {item.label}: 剩{item.inventory || 0}
@@ -262,15 +241,6 @@ const WheelManagePage: FC = () => {
                       ))}
                     </View>
                   )}
-
-                  <View
-                    className="flex flex-row items-center justify-center py-2 rounded-lg bg-indigo-50"
-                    onClick={() => handleSpin(wheel.id)}
-                  >
-                    <Target size={16} color="#4F46E5" />
-                    <Text className="text-sm font-medium text-indigo-600 ml-1">开始转动</Text>
-                    <ChevronRight size={16} color="#4F46E5" />
-                  </View>
                 </View>
               </CardContent>
             </Card>
