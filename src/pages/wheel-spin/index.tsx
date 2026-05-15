@@ -348,7 +348,7 @@ const WheelSpinPage: FC = () => {
                   }`}
                 >
                   <View className="flex flex-row items-center gap-2">
-                    <Text className="text-xs text-gray-400 w-5">{idx + 1}</Text>
+                    <Text className="text-xs text-gray-400 w-5">{history.length - idx}</Text>
                     <Text className="text-sm text-gray-800">{item.result}</Text>
                   </View>
                   <Text className="text-xs text-gray-400">
