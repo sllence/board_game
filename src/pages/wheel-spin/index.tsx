@@ -31,14 +31,17 @@ const WheelSpinPage: FC = () => {
     if (!currentWheel || !ctxRef.current) return
     const ctx = ctxRef.current
     const items = currentWheel.items
-    const count = items.length
-    const anglePer = (Math.PI * 2) / count
+    const sectorAngles = getSectorAngles(currentWheel)
 
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
 
-    for (let i = 0; i < count; i++) {
-      const startAngle = i * anglePer - Math.PI / 2
-      const endAngle = (i + 1) * anglePer - Math.PI / 2
+    for (let i = 0; i < items.length; i++) {
+      const startDeg = sectorAngles[i].startDeg
+      const endDeg = sectorAngles[i].endDeg
+      const midDeg = startDeg + (endDeg - startDeg) / 2
+      const startAngle = (startDeg * Math.PI) / 180 - Math.PI / 2
+      const endAngle = (endDeg * Math.PI) / 180 - Math.PI / 2
+      const midAngle = (midDeg * Math.PI) / 180 - Math.PI / 2
 
       ctx.beginPath()
       ctx.moveTo(CENTER, CENTER)
@@ -52,22 +55,12 @@ const WheelSpinPage: FC = () => {
 
       ctx.save()
       ctx.translate(CENTER, CENTER)
-      ctx.rotate(startAngle + anglePer / 2)
+      ctx.rotate(midAngle)
       ctx.textAlign = 'right'
       ctx.fillStyle = '#ffffff'
       ctx.font = 'bold 13px sans-serif'
       const label = items[i].label.length > 5 ? items[i].label.slice(0, 5) + '..' : items[i].label
       ctx.fillText(label, RADIUS - 16, -3)
-      if (currentWheel.type === 'inventory') {
-        ctx.font = '10px sans-serif'
-        ctx.fillStyle = 'rgba(255,255,255,0.8)'
-        const invText = `${items[i].inventory || 0}/${items[i].total || 0}`
-        ctx.fillText(invText, RADIUS - 16, 10)
-      } else if (items[i].weight && items[i].weight !== 1) {
-        ctx.font = '10px sans-serif'
-        ctx.fillStyle = 'rgba(255,255,255,0.8)'
-        ctx.fillText(`权重${items[i].weight}`, RADIUS - 16, 10)
-      }
       ctx.restore()
     }
 
@@ -133,6 +126,29 @@ const WheelSpinPage: FC = () => {
     }
   }
 
+  const getSectorAngles = (w: Wheel) => {
+    const items = w.items
+    let total = 0
+    for (const item of items) {
+      if (w.type === 'inventory') {
+        total += (item.inventory || 0)
+      } else {
+        total += (item.weight || 1)
+      }
+    }
+    if (total === 0) total = items.length
+
+    const angles: { startDeg: number; endDeg: number }[] = []
+    let currentDeg = 0
+    for (const item of items) {
+      const value = w.type === 'inventory' ? (item.inventory || 0) : (item.weight || 1)
+      const deg = (value / total) * 360
+      angles.push({ startDeg: currentDeg, endDeg: currentDeg + deg })
+      currentDeg += deg
+    }
+    return angles
+  }
+
   const handleSpin = async () => {
     if (spinning || !wheel) return
     setSpinning(true)
@@ -157,9 +173,9 @@ const WheelSpinPage: FC = () => {
       return
     }
 
-    const count = wheel.items.length
-    const anglePer = 360 / count
-    const targetAngle = winnerIndex * anglePer + anglePer / 2
+    const angles = getSectorAngles(wheel)
+    const winnerSector = angles[winnerIndex]
+    const targetAngle = winnerSector.startDeg + (winnerSector.endDeg - winnerSector.startDeg) / 2
     const extraSpins = 5 + Math.random() * 3
     const targetRotation = rotation + extraSpins * 360 + (360 - targetAngle)
 
