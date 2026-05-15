@@ -1,4 +1,5 @@
-import { View, Text, Canvas, ScrollView } from '@tarojs/components'
+// eslint-disable-next-line no-restricted-syntax -- 小程序分享必须使用原生 Button openType="share"
+import { View, Text, Canvas, ScrollView, Button as TaroButton } from '@tarojs/components'
 import Taro, { useDidShow, useReady, useShareAppMessage } from '@tarojs/taro'
 import { useState, useCallback, useRef } from 'react'
 import { Network } from '@/network'
@@ -332,16 +333,15 @@ const WheelSpinPage: FC = () => {
                 <Bookmark size={18} color="#6B7280" />
               )}
             </View>
-            {/* 分享按钮 - 小程序点击提示从右上角转发，H5 复制链接 */}
+            {/* 分享按钮 - 小程序使用 openType="share" 直接触发转发，H5 复制链接 */}
             {[Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv() as any) ? (
-              <View
+              <TaroButton
+                openType="share"
                 className="flex flex-row items-center justify-center w-9 h-9 rounded-full bg-gray-100 active:bg-gray-200"
-                onClick={() => {
-                  Taro.showToast({ title: '点击右上角 ··· 转发', icon: 'none', duration: 2000 })
-                }}
+                style={{ padding: 0, margin: 0, lineHeight: 1, border: 'none', background: '#F3F4F6' }}
               >
                 <Share2 size={18} color="#6B7280" />
-              </View>
+              </TaroButton>
             ) : (
               <View
                 className="flex flex-row items-center justify-center w-9 h-9 rounded-full bg-gray-100 active:bg-gray-200"
