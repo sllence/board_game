@@ -180,7 +180,7 @@ const WheelManagePage: FC = () => {
                     <View className="flex flex-row flex-wrap gap-2 mb-3">
                       {wheel.items.map((item, idx) => (
                         <Text key={idx} className="text-xs text-gray-500">
-                          {item.label}: 剩{item.inventory || 0}/{item.total || 0}
+                          {item.label}: 剩{item.inventory || 0}
                         </Text>
                       ))}
                     </View>

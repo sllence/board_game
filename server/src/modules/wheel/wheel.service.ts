@@ -11,7 +11,6 @@ export interface InvWheelItem {
   label: string
   color?: string
   inventory: number
-  total: number
 }
 
 export type WheelItem = ProbWheelItem | InvWheelItem

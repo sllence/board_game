@@ -23,7 +23,6 @@ interface InvWheelItem {
   label: string
   color?: string
   inventory: number
-  total: number
 }
 
 type WheelItem = ProbWheelItem | InvWheelItem
@@ -66,7 +65,7 @@ const WheelEditPage: FC = () => {
   const handleAddItem = () => {
     const color = WHEEL_COLORS[items.length % WHEEL_COLORS.length]
     if (type === 'inventory') {
-      setItems([...items, { label: '', color, inventory: 1, total: 1 }])
+      setItems([...items, { label: '', color, inventory: 1 }])
     } else {
       setItems([...items, { label: '', color, weight: 1 }])
     }
@@ -108,7 +107,7 @@ const WheelEditPage: FC = () => {
           label: item.label.trim(),
           color: item.color || WHEEL_COLORS[idx % WHEEL_COLORS.length],
           ...(type === 'inventory'
-            ? { inventory: (item as InvWheelItem).inventory || 1, total: (item as InvWheelItem).total || 1 }
+            ? { inventory: (item as InvWheelItem).inventory || 1 }
             : { weight: (item as ProbWheelItem).weight || 1 }),
         })),
       }
@@ -187,7 +186,7 @@ const WheelEditPage: FC = () => {
               }}
               onClick={() => {
                 setType('inventory')
-                setItems(items.map((i) => ({ label: i.label, color: i.color, inventory: 1, total: 1 })))
+                setItems(items.map((i) => ({ label: i.label, color: i.color, inventory: 1 })))
               }}
             >
               <Text
@@ -245,25 +244,14 @@ const WheelEditPage: FC = () => {
                   </View>
                 ) : (
                   <View className="flex flex-row items-center gap-1 flex-shrink-0">
+                    <Text className="text-xs text-gray-400">库存</Text>
                     <Input
-                      className="w-10 text-center bg-gray-50 rounded-lg"
+                      className="w-12 text-center bg-gray-50 rounded-lg"
                       type="number"
                       value={String((item as InvWheelItem).inventory || 0)}
                       onInput={(e) => {
                         const newItems = [...items]
-                        const inv = Number(e.detail.value) || 0
-                        newItems[index] = { ...newItems[index], inventory: inv, total: Math.max(inv, (newItems[index] as InvWheelItem).total || 0) }
-                        setItems(newItems)
-                      }}
-                    />
-                    <Text className="text-xs text-gray-400">/</Text>
-                    <Input
-                      className="w-10 text-center bg-gray-50 rounded-lg"
-                      type="number"
-                      value={String((item as InvWheelItem).total || 0)}
-                      onInput={(e) => {
-                        const newItems = [...items]
-                        newItems[index] = { ...newItems[index], total: Number(e.detail.value) || 0 }
+                        newItems[index] = { ...newItems[index], inventory: Number(e.detail.value) || 0 }
                         setItems(newItems)
                       }}
                     />

@@ -297,7 +297,7 @@ const WheelSpinPage: FC = () => {
                     className="text-xs font-medium"
                     style={{ color: (item.inventory || 0) === 0 ? '#EF4444' : '#166534' }}
                   >
-                    {item.inventory || 0}/{item.total || 0}
+                    {item.inventory || 0}
                   </Text>
                 </View>
               ))}
