@@ -61,9 +61,17 @@ const WheelManagePage: FC = () => {
         }
       }
 
-      // 合并：自己的转盘 + 收藏的转盘（去重）
+      // 合并：自己的转盘 + 收藏的转盘（去重，但保留收藏标识）
+      const favMap = new Map(favWheels.map(w => [w.id, w]))
+      const combined = myWheels.map(w => {
+        const fav = favMap.get(w.id)
+        return fav ? { ...w, is_favorited: true } : w
+      })
+      // 添加别人创建的收藏转盘
       const myIds = new Set(myWheels.map(w => w.id))
-      const combined = [...myWheels, ...favWheels.filter(w => !myIds.has(w.id))]
+      favWheels.forEach(w => {
+        if (!myIds.has(w.id)) combined.push(w)
+      })
       setWheels(combined)
     } catch (e) {
       console.error('[WheelManage] fetch error:', e)
@@ -176,7 +184,7 @@ const WheelManagePage: FC = () => {
                   <View className="flex flex-row items-center justify-between mb-3">
                     <Text className="text-base font-semibold text-gray-900">{wheel.title}</Text>
                     <View className="flex flex-row gap-1" onClick={(e) => e.stopPropagation()}>
-                      {wheel.is_owner ? (
+                      {wheel.is_owner && (
                         <>
                           <View
                             className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
@@ -191,7 +199,8 @@ const WheelManagePage: FC = () => {
                             <Trash2 size={16} color="#EF4444" />
                           </View>
                         </>
-                      ) : (
+                      )}
+                      {wheel.is_favorited && (
                         <View
                           className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50"
                           onClick={() => handleUnfavorite(wheel)}
@@ -206,7 +215,7 @@ const WheelManagePage: FC = () => {
                     <Text className="text-xs text-gray-400">
                       {wheel.created_at ? new Date(wheel.created_at).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : ''}
                     </Text>
-                    {!wheel.is_owner && (
+                    {wheel.is_favorited && (
                       <View className="px-2 py-0 rounded-full bg-amber-50">
                         <Text className="text-xs font-medium text-amber-600">收藏</Text>
                       </View>
