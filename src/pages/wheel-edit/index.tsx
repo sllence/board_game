@@ -100,6 +100,16 @@ const WheelEditPage: FC = () => {
 
     setSaving(true)
     try {
+      // 获取当前用户ID
+      let currentUserId: number | undefined
+      try {
+        const cached = Taro.getStorageSync('userInfo')
+        if (cached) {
+          const user = JSON.parse(cached)
+          currentUserId = user.id
+        }
+      } catch { /* ignore */ }
+
       const payload: any = {
         title: title.trim(),
         type,
@@ -110,6 +120,9 @@ const WheelEditPage: FC = () => {
             ? { inventory: (item as InvWheelItem).inventory || 1 }
             : { weight: (item as ProbWheelItem).weight || 1 }),
         })),
+      }
+      if (currentUserId) {
+        payload.user_id = currentUserId
       }
 
       if (wheelId) {

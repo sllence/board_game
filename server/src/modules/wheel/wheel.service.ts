@@ -46,7 +46,7 @@ export class WheelService {
       .order('updated_at', { ascending: false })
 
     if (userId) {
-      query = query.eq('user_id', userId)
+      query = query.or(`user_id.eq.${userId},user_id.is.null`)
     }
 
     const { data, error } = await query
@@ -66,7 +66,7 @@ export class WheelService {
 
     const result = (data || []).map((item: any) => ({
       ...item,
-      is_owner: item.user_id === userId,
+      is_owner: !item.user_id || item.user_id === userId,
       is_favorited: favoritedIds.has(item.id),
     }))
 
@@ -94,7 +94,7 @@ export class WheelService {
       isFavorited = !!favData
     }
 
-    return { data: { ...data, is_owner: data?.user_id === userId, is_favorited: isFavorited } }
+    return { data: { ...data, is_owner: !data?.user_id || data?.user_id === userId, is_favorited: isFavorited } }
   }
 
   async update(id: number, body: {
