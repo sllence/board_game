@@ -64,9 +64,9 @@ const TOOLS: ToolItem[] = [
     name: '转盘',
     desc: '自定义转盘抽奖',
     icon: <Target size={28} color="#fff" />,
-    gradient: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)',
-    path: '',
-    soon: true,
+    gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+    path: '/pages/wheel-manage/index',
+    soon: false,
   },
 ]
 

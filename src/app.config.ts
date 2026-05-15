@@ -14,6 +14,10 @@ export default defineAppConfig({
     'pages/rule-detail/index',
     'pages/guide-detail/index',
     'pages/games-admin/index',
+    'pages/wheel-manage/index',
+    'pages/wheel-edit/index',
+    'pages/wheel-spin/index',
+    'pages/wheel-history/index',
   ],
   window: {
     backgroundTextStyle: 'light',
