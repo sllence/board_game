@@ -177,7 +177,10 @@ const WheelSpinPage: FC = () => {
     const winnerSector = angles[winnerIndex]
     const targetAngle = winnerSector.startDeg + (winnerSector.endDeg - winnerSector.startDeg) / 2
     const extraSpins = 5 + Math.random() * 3
-    const targetRotation = rotation + extraSpins * 360 + (360 - targetAngle)
+    const currentRotation = rotation % 360
+    const needed = (360 - (currentRotation + targetAngle) % 360) % 360
+    const delta = needed === 0 ? 360 : needed
+    const targetRotation = rotation + extraSpins * 360 + delta
 
     const startTime = Date.now()
     const duration = 3000
