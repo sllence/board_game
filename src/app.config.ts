@@ -19,6 +19,7 @@ export default defineAppConfig({
     'pages/wheel-spin/index',
     'pages/wheel-history/index',
     'pages/wheel-favorites/index',
+    'pages/finger-picker/index',
   ],
   window: {
     backgroundTextStyle: 'light',
