@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Dices, Timer, Layers, Shuffle, Calculator, Target } from 'lucide-react-taro'
+import { Dices, Timer, Layers, Shuffle, Calculator, Target, Hand } from 'lucide-react-taro'
 import type { FC, ReactNode } from 'react'
 
 interface ToolItem {
@@ -53,6 +53,16 @@ const TOOL_GROUPS: ToolGroup[] = [
         iconBg: '#ede9fe',
         iconColor: '#6366f1',
         path: '/pages/wheel-manage/index',
+        soon: false,
+      },
+      {
+        key: 'finger-picker',
+        name: '手指选人',
+        desc: '多人触屏随机选人',
+        icon: <Hand size={20} color="#6366f1" />,
+        iconBg: '#ede9fe',
+        iconColor: '#6366f1',
+        path: '/pages/finger-picker/index',
         soon: false,
       },
 
