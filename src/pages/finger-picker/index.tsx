@@ -58,6 +58,7 @@ const FingerPickerPage: FC = () => {
   const scanAngleRef = useRef(0)
   const rippleWavesRef = useRef<{ r: number; alpha: number; color: string }[]>([])
   const settingsRef = useRef<AppSettings>(DEFAULT_SETTINGS)
+  const screenSizeRef = useRef({ width: 375, height: 667 })
 
   const updateAppState = (s: AppState) => {
     appStateRef.current = s
@@ -66,6 +67,7 @@ const FingerPickerPage: FC = () => {
 
   useEffect(() => {
     const info = Taro.getSystemInfoSync()
+    screenSizeRef.current = { width: info.windowWidth, height: info.windowHeight }
     setScreenSize({ width: info.windowWidth, height: info.windowHeight })
     try {
       const saved = Taro.getStorageSync(SETTINGS_KEY)
@@ -287,8 +289,8 @@ const FingerPickerPage: FC = () => {
   const playEffect = useCallback((effect: EffectType) => {
     const pts = Array.from(touchPointsRef.current.values())
     const eliminated = pts.filter((p) => p.state === 'eliminated')
-    const W = Taro.getSystemInfoSync().windowWidth
-    const H = Taro.getSystemInfoSync().windowHeight
+    const W = screenSizeRef.current.width
+    const H = screenSizeRef.current.height
 
     if (effect === 'pulse') {
       const order = [...eliminated].sort(() => Math.random() - 0.5)
@@ -386,8 +388,8 @@ const FingerPickerPage: FC = () => {
     const loop = (now: number) => {
       const ctx = ctxRef.current
       if (!ctx) { rafRef.current = requestAnimationFrame(loop); return }
-      const W = Taro.getSystemInfoSync().windowWidth
-      const H = Taro.getSystemInfoSync().windowHeight
+      const W = screenSizeRef.current.width
+      const H = screenSizeRef.current.height
       const state = appStateRef.current
 
       ctx.clearRect(0, 0, W, H)
