@@ -167,8 +167,14 @@ export class WheelService {
         }
       }
       if (resultIndex === -1) {
-        resultIndex = invItems.findIndex((i) => i.inventory > 0)
-        resultLabel = invItems[resultIndex].label
+        // 浮点累减误差兜底：选最后一个有库存的项（误差累计的方向）
+        for (let i = invItems.length - 1; i >= 0; i--) {
+          if (invItems[i].inventory > 0) {
+            resultIndex = i
+            resultLabel = invItems[i].label
+            break
+          }
+        }
       }
       // 减少库存
       invItems[resultIndex].inventory -= 1
@@ -186,6 +192,7 @@ export class WheelService {
         }
       }
       if (resultIndex === -1) {
+        // 浮点累减误差兜底：选最后一项
         resultIndex = probItems.length - 1
         resultLabel = probItems[resultIndex].label
       }

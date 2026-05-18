@@ -199,6 +199,15 @@ const WheelSpinPage: FC = () => {
     if (spinning || !wheel) return
     setSpinning(true)
 
+    // 归一化累积角度并按最新数据重绘，让上一次转动后的库存变化反映到扇区，
+    // 同时刷新 sectorAnglesRef 供本次落点计算使用。此处 setSpinning(true) 与 setRotation 同帧 flush，
+    // transition 切为 'none'，rotation 跳变不会产生可见回弹。
+    const normalizedRotation = rotation % 360
+    if (normalizedRotation !== rotation) {
+      setRotation(normalizedRotation)
+    }
+    drawWheel()
+
     let winnerIndex = 0
     let winnerLabel = ''
 
@@ -224,8 +233,8 @@ const WheelSpinPage: FC = () => {
     const winnerSector = angles[winnerIndex]
     const targetAngle = winnerSector.startDeg + (winnerSector.endDeg - winnerSector.startDeg) / 2
     console.log('[WheelSpin] winnerIndex:', winnerIndex, 'winnerLabel:', winnerLabel, 'targetAngle:', targetAngle, 'angles:', JSON.stringify(angles))
-    const extraSpins = 5 + Math.random() * 3
-    const currentRotation = rotation % 360
+    const extraSpins = 5 + Math.floor(Math.random() * 4)
+    const currentRotation = normalizedRotation
     // getSectorAngles 的 0° 对应屏幕上方（指针位置），因为 Canvas 绘制时减了 π/2
     // CSS rotate(R) 顺时针旋转 R 度后，指针指向原始角度 (360 - R%360) % 360
     // 要让指针指向 targetAngle：(360 - R%360) % 360 = targetAngle
@@ -233,11 +242,11 @@ const WheelSpinPage: FC = () => {
     const desiredRotation = (360 - targetAngle + 360) % 360
     let delta = (desiredRotation - currentRotation + 360) % 360
     if (delta === 0) delta = 360
-    const targetRotation = rotation + extraSpins * 360 + delta
+    const targetRotation = normalizedRotation + extraSpins * 360 + delta
 
     const startTime = Date.now()
     const duration = 3000
-    const startRot = rotation
+    const startRot = normalizedRotation
 
     const animate = () => {
       const elapsed = Date.now() - startTime
@@ -262,8 +271,10 @@ const WheelSpinPage: FC = () => {
             if (w) {
               wheelRef.current = w
               setWheel(w)
-              // 不调用 drawWheel()：保持当前扇区布局不变，
-              // 避免指针角度（按旧布局计算）和新扇区大小对不上
+              // 此处刻意不重绘：当前 transform 是大数（累积旋转角度），
+              // 直接重绘会让指针停留位置在新扇区布局下不再对应中奖项。
+              // 重绘推迟到下一次 handleSpin 开头：那时 rotation 已归一化，且 spinning=true，
+              // transition: none 可吞掉视觉跳变。
             }
             const h = historyRes.data?.data
             if (Array.isArray(h)) {
