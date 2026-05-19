@@ -6,7 +6,6 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from '@/components/ui/sheet'
 import type { FC } from 'react'
-import './index.scss'
 
 const COLORS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4',
@@ -29,10 +28,17 @@ interface ShockwaveRing {
   duration: number; maxR: number; color: string
 }
 
-interface DomTouchPoint {
+interface AmbientDot {
+  x: number; y: number; speed: number
+  radius: number; maxAlpha: number; phase: number
+}
+
+interface TouchPoint {
   id: number; x: number; y: number; color: string
   state: 'active' | 'winner' | 'eliminated'
   particles: Particle[]
+  scale: number; alpha: number
+  pulsePhase: number; ringRotation: number
   sparkles?: { angle: number; dist: number; speed: number }[]
 }
 
@@ -45,18 +51,20 @@ interface AppSettings {
 const DEFAULT_SETTINGS: AppSettings = { mode: 'single', count: 2, effect: 'pulse' }
 const SETTINGS_KEY = 'fingerPickerSettings'
 const COUNTDOWN_DURATION = 3000
+const AMBIENT_COUNT = 25
 
 const FingerPickerPage: FC = () => {
-  const [appState, _setAppState] = useState<AppState>('idle')
+  const [, setAppStateDisplay] = useState<AppState>('idle')
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [screenSize, setScreenSize] = useState({ width: 375, height: 667 })
-  const [touchPoints, _setTouchPoints] = useState<DomTouchPoint[]>([])
-  const [countdownValue, setCountdownValue] = useState(3)
 
   const ctxRef = useRef<any>(null)
+  const touchPointsRef = useRef<Map<number, TouchPoint>>(new Map())
   const colorIndexRef = useRef(0)
+  const appStateRef = useRef<AppState>('idle')
   const countdownStartRef = useRef<number>(0)
+  const countdownValueRef = useRef(3)
   const rafRef = useRef<number>(0)
   const animStartRef = useRef<number>(0)
   const winnersRef = useRef<number[]>([])
@@ -65,28 +73,32 @@ const FingerPickerPage: FC = () => {
   const settingsRef = useRef<AppSettings>(DEFAULT_SETTINGS)
   const screenSizeRef = useRef({ width: 375, height: 667 })
   const shockwavesRef = useRef<ShockwaveRing[]>([])
-  const syncRafRef = useRef<number>(0)
-  const pendingMovesRef = useRef<Map<number, { x: number; y: number }>>(new Map())
-  const appStateRef = useRef<AppState>('idle')
-  const touchPointsRef = useRef<DomTouchPoint[]>([])
+  const ambientRef = useRef<AmbientDot[]>([])
 
-  const setAppState = useCallback((s: AppState) => {
+  const updateAppState = (s: AppState) => {
     appStateRef.current = s
-    _setAppState(s)
-  }, [])
-
-  const setTouchPoints = useCallback((updater: DomTouchPoint[] | ((prev: DomTouchPoint[]) => DomTouchPoint[])) => {
-    _setTouchPoints(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      touchPointsRef.current = next
-      return next
-    })
-  }, [])
+    setAppStateDisplay(s)
+  }
 
   useEffect(() => {
     const info = Taro.getSystemInfoSync()
     screenSizeRef.current = { width: info.windowWidth, height: info.windowHeight }
     setScreenSize({ width: info.windowWidth, height: info.windowHeight })
+
+    const W = info.windowWidth
+    const H = info.windowHeight
+    const dots: AmbientDot[] = []
+    for (let i = 0; i < AMBIENT_COUNT; i++) {
+      dots.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        speed: 0.15 + Math.random() * 0.35,
+        radius: 0.8 + Math.random() * 1.5,
+        maxAlpha: 0.08 + Math.random() * 0.14,
+        phase: Math.random() * Math.PI * 2,
+      })
+    }
+    ambientRef.current = dots
 
     try {
       const saved = Taro.getStorageSync(SETTINGS_KEY)
@@ -96,11 +108,7 @@ const FingerPickerPage: FC = () => {
         settingsRef.current = parsed
       }
     } catch { /* ignore */ }
-
-    return () => {
-      cancelAnimationFrame(rafRef.current)
-      cancelAnimationFrame(syncRafRef.current)
-    }
+    return () => { cancelAnimationFrame(rafRef.current) }
   }, [])
 
   useReady(() => {
@@ -115,32 +123,10 @@ const FingerPickerPage: FC = () => {
         canvas.height = info.windowHeight * dpr
         ctx.scale(dpr, dpr)
         ctxRef.current = ctx
+        startRenderLoop()
       }
     })
   })
-
-  // 同步 pending 坐标到 state（rAF 节流）
-  const syncPendingMoves = useCallback(() => {
-    if (pendingMovesRef.current.size > 0) {
-      setTouchPoints(prev => {
-        const updated = prev.map(pt => {
-          const pending = pendingMovesRef.current.get(pt.id)
-          if (pending) {
-            return { ...pt, x: pending.x, y: pending.y }
-          }
-          return pt
-        })
-        pendingMovesRef.current.clear()
-        return updated
-      })
-    }
-    syncRafRef.current = requestAnimationFrame(syncPendingMoves)
-  }, [])
-
-  useEffect(() => {
-    syncRafRef.current = requestAnimationFrame(syncPendingMoves)
-    return () => cancelAnimationFrame(syncRafRef.current)
-  }, [syncPendingMoves])
 
   const assignColor = (): string => {
     const color = COLORS[colorIndexRef.current % COLORS.length]
@@ -149,21 +135,21 @@ const FingerPickerPage: FC = () => {
   }
 
   const handleTouchStart = (e: any) => {
-    if (appState === 'animating' || appState === 'result') return
+    if (appStateRef.current === 'animating' || appStateRef.current === 'result') return
     const touches = e.touches || e.changedTouches || []
     let addedNew = false
-    const newPoints: DomTouchPoint[] = []
-
     for (const t of touches) {
-      const existing = touchPoints.find(p => p.id === t.identifier)
-      if (!existing) {
+      if (!touchPointsRef.current.has(t.identifier)) {
         addedNew = true
         const px = t.x ?? t.clientX ?? t.pageX ?? 0
         const py = t.y ?? t.clientY ?? t.pageY ?? 0
         const color = assignColor()
-        newPoints.push({
+        touchPointsRef.current.set(t.identifier, {
           id: t.identifier, x: px, y: py, color,
           state: 'active', particles: [],
+          scale: 1, alpha: 1,
+          pulsePhase: Math.random() * Math.PI * 2,
+          ringRotation: Math.random() * Math.PI * 2,
         })
         shockwavesRef.current.push({
           x: px, y: py, startTime: Date.now(),
@@ -171,98 +157,242 @@ const FingerPickerPage: FC = () => {
         })
       }
     }
-
-    if (newPoints.length > 0) {
-      setTouchPoints(prev => [...prev, ...newPoints])
-    }
-
-    if (addedNew && touchPoints.length + newPoints.length >= 2) {
+    if (addedNew && touchPointsRef.current.size >= 2) {
       countdownStartRef.current = Date.now()
-      setCountdownValue(3)
+      countdownValueRef.current = 3
     }
-
-    updateStateFromTouches(touchPoints.length + newPoints.length)
+    updateStateFromTouches()
   }
 
   const handleTouchMove = (e: any) => {
-    if (appState === 'animating' || appState === 'result') return
+    if (appStateRef.current === 'animating' || appStateRef.current === 'result') return
     const touches = e.touches || e.changedTouches || []
     for (const t of touches) {
-      pendingMovesRef.current.set(t.identifier, {
-        x: t.x ?? t.clientX ?? t.pageX ?? 0,
-        y: t.y ?? t.clientY ?? t.pageY ?? 0,
-      })
+      const pt = touchPointsRef.current.get(t.identifier)
+      if (pt) {
+        pt.x = t.x ?? t.clientX ?? t.pageX ?? 0
+        pt.y = t.y ?? t.clientY ?? t.pageY ?? 0
+      }
     }
   }
 
   const handleTouchEnd = (e: any) => {
-    if (appState === 'animating') return
-    if (appState === 'result') {
+    if (appStateRef.current === 'animating') return
+    if (appStateRef.current === 'result') {
       resetAll()
       return
     }
     const ended = e.changedTouches || []
-    const endedIds = new Set(Array.from(ended).map((t: any) => t.identifier))
-    setTouchPoints(prev => {
-      const remaining = prev.filter(p => !endedIds.has(p.id))
-      colorIndexRef.current = 0
-      return remaining.map((pt, i) => ({
-        ...pt,
-        color: COLORS[i % COLORS.length],
-      }))
+    for (const t of ended) {
+      touchPointsRef.current.delete(t.identifier)
+    }
+    colorIndexRef.current = 0
+    touchPointsRef.current.forEach((pt) => {
+      pt.color = COLORS[colorIndexRef.current % COLORS.length]
+      colorIndexRef.current++
     })
-    colorIndexRef.current = touchPoints.length - endedIds.size
-    updateStateFromTouches(touchPoints.length - endedIds.size)
+    updateStateFromTouches()
   }
 
-  const updateStateFromTouches = (count: number) => {
+  const updateStateFromTouches = () => {
+    const count = touchPointsRef.current.size
     if (count === 0) {
-      setAppState('idle')
+      updateAppState('idle')
       countdownStartRef.current = 0
     } else if (count === 1) {
-      setAppState('waiting')
+      updateAppState('waiting')
       countdownStartRef.current = 0
     } else {
-      if (appState !== 'countdown') {
+      if (appStateRef.current !== 'countdown') {
         countdownStartRef.current = Date.now()
-        setCountdownValue(3)
+        countdownValueRef.current = 3
       }
-      setAppState('countdown')
+      updateAppState('countdown')
     }
   }
 
   const resetAll = () => {
-    setTouchPoints([])
+    touchPointsRef.current.clear()
     colorIndexRef.current = 0
     winnersRef.current = []
     rippleWavesRef.current = []
     shockwavesRef.current = []
     scanAngleRef.current = 0
     countdownStartRef.current = 0
-    setAppState('idle')
+    updateAppState('idle')
   }
 
-  // 倒计时逻辑（每秒更新）
-  useEffect(() => {
-    if (appState !== 'countdown') return
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - countdownStartRef.current
-      const remaining = Math.ceil((COUNTDOWN_DURATION - elapsed) / 1000)
-      setCountdownValue(Math.max(1, remaining))
-      if (elapsed >= COUNTDOWN_DURATION) {
-        triggerAnimation()
+  // ── Drawing functions ──
+
+  const drawTouchPoint = useCallback((ctx: any, pt: TouchPoint, now: number) => {
+    const { x, y, color, state, scale, alpha } = pt
+    if (alpha <= 0) return
+    const baseR = 48
+    const r = baseR * scale
+
+    ctx.save()
+    ctx.globalAlpha = alpha
+
+    if (state === 'active') {
+      const breath = 1 + 0.15 * Math.sin(now / 500 + pt.pulsePhase)
+      const glowR = r * breath
+
+      // Single soft glow circle (no gradient, just semi-transparent fill)
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 1.5, 0, Math.PI * 2)
+      ctx.fillStyle = color + '18'
+      ctx.fill()
+
+      // Main ring
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 2.2
+      ctx.stroke()
+
+      // Simple core fill
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.45, 0, Math.PI * 2)
+      ctx.fillStyle = color + '44'
+      ctx.fill()
+    } else if (state === 'winner') {
+      const breath = 1.3 + 0.1 * Math.sin(now / 300)
+      const glowR = r * breath
+
+      // Full glow for winners (additive)
+      ctx.globalCompositeOperation = 'lighter'
+      const grad1 = ctx.createRadialGradient(x, y, glowR * 0.2, x, y, glowR * 2)
+      grad1.addColorStop(0, color + '30')
+      grad1.addColorStop(1, color + '00')
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 2, 0, Math.PI * 2)
+      ctx.fillStyle = grad1
+      ctx.fill()
+      ctx.globalCompositeOperation = 'source-over'
+
+      // Rotating dashed ring
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate(pt.ringRotation)
+      ctx.setLineDash([6, 14])
+      ctx.beginPath()
+      ctx.arc(0, 0, glowR * 1.15, 0, Math.PI * 2)
+      ctx.strokeStyle = color + '66'
+      ctx.lineWidth = 1.2
+      ctx.stroke()
+      ctx.setLineDash([])
+      ctx.restore()
+
+      // Main ring
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 3.5
+      ctx.stroke()
+
+      // Bright core gradient
+      const grad3 = ctx.createRadialGradient(x, y, 0, x, y, glowR * 0.5)
+      grad3.addColorStop(0, '#ffffff88')
+      grad3.addColorStop(0.4, color + '99')
+      grad3.addColorStop(1, color + '00')
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.5, 0, Math.PI * 2)
+      ctx.fillStyle = grad3
+      ctx.fill()
+    } else {
+      // eliminated — simple fading circle
+      const glowR = r
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
+
+    ctx.restore()
+  }, [])
+
+  const drawParticles = useCallback((ctx: any, pt: TouchPoint) => {
+    for (const p of pt.particles) {
+      if (p.alpha <= 0) continue
+      ctx.save()
+      ctx.globalAlpha = p.alpha
+
+      if (p.type === 'spark') {
+        const len = p.radius * 2.5
+        const rot = p.rotation ?? 0
+        ctx.beginPath()
+        ctx.moveTo(p.x - Math.cos(rot) * len, p.y - Math.sin(rot) * len)
+        ctx.lineTo(p.x + Math.cos(rot) * len, p.y + Math.sin(rot) * len)
+        ctx.strokeStyle = p.color
+        ctx.lineWidth = Math.max(1, p.radius * 0.5)
+        ctx.lineCap = 'round'
+        ctx.stroke()
+      } else if (p.type === 'sparkle') {
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
+        ctx.fillStyle = p.color
+        ctx.fill()
+        ctx.globalCompositeOperation = 'source-over'
+      } else {
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
+        ctx.fillStyle = p.color
+        ctx.fill()
       }
-    }, 100)
-    return () => clearInterval(timer)
-  }, [appState])
+
+      ctx.restore()
+    }
+  }, [])
+
+  const drawCountdown = useCallback((ctx: any, value: number, w: number, h: number) => {
+    ctx.save()
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+
+    const elapsed = Date.now() - countdownStartRef.current
+    const inSecond = elapsed % 1000
+    const scaleT = Math.min(inSecond / 280, 1)
+    const easeOut = 1 - (1 - scaleT) * (1 - scaleT)
+    const scale = 1 + 0.35 * (1 - easeOut)
+    const baseFontSize = Math.min(w, h) * 0.25
+
+    // Glow pulse behind number
+    const glowAlpha = 0.18 * (1 - easeOut)
+    if (glowAlpha > 0.005) {
+      const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, baseFontSize * scale * 0.9)
+      grad.addColorStop(0, `rgba(255,255,255,${glowAlpha})`)
+      grad.addColorStop(1, 'rgba(255,255,255,0)')
+      ctx.beginPath()
+      ctx.arc(w / 2, h / 2, baseFontSize * scale * 0.9, 0, Math.PI * 2)
+      ctx.fillStyle = grad
+      ctx.fill()
+    }
+
+    ctx.fillStyle = 'rgba(255,255,255,0.95)'
+    ctx.font = `bold ${baseFontSize * scale}px sans-serif`
+    ctx.fillText(String(value), w / 2, h / 2)
+    ctx.restore()
+  }, [])
+
+  const drawHint = useCallback((ctx: any, text: string, w: number, h: number) => {
+    ctx.save()
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'
+    ctx.font = '16px sans-serif'
+    ctx.fillText(text, w / 2, h * 0.12)
+    ctx.restore()
+  }, [])
 
   // ── Animation logic ──
 
   const triggerAnimation = useCallback(() => {
-    if (appState === 'animating') return
-    setAppState('animating')
+    if (appStateRef.current === 'animating') return
+    updateAppState('animating')
     animStartRef.current = Date.now()
-    const pts = touchPoints
+    const pts = Array.from(touchPointsRef.current.values())
     const s = settingsRef.current
     let winnerIds: number[] = []
     if (s.mode === 'single') {
@@ -276,47 +406,38 @@ const FingerPickerPage: FC = () => {
       const n = Math.max(2, Math.min(s.count, pts.length))
       const shuffled = [...pts].sort(() => Math.random() - 0.5)
       const groupColors = COLORS.slice(0, n)
-      setTouchPoints(prev => prev.map((pt) => {
-        const idx = shuffled.findIndex(sp => sp.id === pt.id)
-        return { ...pt, color: groupColors[idx % n] }
-      }))
+      shuffled.forEach((pt, i) => { pt.color = groupColors[i % n] })
       winnerIds = pts.map((p) => p.id)
     }
     winnersRef.current = winnerIds
-    setTouchPoints(prev => prev.map(pt => ({
-      ...pt,
-      state: winnerIds.includes(pt.id) ? 'winner' : 'eliminated',
-    })))
-    playEffect(s.effect, pts, winnerIds)
-  }, [appState, touchPoints])
+    pts.forEach((pt) => {
+      pt.state = winnerIds.includes(pt.id) ? 'winner' : 'eliminated'
+    })
+    playEffect(s.effect)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const finishAnimation = useCallback(() => {
-    setTouchPoints(prev => prev.map(pt => {
+    touchPointsRef.current.forEach((pt) => {
       if (pt.state === 'winner') {
-        return {
-          ...pt,
-          sparkles: Array.from({ length: 6 }, (_, i) => ({
-            angle: (i / 6) * Math.PI * 2 + Math.random() * 0.5,
-            dist: 52 + Math.random() * 16,
-            speed: 0.5 + Math.random() * 0.5,
-          })),
-        }
-      }
-      return pt
-    }))
-    touchPoints.forEach(pt => {
-      if (pt.state === 'winner') {
+        pt.scale = 1.4
+        pt.sparkles = Array.from({ length: 6 }, (_, i) => ({
+          angle: (i / 6) * Math.PI * 2 + Math.random() * 0.5,
+          dist: 52 + Math.random() * 16,
+          speed: 0.5 + Math.random() * 0.5,
+        }))
         shockwavesRef.current.push({
           x: pt.x, y: pt.y, startTime: Date.now(),
           duration: 600, maxR: 140, color: pt.color,
         })
       }
     })
-    setAppState('result')
-  }, [touchPoints])
+    updateAppState('result')
+  }, [])
 
-  const playEffect = useCallback((effect: EffectType, pts: DomTouchPoint[], winnerIds: number[]) => {
-    const eliminated = pts.filter((p) => !winnerIds.includes(p.id))
+  const playEffect = useCallback((effect: EffectType) => {
+    const pts = Array.from(touchPointsRef.current.values())
+    const eliminated = pts.filter((p) => p.state === 'eliminated')
     const W = screenSizeRef.current.width
     const H = screenSizeRef.current.height
 
@@ -339,19 +460,29 @@ const FingerPickerPage: FC = () => {
           }
           const fade = () => {
             const t = Math.min((Date.now() - start) / 450, 1)
+            if (t < 0.2) {
+              pt.scale = 1 + t * 2.5
+              pt.alpha = 1
+            } else {
+              const ft = (t - 0.2) / 0.8
+              pt.scale = 1.5 * (1 - ft)
+              pt.alpha = 1 - ft
+            }
             pt.particles.forEach(p => {
               p.x += p.vx; p.y += p.vy
               p.vx *= 0.94; p.vy *= 0.94
               p.alpha = Math.max(0, 1 - t * 1.5)
             })
             if (t < 1) requestAnimationFrame(fade)
-            else if (i === order.length - 1) finishAnimation()
+            else {
+              pt.alpha = 0
+              if (i === order.length - 1) finishAnimation()
+            }
           }
           requestAnimationFrame(fade)
         }, i * 450)
       })
       if (eliminated.length === 0) finishAnimation()
-      startCanvasRender()
 
     } else if (effect === 'scan') {
       const duration = 2800
@@ -375,6 +506,7 @@ const FingerPickerPage: FC = () => {
             )
             if (diff < 0.3) {
               hitSet.add(pt.id)
+              pt.alpha = 0; pt.scale = 0
               shockwavesRef.current.push({
                 x: pt.x, y: pt.y, startTime: Date.now(),
                 duration: 400, maxR: 80, color: pt.color,
@@ -391,7 +523,7 @@ const FingerPickerPage: FC = () => {
           })
         }
 
-        pts.forEach(pt => {
+        touchPointsRef.current.forEach(pt => {
           pt.particles.forEach(p => {
             p.x += p.vx; p.y += p.vy
             p.vx *= 0.95; p.vy *= 0.95
@@ -400,10 +532,12 @@ const FingerPickerPage: FC = () => {
         })
 
         if (progress < 1) requestAnimationFrame(scan)
-        else finishAnimation()
+        else {
+          eliminated.forEach((pt) => { pt.alpha = 0 })
+          finishAnimation()
+        }
       }
       requestAnimationFrame(scan)
-      startCanvasRender()
 
     } else if (effect === 'explode') {
       eliminated.forEach((pt) => {
@@ -424,11 +558,12 @@ const FingerPickerPage: FC = () => {
           x: pt.x, y: pt.y, startTime: Date.now(),
           duration: 500, maxR: 110, color: pt.color,
         })
+        pt.alpha = 0
       })
       const start = Date.now()
       const animParticles = () => {
         const elapsed = Date.now() - start
-        pts.forEach((pt) => {
+        touchPointsRef.current.forEach((pt) => {
           pt.particles.forEach((p) => {
             p.x += p.vx; p.y += p.vy
             if (p.type === 'sparkle') {
@@ -449,7 +584,6 @@ const FingerPickerPage: FC = () => {
         else finishAnimation()
       }
       requestAnimationFrame(animParticles)
-      startCanvasRender()
 
     } else if (effect === 'ripple') {
       const order = [...eliminated].sort(() => Math.random() - 0.5)
@@ -474,18 +608,19 @@ const FingerPickerPage: FC = () => {
           }, ring * 100)
         }
         setTimeout(() => {
+          pt.alpha = 0
           waveIndex++
           setTimeout(emitWave, 200)
         }, 180)
       }
       emitWave()
-      startCanvasRender()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finishAnimation])
 
-  // ── Canvas render (仅特效阶段) ──
+  // ── Render loop ──
 
-  const startCanvasRender = useCallback(() => {
+  const startRenderLoop = useCallback(() => {
     const loop = (now: number) => {
       const ctx = ctxRef.current
       if (!ctx) { rafRef.current = requestAnimationFrame(loop); return }
@@ -493,47 +628,69 @@ const FingerPickerPage: FC = () => {
       const H = screenSizeRef.current.height
       const state = appStateRef.current
 
-      if (state !== 'animating' && state !== 'result') {
-        cancelAnimationFrame(rafRef.current)
-        return
+      ctx.clearRect(0, 0, W, H)
+      ctx.fillStyle = '#0a0a0f'
+      ctx.fillRect(0, 0, W, H)
+
+      // Ambient floating particles (skip during active touch for perf)
+      if (state === 'idle' || state === 'result') {
+        ctx.fillStyle = 'rgba(255,255,255,0.9)'
+        ambientRef.current.forEach(dot => {
+          dot.y -= dot.speed
+          if (dot.y < -5) { dot.y = H + 5; dot.x = Math.random() * W }
+          ctx.globalAlpha = dot.maxAlpha * (0.5 + 0.5 * Math.sin(now / 1200 + dot.phase))
+          ctx.beginPath()
+          ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2)
+          ctx.fill()
+        })
+        ctx.globalAlpha = 1
       }
 
-      ctx.clearRect(0, 0, W, H)
+      if (state === 'countdown') {
+        const elapsed = Date.now() - countdownStartRef.current
+        const remaining = Math.ceil((COUNTDOWN_DURATION - elapsed) / 1000)
+        countdownValueRef.current = Math.max(1, remaining)
+        if (elapsed >= COUNTDOWN_DURATION) triggerAnimation()
+      }
 
-      // Shockwave rings
-      const nowMs = Date.now()
-      shockwavesRef.current = shockwavesRef.current.filter(sw => {
-        const t = (nowMs - sw.startTime) / sw.duration
-        if (t >= 1) return false
-        const r = sw.maxR * t
-        const alpha = 0.55 * (1 - t)
-        ctx.save()
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.globalAlpha = alpha
-        ctx.beginPath()
-        ctx.arc(sw.x, sw.y, r, 0, Math.PI * 2)
-        ctx.strokeStyle = sw.color
-        ctx.lineWidth = 2.5 * (1 - t) + 0.5
-        ctx.stroke()
-        ctx.restore()
-        return true
-      })
+      // Shockwave rings (skip if none active)
+      if (shockwavesRef.current.length > 0) {
+        const nowMs = Date.now()
+        shockwavesRef.current = shockwavesRef.current.filter(sw => {
+          const t = (nowMs - sw.startTime) / sw.duration
+          if (t >= 1) return false
+          const r = sw.maxR * t
+          const alpha = 0.55 * (1 - t)
+          ctx.save()
+          ctx.globalCompositeOperation = 'lighter'
+          ctx.globalAlpha = alpha
+          ctx.beginPath()
+          ctx.arc(sw.x, sw.y, r, 0, Math.PI * 2)
+          ctx.strokeStyle = sw.color
+          ctx.lineWidth = 2.5 * (1 - t) + 0.5
+          ctx.stroke()
+          ctx.restore()
+          return true
+        })
+      }
 
-      // Ripple waves
-      rippleWavesRef.current.forEach((wave) => {
-        if (wave.alpha <= 0) return
-        ctx.save()
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.globalAlpha = wave.alpha * 0.45
-        ctx.beginPath()
-        ctx.arc(W / 2, H / 2, wave.r, 0, Math.PI * 2)
-        ctx.strokeStyle = wave.color
-        ctx.lineWidth = Math.max(1, wave.lineWidth)
-        ctx.stroke()
-        ctx.restore()
-      })
+      // Ripple waves (skip if none active)
+      if (rippleWavesRef.current.length > 0) {
+        rippleWavesRef.current.forEach((wave) => {
+          if (wave.alpha <= 0) return
+          ctx.save()
+          ctx.globalCompositeOperation = 'lighter'
+          ctx.globalAlpha = wave.alpha * 0.45
+          ctx.beginPath()
+          ctx.arc(W / 2, H / 2, wave.r, 0, Math.PI * 2)
+          ctx.strokeStyle = wave.color
+          ctx.lineWidth = Math.max(1, wave.lineWidth)
+          ctx.stroke()
+          ctx.restore()
+        })
+      }
 
-      // Scan beam
+      // Scan beam (wide gradient fan)
       if (state === 'animating' && settingsRef.current.effect === 'scan') {
         ctx.save()
         const cx = W / 2, cy = H / 2
@@ -565,43 +722,14 @@ const FingerPickerPage: FC = () => {
         ctx.restore()
       }
 
-      // Particles
-      const pts = touchPointsRef.current
-      pts.forEach((pt) => {
-        pt.particles.forEach(p => {
-          if (p.alpha <= 0) return
-          ctx.save()
-          ctx.globalAlpha = p.alpha
-
-          if (p.type === 'spark') {
-            const len = p.radius * 2.5
-            const rot = p.rotation ?? 0
-            ctx.beginPath()
-            ctx.moveTo(p.x - Math.cos(rot) * len, p.y - Math.sin(rot) * len)
-            ctx.lineTo(p.x + Math.cos(rot) * len, p.y + Math.sin(rot) * len)
-            ctx.strokeStyle = p.color
-            ctx.lineWidth = Math.max(1, p.radius * 0.5)
-            ctx.lineCap = 'round'
-            ctx.stroke()
-          } else if (p.type === 'sparkle') {
-            ctx.globalCompositeOperation = 'lighter'
-            ctx.beginPath()
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-            ctx.fillStyle = p.color
-            ctx.fill()
-            ctx.globalCompositeOperation = 'source-over'
-          } else {
-            ctx.beginPath()
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
-            ctx.fillStyle = p.color
-            ctx.fill()
-          }
-
-          ctx.restore()
-        })
+      // Touch points
+      touchPointsRef.current.forEach((pt) => {
+        pt.ringRotation += pt.state === 'winner' ? 0.03 : 0.015
+        drawTouchPoint(ctx, pt, now)
+        drawParticles(ctx, pt)
 
         // Winner sparkles
-        if (pt.state === 'winner' && pt.sparkles) {
+        if (pt.state === 'winner' && pt.sparkles && pt.alpha > 0) {
           ctx.save()
           ctx.globalCompositeOperation = 'lighter'
           pt.sparkles.forEach(s => {
@@ -609,7 +737,7 @@ const FingerPickerPage: FC = () => {
             const sx = pt.x + Math.cos(s.angle) * s.dist
             const sy = pt.y + Math.sin(s.angle) * s.dist
             const sparkAlpha = 0.45 + 0.45 * Math.sin(now / 180 + s.angle * 3)
-            ctx.globalAlpha = sparkAlpha
+            ctx.globalAlpha = sparkAlpha * pt.alpha
             ctx.beginPath()
             ctx.arc(sx, sy, 2, 0, Math.PI * 2)
             ctx.fillStyle = '#ffffff'
@@ -620,10 +748,16 @@ const FingerPickerPage: FC = () => {
         }
       })
 
+      if (state === 'countdown') drawCountdown(ctx, countdownValueRef.current, W, H)
+      if (state === 'idle') drawHint(ctx, '请将手指放在屏幕上', W, H)
+      else if (state === 'waiting') drawHint(ctx, '再放一根手指开始倒计时', W, H)
+      else if (state === 'result') drawHint(ctx, '点击任意位置重新开始', W, H)
+
       rafRef.current = requestAnimationFrame(loop)
     }
     rafRef.current = requestAnimationFrame(loop)
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawTouchPoint, drawParticles, drawCountdown, drawHint])
 
   const saveSettings = (s: AppSettings) => {
     setSettings(s)
@@ -631,109 +765,24 @@ const FingerPickerPage: FC = () => {
     try { Taro.setStorageSync(SETTINGS_KEY, JSON.stringify(s)) } catch { /* ignore */ }
   }
 
-  const hintText = appState === 'idle' ? '请将手指放在屏幕上'
-    : appState === 'waiting' ? '再放一根手指开始倒计时'
-    : appState === 'result' ? '点击任意位置重新开始' : ''
-
   return (
     <View
       className="relative overflow-hidden"
       style={{ width: screenSize.width, height: screenSize.height, background: '#0a0a0f' }}
     >
-      {/* Canvas 特效层 */}
       <Canvas
         type="2d"
         id="fingerCanvas"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: screenSize.width,
-          height: screenSize.height,
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* DOM 触摸点 */}
-      {touchPoints.map(pt => (
-        <View
-          key={pt.id}
-          className={`finger-dot ${
-            pt.state === 'winner' ? 'finger-dot--winner' :
-            pt.state === 'eliminated' ? 'finger-dot--eliminated' : ''
-          }`}
-          style={{
-            position: 'absolute',
-            left: pt.x - 48,
-            top: pt.y - 48,
-            width: 96,
-            height: 96,
-            borderRadius: '50%',
-            border: `${pt.state === 'winner' ? 3.5 : 2.2}px solid ${pt.color}`,
-            pointerEvents: 'none',
-            boxShadow: pt.state === 'winner'
-              ? `0 0 30px ${pt.color}aa, 0 0 60px ${pt.color}66`
-              : `0 0 20px ${pt.color}66, 0 0 40px ${pt.color}33`,
-          }}
-        >
-          {/* 内核 */}
-          <View
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: 43.2,
-              height: 43.2,
-              borderRadius: '50%',
-              transform: 'translate(-50%, -50%)',
-              opacity: pt.state === 'winner' ? 0.6 : 0.27,
-              background: pt.color,
-            }}
-          />
-          {/* 外层柔光圈 */}
-          <View
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: 144,
-              height: 144,
-              borderRadius: '50%',
-              transform: 'translate(-50%, -50%)',
-              opacity: pt.state === 'winner' ? 0.18 : 0.09,
-              background: pt.color,
-              pointerEvents: 'none',
-            }}
-          />
-        </View>
-      ))}
-
-      {/* 倒计时 */}
-      {appState === 'countdown' && (
-        <Text
-          key={countdownValue}
-          className="countdown-number"
-        >
-          {countdownValue}
-        </Text>
-      )}
-
-      {/* 提示文字 */}
-      {hintText && <Text className="hint-text">{hintText}</Text>}
-
-      {/* 触摸事件捕获层 */}
-      <View
-        className="touch-layer"
+        style={{ width: screenSize.width, height: screenSize.height, display: 'block' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       />
 
-      {/* 设置按钮 */}
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
         <SheetTrigger
           className="absolute top-10 right-4 w-10 h-10 flex items-center justify-center rounded-full"
-          style={{ background: 'rgba(255,255,255,0.12)', zIndex: 100 }}
+          style={{ background: 'rgba(255,255,255,0.12)' }}
         >
           <Settings size={20} color="#ffffff" />
         </SheetTrigger>
