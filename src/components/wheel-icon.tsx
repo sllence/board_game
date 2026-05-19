@@ -36,15 +36,20 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
     return `M ${cx} ${cy} L ${sx.toFixed(2)} ${sy.toFixed(2)} A ${r} ${r} 0 0 1 ${ex.toFixed(2)} ${ey.toFixed(2)} Z`
   })
 
+  // 交替填充色：奇数扇区白色，偶数扇区用传入颜色的 12% 透明度
+  const altFill = (i: number) => i % 2 === 0 ? 'white' : color + '20'
+
   const svgContent = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">
-      ${sectorPaths.map((d) => `
-        <path d="${d}" fill="white" stroke="${color}" stroke-width="1.2" stroke-linejoin="round"/>
+      ${sectorPaths.map((d, i) => `
+        <path d="${d}" fill="${altFill(i)}" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
       `).join('')}
+      <!-- 外圈轮廓 -->
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="1.5"/>
       <!-- 中心圆 -->
-      <circle cx="${cx}" cy="${cy}" r="2" fill="${color}"/>
+      <circle cx="${cx}" cy="${cy}" r="2.5" fill="white" stroke="${color}" stroke-width="1.5"/>
       <!-- 顶部指针 -->
-      <path d="M 12 1.5 L 13.3 4.2 L 10.7 4.2 Z" fill="${color}"/>
+      <path d="M 12 1 L 13.5 4.5 L 10.5 4.5 Z" fill="${color}"/>
     </svg>
   `
 
