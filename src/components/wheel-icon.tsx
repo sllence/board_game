@@ -41,7 +41,7 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
         d={path}
         fill="transparent"
         stroke={color}
-        strokeWidth="3"
+        strokeWidth="5"
       />
     )
   }
@@ -49,8 +49,8 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
   // 将 SVG 转为 data URI
   const svgContent = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="transparent" stroke="${color}" strokeWidth="3" />
-      ${sectors.map(s => s.props.d ? `<path d="${s.props.d}" fill="transparent" stroke="${color}" strokeWidth="3" />` : '').join('')}
+      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="transparent" stroke="${color}" strokeWidth="5" />
+      ${sectors.map(s => s.props.d ? `<path d="${s.props.d}" fill="transparent" stroke="${color}" strokeWidth="5" />` : '').join('')}
     </svg>
   `
   const encodedSvg = encodeURIComponent(svgContent)
