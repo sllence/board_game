@@ -12,7 +12,6 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
   const centerX = size / 2
   const centerY = size / 2
   const radius = size / 2 - 1
-  const innerRadius = size / 4
   
   for (let i = 0; i < 5; i++) {
     const startAngle = -90 + i * 72
@@ -42,26 +41,16 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
         d={path}
         fill="transparent"
         stroke={color}
-        strokeWidth="2"
+        strokeWidth="3"
       />
     )
   }
   
-  // 顶部指针
-  const pointerPath = `
-    M ${centerX} ${2}
-    L ${centerX - 3} ${10}
-    L ${centerX + 3} ${10}
-    Z
-  `
-  
   // 将 SVG 转为 data URI
   const svgContent = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="transparent" stroke="${color}" strokeWidth="2" />
-      ${sectors.map(s => s.props.d ? `<path d="${s.props.d}" fill="transparent" stroke="${color}" strokeWidth="2" />` : '').join('')}
-      <circle cx="${centerX}" cy="${centerY}" r="${innerRadius}" fill="transparent" stroke="${color}" strokeWidth="2" />
-      <path d="${pointerPath}" fill="${color}" />
+      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="transparent" stroke="${color}" strokeWidth="3" />
+      ${sectors.map(s => s.props.d ? `<path d="${s.props.d}" fill="transparent" stroke="${color}" strokeWidth="3" />` : '').join('')}
     </svg>
   `
   const encodedSvg = encodeURIComponent(svgContent)
