@@ -360,8 +360,9 @@ const FingerPickerPage: FC = () => {
     ctx.textBaseline = 'middle'
 
     const elapsed = Date.now() - countdownStartRef.current
-    const inSecond = elapsed % 1000
-    const scaleT = Math.min(inSecond / 280, 1)
+    const perNumber = COUNTDOWN_DURATION / 3
+    const inSecond = elapsed % perNumber
+    const scaleT = Math.min(inSecond / (280 / 2), 1)
     const easeOut = 1 - (1 - scaleT) * (1 - scaleT)
     const scale = 1 + 0.35 * (1 - easeOut)
     const baseFontSize = Math.min(w, h) * 0.25
@@ -656,7 +657,8 @@ const FingerPickerPage: FC = () => {
 
       if (state === 'countdown') {
         const elapsed = Date.now() - countdownStartRef.current
-        const remaining = Math.ceil((COUNTDOWN_DURATION - elapsed) / 1000)
+        const perNumber = COUNTDOWN_DURATION / 3
+        const remaining = Math.ceil((COUNTDOWN_DURATION - elapsed) / perNumber)
         countdownValueRef.current = Math.max(1, remaining)
         if (elapsed >= COUNTDOWN_DURATION) triggerAnimation()
       }
