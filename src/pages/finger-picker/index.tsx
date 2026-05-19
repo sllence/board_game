@@ -8,8 +8,16 @@ import {
 import type { FC } from 'react'
 
 const COLORS = [
-  '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4',
-  '#3b82f6', '#a855f7', '#ec4899', '#f8fafc', '#fbbf24',
+  '#ef4444', // 红
+  '#3b82f6', // 蓝（高对比度）
+  '#22c55e', // 绿
+  '#f97316', // 橙
+  '#a855f7', // 紫
+  '#ec4899', // 粉
+  '#06b6d4', // 青
+  '#eab308', // 黄
+  '#fbbf24', // 琥珀
+  '#64748b', // 灰
 ]
 
 type AppState = 'idle' | 'waiting' | 'countdown' | 'animating' | 'result'
@@ -50,7 +58,7 @@ interface AppSettings {
 
 const DEFAULT_SETTINGS: AppSettings = { mode: 'single', count: 2, effect: 'pulse' }
 const SETTINGS_KEY = 'fingerPickerSettings'
-const COUNTDOWN_DURATION = 3000
+const COUNTDOWN_DURATION = 1500
 const AMBIENT_COUNT = 25
 
 const FingerPickerPage: FC = () => {
