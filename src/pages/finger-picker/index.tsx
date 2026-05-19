@@ -47,11 +47,11 @@ const SETTINGS_KEY = 'fingerPickerSettings'
 const COUNTDOWN_DURATION = 3000
 
 const FingerPickerPage: FC = () => {
-  const [appState, setAppState] = useState<AppState>('idle')
+  const [appState, _setAppState] = useState<AppState>('idle')
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [screenSize, setScreenSize] = useState({ width: 375, height: 667 })
-  const [touchPoints, setTouchPoints] = useState<DomTouchPoint[]>([])
+  const [touchPoints, _setTouchPoints] = useState<DomTouchPoint[]>([])
   const [countdownValue, setCountdownValue] = useState(3)
 
   const ctxRef = useRef<any>(null)
@@ -67,6 +67,21 @@ const FingerPickerPage: FC = () => {
   const shockwavesRef = useRef<ShockwaveRing[]>([])
   const syncRafRef = useRef<number>(0)
   const pendingMovesRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const appStateRef = useRef<AppState>('idle')
+  const touchPointsRef = useRef<DomTouchPoint[]>([])
+
+  const setAppState = useCallback((s: AppState) => {
+    appStateRef.current = s
+    _setAppState(s)
+  }, [])
+
+  const setTouchPoints = useCallback((updater: DomTouchPoint[] | ((prev: DomTouchPoint[]) => DomTouchPoint[])) => {
+    _setTouchPoints(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      touchPointsRef.current = next
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     const info = Taro.getSystemInfoSync()
@@ -476,7 +491,7 @@ const FingerPickerPage: FC = () => {
       if (!ctx) { rafRef.current = requestAnimationFrame(loop); return }
       const W = screenSizeRef.current.width
       const H = screenSizeRef.current.height
-      const state = appState
+      const state = appStateRef.current
 
       if (state !== 'animating' && state !== 'result') {
         cancelAnimationFrame(rafRef.current)
@@ -551,7 +566,8 @@ const FingerPickerPage: FC = () => {
       }
 
       // Particles
-      touchPoints.forEach((pt) => {
+      const pts = touchPointsRef.current
+      pts.forEach((pt) => {
         pt.particles.forEach(p => {
           if (p.alpha <= 0) return
           ctx.save()
@@ -607,7 +623,7 @@ const FingerPickerPage: FC = () => {
       rafRef.current = requestAnimationFrame(loop)
     }
     rafRef.current = requestAnimationFrame(loop)
-  }, [appState, touchPoints])
+  }, [])
 
   const saveSettings = (s: AppSettings) => {
     setSettings(s)
