@@ -143,8 +143,8 @@ const FingerPickerPage: FC = () => {
       const existing = touchPoints.find(p => p.id === t.identifier)
       if (!existing) {
         addedNew = true
-        const px = t.clientX ?? t.pageX
-        const py = t.clientY ?? t.pageY
+        const px = t.x ?? t.clientX ?? t.pageX ?? 0
+        const py = t.y ?? t.clientY ?? t.pageY ?? 0
         const color = assignColor()
         newPoints.push({
           id: t.identifier, x: px, y: py, color,
@@ -174,8 +174,8 @@ const FingerPickerPage: FC = () => {
     const touches = e.touches || e.changedTouches || []
     for (const t of touches) {
       pendingMovesRef.current.set(t.identifier, {
-        x: t.clientX ?? t.pageX,
-        y: t.clientY ?? t.pageY,
+        x: t.x ?? t.clientX ?? t.pageX ?? 0,
+        y: t.y ?? t.clientY ?? t.pageY ?? 0,
       })
     }
   }
