@@ -137,8 +137,10 @@ const FingerPickerPage: FC = () => {
   const handleTouchStart = (e: any) => {
     if (appStateRef.current === 'animating' || appStateRef.current === 'result') return
     const touches = e.touches || e.changedTouches || []
+    let addedNew = false
     for (const t of touches) {
       if (!touchPointsRef.current.has(t.identifier)) {
+        addedNew = true
         const px = t.clientX ?? t.pageX
         const py = t.clientY ?? t.pageY
         const color = assignColor()
@@ -154,6 +156,10 @@ const FingerPickerPage: FC = () => {
           duration: 350, maxR: 70, color,
         })
       }
+    }
+    if (addedNew && touchPointsRef.current.size >= 2) {
+      countdownStartRef.current = Date.now()
+      countdownValueRef.current = 3
     }
     updateStateFromTouches()
   }
