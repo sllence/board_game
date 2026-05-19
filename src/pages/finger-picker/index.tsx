@@ -145,7 +145,6 @@ const FingerPickerPage: FC = () => {
         addedNew = true
         const px = t.x ?? t.clientX ?? t.pageX ?? 0
         const py = t.y ?? t.clientY ?? t.pageY ?? 0
-        console.log('Touch coords:', { x: t.x, clientX: t.clientX, pageX: t.pageX, px, py })
         const color = assignColor()
         newPoints.push({
           id: t.identifier, x: px, y: py, color,
@@ -648,14 +647,49 @@ const FingerPickerPage: FC = () => {
             pt.state === 'eliminated' ? 'finger-dot--eliminated' : ''
           }`}
           style={{
-            transform: `translate3d(${pt.x - 48}px, ${pt.y - 48}px, 0)`,
-            borderColor: pt.color,
-            color: pt.color,
+            position: 'absolute',
+            left: pt.x - 48,
+            top: pt.y - 48,
+            width: 96,
+            height: 96,
+            borderRadius: '50%',
+            border: `${pt.state === 'winner' ? 3.5 : 2.2}px solid ${pt.color}`,
+            pointerEvents: 'none',
             boxShadow: pt.state === 'winner'
               ? `0 0 30px ${pt.color}aa, 0 0 60px ${pt.color}66`
               : `0 0 20px ${pt.color}66, 0 0 40px ${pt.color}33`,
           }}
-        />
+        >
+          {/* 内核 */}
+          <View
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: 43.2,
+              height: 43.2,
+              borderRadius: '50%',
+              transform: 'translate(-50%, -50%)',
+              opacity: pt.state === 'winner' ? 0.6 : 0.27,
+              background: pt.color,
+            }}
+          />
+          {/* 外层柔光圈 */}
+          <View
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: 144,
+              height: 144,
+              borderRadius: '50%',
+              transform: 'translate(-50%, -50%)',
+              opacity: pt.state === 'winner' ? 0.18 : 0.09,
+              background: pt.color,
+              pointerEvents: 'none',
+            }}
+          />
+        </View>
       ))}
 
       {/* 倒计时 */}

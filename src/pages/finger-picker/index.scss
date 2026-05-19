@@ -1,65 +1,16 @@
-// 触摸点基础样式
+// 触摸点动画
 .finger-dot {
-  position: absolute;
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  border: 2.2px solid;
-  pointer-events: none;
-  will-change: transform;
-  transition: border-width 0.15s ease, box-shadow 0.15s ease;
-
-  // 呼吸动画
+  // 呼吸动画（通过 scale 实现，但小程序可能不支持，先保留）
   animation: finger-pulse 1s ease-in-out infinite;
-
-  // 内核
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 43.2px; // 45% of 96px
-    height: 43.2px;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0.27;
-    background: currentColor;
-  }
-
-  // 外层柔光圈
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 144px; // 150% of 96px
-    height: 144px;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0.09;
-    background: currentColor;
-    pointer-events: none;
-  }
 }
 
-// 赢家状态
 .finger-dot--winner {
-  border-width: 3.5px;
   animation: finger-pulse-winner 0.6s ease-in-out infinite;
-
-  &::before {
-    opacity: 0.6;
-  }
-
-  &::after {
-    opacity: 0.18;
-    animation: winner-glow 1.2s ease-in-out infinite;
-  }
 }
 
 // 淘汰状态（渐隐）
 .finger-dot--eliminated {
-  opacity: 0;
+  opacity: 0 !important;
   transform: scale(0.5);
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
@@ -77,22 +28,10 @@
 // 赢家呼吸动画（更快更强）
 @keyframes finger-pulse-winner {
   0%, 100% {
-    transform: scale(1.3);
+    transform: scale(1);
   }
   50% {
-    transform: scale(1.4);
-  }
-}
-
-// 赢家外圈脉冲
-@keyframes winner-glow {
-  0%, 100% {
-    opacity: 0.18;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 0.3;
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: scale(1.1);
   }
 }
 
