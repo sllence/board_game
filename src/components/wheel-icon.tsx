@@ -40,7 +40,7 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
       <path
         key={i}
         d={path}
-        fill="white"
+        fill="transparent"
         stroke={color}
         strokeWidth="2"
       />
@@ -58,9 +58,9 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
   // 将 SVG 转为 data URI
   const svgContent = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="${color}" strokeWidth="2" />
-      ${sectors.map(s => s.props.d ? `<path d="${s.props.d}" fill="white" stroke="${color}" strokeWidth="2" />` : '').join('')}
-      <circle cx="${centerX}" cy="${centerY}" r="${innerRadius}" fill="white" stroke="${color}" strokeWidth="2" />
+      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="transparent" stroke="${color}" strokeWidth="2" />
+      ${sectors.map(s => s.props.d ? `<path d="${s.props.d}" fill="transparent" stroke="${color}" strokeWidth="2" />` : '').join('')}
+      <circle cx="${centerX}" cy="${centerY}" r="${innerRadius}" fill="transparent" stroke="${color}" strokeWidth="2" />
       <path d="${pointerPath}" fill="${color}" />
     </svg>
   `
