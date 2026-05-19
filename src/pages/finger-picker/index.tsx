@@ -145,6 +145,7 @@ const FingerPickerPage: FC = () => {
         addedNew = true
         const px = t.x ?? t.clientX ?? t.pageX ?? 0
         const py = t.y ?? t.clientY ?? t.pageY ?? 0
+        console.log('Touch coords:', { x: t.x, clientX: t.clientX, pageX: t.pageX, px, py })
         const color = assignColor()
         newPoints.push({
           id: t.identifier, x: px, y: py, color,
