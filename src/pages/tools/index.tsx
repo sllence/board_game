@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { Dices, Timer, Layers, Shuffle, Calculator, Target, Hand } from 'lucide-react-taro'
+import { Dices, Timer, Layers, Shuffle, Calculator, RotateCw, Hand } from 'lucide-react-taro'
 import type { FC, ReactNode } from 'react'
 
 interface ToolItem {
@@ -49,7 +49,7 @@ const TOOL_GROUPS: ToolGroup[] = [
         key: 'wheel',
         name: '转盘',
         desc: '自定义转盘抽奖',
-        icon: <Target size={20} color="#f59e0b" />,
+        icon: <RotateCw size={20} color="#f59e0b" />,
         iconBg: '#fef3c7',
         iconColor: '#f59e0b',
         path: '/pages/wheel-manage/index',
