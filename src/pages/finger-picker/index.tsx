@@ -233,64 +233,81 @@ const FingerPickerPage: FC = () => {
     ctx.save()
     ctx.globalAlpha = alpha
 
-    const breath = state === 'active'
-      ? 1 + 0.18 * Math.sin(now / 500 + pt.pulsePhase)
-      : state === 'winner' ? 1.3 + 0.1 * Math.sin(now / 300) : 1
-    const glowR = r * breath
+    if (state === 'active') {
+      const breath = 1 + 0.15 * Math.sin(now / 500 + pt.pulsePhase)
+      const glowR = r * breath
 
-    // Layer 1: Wide soft glow (additive blending)
-    ctx.globalCompositeOperation = 'lighter'
+      // Single soft glow circle (no gradient, just semi-transparent fill)
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 1.5, 0, Math.PI * 2)
+      ctx.fillStyle = color + '18'
+      ctx.fill()
 
-    const grad1 = ctx.createRadialGradient(x, y, glowR * 0.2, x, y, glowR * 2.2)
-    grad1.addColorStop(0, color + '28')
-    grad1.addColorStop(0.4, color + '12')
-    grad1.addColorStop(1, color + '00')
-    ctx.beginPath()
-    ctx.arc(x, y, glowR * 2.2, 0, Math.PI * 2)
-    ctx.fillStyle = grad1
-    ctx.fill()
+      // Main ring
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 2.2
+      ctx.stroke()
 
-    // Layer 2: Inner concentrated glow
-    const grad2 = ctx.createRadialGradient(x, y, 0, x, y, glowR * 1.3)
-    grad2.addColorStop(0, color + '55')
-    grad2.addColorStop(0.5, color + '28')
-    grad2.addColorStop(1, color + '00')
-    ctx.beginPath()
-    ctx.arc(x, y, glowR * 1.3, 0, Math.PI * 2)
-    ctx.fillStyle = grad2
-    ctx.fill()
+      // Simple core fill
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.45, 0, Math.PI * 2)
+      ctx.fillStyle = color + '44'
+      ctx.fill()
+    } else if (state === 'winner') {
+      const breath = 1.3 + 0.1 * Math.sin(now / 300)
+      const glowR = r * breath
 
-    ctx.globalCompositeOperation = 'source-over'
+      // Full glow for winners (additive)
+      ctx.globalCompositeOperation = 'lighter'
+      const grad1 = ctx.createRadialGradient(x, y, glowR * 0.2, x, y, glowR * 2)
+      grad1.addColorStop(0, color + '30')
+      grad1.addColorStop(1, color + '00')
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 2, 0, Math.PI * 2)
+      ctx.fillStyle = grad1
+      ctx.fill()
+      ctx.globalCompositeOperation = 'source-over'
 
-    // Rotating dashed outer ring
-    ctx.save()
-    ctx.translate(x, y)
-    ctx.rotate(pt.ringRotation)
-    ctx.setLineDash([6, 14])
-    ctx.beginPath()
-    ctx.arc(0, 0, glowR * 1.15, 0, Math.PI * 2)
-    ctx.strokeStyle = color + '66'
-    ctx.lineWidth = 1.2
-    ctx.stroke()
-    ctx.setLineDash([])
-    ctx.restore()
+      // Rotating dashed ring
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate(pt.ringRotation)
+      ctx.setLineDash([6, 14])
+      ctx.beginPath()
+      ctx.arc(0, 0, glowR * 1.15, 0, Math.PI * 2)
+      ctx.strokeStyle = color + '66'
+      ctx.lineWidth = 1.2
+      ctx.stroke()
+      ctx.setLineDash([])
+      ctx.restore()
 
-    // Main solid ring
-    ctx.beginPath()
-    ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
-    ctx.strokeStyle = color
-    ctx.lineWidth = state === 'winner' ? 3.5 : 2.2
-    ctx.stroke()
+      // Main ring
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 3.5
+      ctx.stroke()
 
-    // Bright gradient core
-    const grad3 = ctx.createRadialGradient(x, y, 0, x, y, glowR * 0.5)
-    grad3.addColorStop(0, '#ffffff' + (state === 'winner' ? '88' : '33'))
-    grad3.addColorStop(0.4, color + (state === 'winner' ? '99' : '44'))
-    grad3.addColorStop(1, color + '00')
-    ctx.beginPath()
-    ctx.arc(x, y, glowR * 0.5, 0, Math.PI * 2)
-    ctx.fillStyle = grad3
-    ctx.fill()
+      // Bright core gradient
+      const grad3 = ctx.createRadialGradient(x, y, 0, x, y, glowR * 0.5)
+      grad3.addColorStop(0, '#ffffff88')
+      grad3.addColorStop(0.4, color + '99')
+      grad3.addColorStop(1, color + '00')
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.5, 0, Math.PI * 2)
+      ctx.fillStyle = grad3
+      ctx.fill()
+    } else {
+      // eliminated — simple fading circle
+      const glowR = r
+      ctx.beginPath()
+      ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
 
     ctx.restore()
   }, [])
@@ -615,18 +632,19 @@ const FingerPickerPage: FC = () => {
       ctx.fillStyle = '#0a0a0f'
       ctx.fillRect(0, 0, W, H)
 
-      // Ambient floating particles
-      ambientRef.current.forEach(dot => {
-        dot.y -= dot.speed
-        if (dot.y < -5) { dot.y = H + 5; dot.x = Math.random() * W }
-        const flicker = dot.maxAlpha * (0.5 + 0.5 * Math.sin(now / 1200 + dot.phase))
-        ctx.globalAlpha = flicker
-        ctx.beginPath()
-        ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2)
+      // Ambient floating particles (skip during active touch for perf)
+      if (state === 'idle' || state === 'result') {
         ctx.fillStyle = 'rgba(255,255,255,0.9)'
-        ctx.fill()
-      })
-      ctx.globalAlpha = 1
+        ambientRef.current.forEach(dot => {
+          dot.y -= dot.speed
+          if (dot.y < -5) { dot.y = H + 5; dot.x = Math.random() * W }
+          ctx.globalAlpha = dot.maxAlpha * (0.5 + 0.5 * Math.sin(now / 1200 + dot.phase))
+          ctx.beginPath()
+          ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2)
+          ctx.fill()
+        })
+        ctx.globalAlpha = 1
+      }
 
       if (state === 'countdown') {
         const elapsed = Date.now() - countdownStartRef.current
