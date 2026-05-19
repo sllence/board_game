@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Dices, Calculator, ArrowRight, Sparkles, Play, History, RotateCw, Hand, Timer } from 'lucide-react-taro'
+import { Dices, Calculator, ArrowRight, Sparkles, Play, History, Hand, Timer } from 'lucide-react-taro'
+import { WheelIcon } from '@/components/wheel-icon'
 import { requireLogin, getCurrentUser } from '@/utils/auth'
 import type { FC } from 'react'
 
@@ -39,7 +40,7 @@ interface GameSession {
 const QUICK_TOOLS = [
   { key: 'finger', label: '手指选人', icon: <Hand size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', path: '/pages/finger-picker/index' },
   { key: 'dice', label: '骰子', icon: <Dices size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', path: '/pages/dice/index' },
-  { key: 'wheel', label: '转盘', icon: <RotateCw size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', path: '/pages/wheel-manage/index' },
+  { key: 'wheel', label: '转盘', icon: <WheelIcon size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', path: '/pages/wheel-manage/index' },
   { key: 'timer', label: '计时器', icon: <Timer size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', path: '/pages/timer/index' },
   { key: 'scorer', label: '计分', icon: <Calculator size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', path: '/pages/scorer/index' },
 ]
