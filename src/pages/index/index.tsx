@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Clock, Dices, CircleUser, Calculator, ArrowRight, Sparkles, Play, History, CircleDot } from 'lucide-react-taro'
+import { Dices, Calculator, ArrowRight, Sparkles, Play, History, Target, Hand, Timer } from 'lucide-react-taro'
 import { requireLogin, getCurrentUser } from '@/utils/auth'
 import type { FC } from 'react'
 
@@ -37,10 +37,10 @@ interface GameSession {
 }
 
 const QUICK_TOOLS = [
-  { key: 'finger', label: '手指选人', icon: <CircleUser size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', path: '/pages/finger-picker/index' },
+  { key: 'finger', label: '手指选人', icon: <Hand size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', path: '/pages/finger-picker/index' },
   { key: 'dice', label: '骰子', icon: <Dices size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', path: '/pages/dice/index' },
-  { key: 'wheel', label: '转盘', icon: <CircleDot size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', path: '/pages/wheel-manage/index' },
-  { key: 'timer', label: '计时器', icon: <Clock size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', path: '/pages/timer/index' },
+  { key: 'wheel', label: '转盘', icon: <Target size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', path: '/pages/wheel-manage/index' },
+  { key: 'timer', label: '计时器', icon: <Timer size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', path: '/pages/timer/index' },
   { key: 'scorer', label: '计分', icon: <Calculator size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', path: '/pages/scorer/index' },
 ]
 
@@ -336,7 +336,7 @@ const IndexPage: FC = () => {
           <Card className="border-0">
             <CardContent className="flex flex-col items-center p-8">
               <View className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
-                <Clock size={24} color="#9ca3af" />
+                <Timer size={24} color="#9ca3af" />
               </View>
               <Text className="block text-sm text-gray-400 mb-3">还没有对局记录</Text>
               <Button size="sm" className="rounded-full" onClick={() => requireLogin(() => Taro.switchTab({ url: '/pages/games/index' }))}>
@@ -369,7 +369,7 @@ const IndexPage: FC = () => {
                         </Text>
                         <View className="flex flex-row items-center gap-3 mt-2">
                           <View className="flex flex-row items-center gap-1">
-                            <Clock size={12} color="#9ca3af" />
+                            <Timer size={12} color="#9ca3af" />
                             <Text className="text-xs text-gray-500">
                               {session.status === 'playing' ? '进行中' : '已结束'}
                             </Text>
