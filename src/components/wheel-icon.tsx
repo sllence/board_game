@@ -7,41 +7,29 @@ interface WheelIconProps {
 }
 
 export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: WheelIconProps) {
-  // 5等分扇区，每个72度，从顶部(-90度)开始
-  const sectors = []
   const centerX = size / 2
   const centerY = size / 2
-  const radius = size / 2 - 1
+  const radius = size / 2 - 2.5 // 留出边框空间
+  
+  // 只绘制外圆和5条半径分割线，效果更明显
+  const lines = []
   
   for (let i = 0; i < 5; i++) {
-    const startAngle = -90 + i * 72
-    const endAngle = -90 + (i + 1) * 72
+    const angle = -90 + i * 72
+    const rad = (angle * Math.PI) / 180
+    const x = centerX + radius * Math.cos(rad)
+    const y = centerY + radius * Math.sin(rad)
     
-    const startRad = (startAngle * Math.PI) / 180
-    const endRad = (endAngle * Math.PI) / 180
-    
-    const x1 = centerX + radius * Math.cos(startRad)
-    const y1 = centerY + radius * Math.sin(startRad)
-    const x2 = centerX + radius * Math.cos(endRad)
-    const y2 = centerY + radius * Math.sin(endRad)
-    
-    const largeArcFlag = 72 > 180 ? 1 : 0
-    
-    // 扇区路径：从圆心 -> 起始点 -> 圆弧 -> 结束点 -> 圆心
-    const path = `
-      M ${centerX} ${centerY}
-      L ${x1} ${y1}
-      A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}
-      Z
-    `
-    
-    sectors.push(
-      <path
+    lines.push(
+      <line
         key={i}
-        d={path}
-        fill="transparent"
+        x1={centerX}
+        y1={centerY}
+        x2={x}
+        y2={y}
         stroke={color}
         strokeWidth="5"
+        strokeLinecap="round"
       />
     )
   }
@@ -50,7 +38,7 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
   const svgContent = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
       <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="transparent" stroke="${color}" strokeWidth="5" />
-      ${sectors.map(s => s.props.d ? `<path d="${s.props.d}" fill="transparent" stroke="${color}" strokeWidth="5" />` : '').join('')}
+      ${lines.map(l => `<line x1="${l.props.x1}" y1="${l.props.y1}" x2="${l.props.x2}" y2="${l.props.y2}" stroke="${color}" strokeWidth="5" stroke-linecap="round" />`).join('')}
     </svg>
   `
   const encodedSvg = encodeURIComponent(svgContent)
