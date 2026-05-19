@@ -8,52 +8,66 @@ interface WheelIconProps {
 
 export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: WheelIconProps) {
   // 5等分扇区，每个72度，从顶部(-90度)开始
-  const cx = 12
-  const cy = 12
-  const r = 9
-
-  const toRad = (deg: number) => (deg * Math.PI) / 180
-  const px = (deg: number) => cx + r * Math.cos(toRad(deg))
-  const py = (deg: number) => cy + r * Math.sin(toRad(deg))
-
-  // 5个扇区的起始和结束角度
-  const sectors = [
-    { start: 270, end: 342 },
-    { start: 342, end: 54 },
-    { start: 54, end: 126 },
-    { start: 126, end: 198 },
-    { start: 198, end: 270 },
-  ]
-
-  // 构建每个扇区的 SVG path
-  const sectorPaths = sectors.map((s) => {
-    const sx = px(s.start)
-    const sy = py(s.start)
-    const ex = px(s.end)
-    const ey = py(s.end)
-    // 大弧标志：72度 < 180，所以是0
-    // sweep-flag: 1 (顺时针)
-    return `M ${cx} ${cy} L ${sx.toFixed(2)} ${sy.toFixed(2)} A ${r} ${r} 0 0 1 ${ex.toFixed(2)} ${ey.toFixed(2)} Z`
-  })
-
-  // 交替填充色：奇数扇区白色，偶数扇区用传入颜色的 12% 透明度
-  const altFill = (i: number) => i % 2 === 0 ? 'white' : color + '20'
-
+  const sectors = []
+  const centerX = size / 2
+  const centerY = size / 2
+  const radius = size / 2 - 1
+  const innerRadius = size / 4
+  
+  for (let i = 0; i < 5; i++) {
+    const startAngle = -90 + i * 72
+    const endAngle = -90 + (i + 1) * 72
+    
+    const startRad = (startAngle * Math.PI) / 180
+    const endRad = (endAngle * Math.PI) / 180
+    
+    const x1 = centerX + radius * Math.cos(startRad)
+    const y1 = centerY + radius * Math.sin(startRad)
+    const x2 = centerX + radius * Math.cos(endRad)
+    const y2 = centerY + radius * Math.sin(endRad)
+    
+    const largeArcFlag = 72 > 180 ? 1 : 0
+    
+    // 扇区路径：从圆心 -> 起始点 -> 圆弧 -> 结束点 -> 圆心
+    const path = `
+      M ${centerX} ${centerY}
+      L ${x1} ${y1}
+      A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}
+      Z
+    `
+    
+    sectors.push(
+      <path
+        key={i}
+        d={path}
+        fill="white"
+        stroke={color}
+        strokeWidth="2"
+      />
+    )
+  }
+  
+  // 顶部指针
+  const pointerPath = `
+    M ${centerX} ${2}
+    L ${centerX - 3} ${10}
+    L ${centerX + 3} ${10}
+    Z
+  `
+  
+  // 将 SVG 转为 data URI
   const svgContent = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">
-      ${sectorPaths.map((d, i) => `
-        <path d="${d}" fill="${altFill(i)}" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
-      `).join('')}
-      <!-- 外圈轮廓 -->
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="1.5"/>
-      <!-- 中心圆 -->
-      <circle cx="${cx}" cy="${cy}" r="2.5" fill="white" stroke="${color}" stroke-width="1.5"/>
-      <!-- 顶部指针 -->
-      <path d="M 12 1 L 13.5 4.5 L 10.5 4.5 Z" fill="${color}"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="${color}" strokeWidth="2" />
+      ${sectors.map(s => s.props.d ? `<path d="${s.props.d}" fill="white" stroke="${color}" strokeWidth="2" />` : '').join('')}
+      <circle cx="${centerX}" cy="${centerY}" r="${innerRadius}" fill="white" stroke="${color}" strokeWidth="2" />
+      <path d="${pointerPath}" fill="${color}" />
     </svg>
   `
-
-  const dataUrl = `data:image/svg+xml,${encodeURIComponent(svgContent)}`
-
-  return <Image src={dataUrl} style={{ width: size, height: size }} className={className} />
+  const encodedSvg = encodeURIComponent(svgContent)
+    .replace(/'/g, '%27')
+    .replace(/"/g, '%22')
+  const dataUrl = `data:image/svg+xml,${encodedSvg}`
+  
+  return <Image src={dataUrl} className={className} style={{ width: size, height: size }} />
 }
