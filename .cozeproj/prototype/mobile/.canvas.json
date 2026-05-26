@@ -1,0 +1,12 @@
+{
+  "elements": [
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/mobile/dice.html"
+      },
+      "title": "骰子工具",
+      "size": "mobile"
+    }
+  ]
+}

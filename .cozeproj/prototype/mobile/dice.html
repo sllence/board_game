@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+  <!-- 字体（按需，系统字体时省略；只能用 Google 字体，CSS 地址前缀：https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google） -->
+  <!-- <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/> -->
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #F59E0B;
+      --color-primary-container:    #FEF3C7;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面（M3 色调系统 + Apple HIG 呼吸感） === */
+      --color-background:                 #FAFAF8;
+      --color-surface-container-lowest:   #FFFFFF;
+      --color-surface:                    #FAFAF8;
+      --color-surface-container:          #F5F5F0;
+      --color-surface-container-high:     #EBEBE4;
+      --color-surface-container-highest:  #E0E0D8;
+      /* === 文字 === */
+      --color-on-surface:           #1C1917;
+      --color-on-surface-variant:   #57534E;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #A8A29E;
+      --color-outline-variant:  #D6D3D1;
+      /* === 圆角 === */
+      --radius-sm:   0.5rem;
+      --radius-md:   0.75rem;
+      --radius-lg:   1rem;
+      --radius-xl:   1.5rem;
+      --radius-2xl:  2rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 4px 12px rgba(245, 158, 11, 0.15);
+      --shadow-float:  0 10px 25px rgba(245, 158, 11, 0.2);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: system-ui, -apple-system, "Noto Sans SC", sans-serif;
+    }
+  </style>
+
+  <style>
+    body {
+      min-height: max(812px, 100dvh);
+      font-family: system-ui, sans-serif;
+    }
+
+    /* 骰子动画关键帧 */
+    @keyframes dice-roll {
+      0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      25% { transform: rotateX(90deg) rotateY(180deg) rotateZ(45deg); }
+      50% { transform: rotateX(180deg) rotateY(360deg) rotateZ(90deg); }
+      75% { transform: rotateX(270deg) rotateY(540deg) rotateZ(135deg); }
+      100% { transform: rotateX(360deg) rotateY(720deg) rotateZ(180deg); }
+    }
+
+    @keyframes dice-bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-20px) scale(1.1); }
+    }
+
+    @keyframes dice-shake {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      25% { transform: translateX(-10px) rotate(-5deg); }
+      75% { transform: translateX(10px) rotate(5deg); }
+    }
+
+    @keyframes cup-shake {
+      0%, 100% { transform: rotate(0deg) translateX(0); }
+      25% { transform: rotate(-15deg) translateX(-10px); }
+      50% { transform: rotate(10deg) translateX(5px); }
+      75% { transform: rotate(-8deg) translateX(-5px); }
+    }
+
+    @keyframes cup-lift {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-150px) rotate(-10deg); opacity: 0; }
+    }
+
+    @keyframes result-pop {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6); }
+    }
+
+    .dice-rolling {
+      animation: dice-roll 0.5s linear infinite, dice-shake 0.3s ease-in-out infinite;
+    }
+
+    .dice-bouncing {
+      animation: dice-bounce 0.6s ease-in-out;
+    }
+
+    .cup-shaking {
+      animation: cup-shake 0.3s ease-in-out infinite;
+    }
+
+    .cup-lifting {
+      animation: cup-lift 0.8s ease-out forwards;
+    }
+
+    .result-popping {
+      animation: result-pop 0.5s ease-out forwards;
+    }
+
+    .glow-pulsing {
+      animation: glow-pulse 1s ease-in-out infinite;
+    }
+
+    /* 3D 骰子样式 */
+    .dice-3d {
+      perspective: 1000px;
+      transform-style: preserve-3d;
+    }
+
+    /* 按钮按压效果 */
+    .btn-press:active {
+      transform: scale(0.95);
+    }
+
+    /* 模态框动画 */
+    @keyframes modal-slide-up {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-slide-up {
+      animation: modal-slide-up 0.3s ease-out;
+    }
+
+    /* 骰子数字样式 */
+    .dice-face {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1C1917;
+      box-shadow: 
+        inset 2px 2px 5px rgba(255,255,255,0.8),
+        inset -2px -2px 5px rgba(0,0,0,0.1),
+        4px 4px 10px rgba(0,0,0,0.15);
+    }
+
+    /* 杯子SVG容器 */
+    .cup-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+    }
+
+    /* 音效状态指示器 */
+    .sound-indicator {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件 -->
+  <header class="sticky top-0 z-30 bg-surface-container-lowest">
+    <div class="flex items-center justify-between px-5 h-14">
+      <div class="flex items-center gap-3">
+        <button onclick="history.back()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container">
+          <i data-lucide="arrow-left" class="w-5 h-5 text-on-surface-variant"></i>
+        </button>
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-2xl flex items-center justify-center bg-gradient-to-br from-primary to-amber-700">
+            <i data-lucide="dices" class="w-5 h-5 text-white"></i>
+          </div>
+          <h1 class="text-xl font-bold text-on-surface">骰子</h1>
+        </div>
+      </div>
+      <button id="settings-btn" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container">
+        <i data-lucide="settings" class="w-5 h-5 text-on-surface-variant"></i>
+      </button>
+    </div>
+  </header>
+  <!-- @nav:end 导航组件 -->
+
+  <main class="flex-1">
+    <!-- @main-content:start -->
+    <div class="px-4 py-6 flex flex-col min-h-[calc(100dvh-3.5rem)]">
+      
+      <!-- 当前配置显示 -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between px-4 py-3 bg-surface-container rounded-2xl">
+          <div class="flex items-center gap-3">
+            <i data-lucide="dices" class="w-5 h-5 text-primary"></i>
+            <div>
+              <div class="text-sm font-medium text-on-surface" id="current-config">D6 · 1个骰子</div>
+              <div class="text-xs text-on-surface-variant" id="current-mode">点击投掷</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="sound-indicator" id="sound-indicator-mini"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 主投掷区域 -->
+      <div class="flex-1 flex flex-col items-center justify-center mb-8">
+        <!-- 状态提示 -->
+        <div id="status-message" class="text-sm text-on-surface-variant mb-4 text-center">
+          点击下方按钮开始掷骰
+        </div>
+
+        <!-- 杯子区域（摇一摇模式） -->
+        <div id="cup-area" class="cup-container mb-6 hidden">
+          <!-- SVG 杯子图标 -->
+          <svg id="cup-svg" viewBox="0 0 200 200" class="w-full h-full drop-shadow-lg">
+            <!-- 杯子主体（不透明金色） -->
+            <path d="M40 60 Q50 180 100 180 Q150 180 160 60 L40 60 Z" 
+                  fill="url(#cupGradient)" stroke="#B45309" stroke-width="2"/>
+            <!-- 杯子边缘 -->
+            <ellipse cx="100" cy="60" rx="60" ry="12" 
+                     fill="url(#rimGradient)" stroke="#92400E" stroke-width="2"/>
+            <!-- 杯子高光 -->
+            <path d="M60 80 Q65 140 100 140 Q85 140 75 90 Z" 
+                  fill="rgba(255,255,255,0.2)"/>
+            <!-- 杯子装饰条纹 -->
+            <ellipse cx="100" cy="100" rx="45" ry="8" 
+                     fill="none" stroke="#D97706" stroke-width="3" opacity="0.6"/>
+            <ellipse cx="100" cy="130" rx="35" ry="6" 
+                     fill="none" stroke="#D97706" stroke-width="2" opacity="0.4"/>
+            <!-- 渐变定义 -->
+            <defs>
+              <linearGradient id="cupGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#F59E0B"/>
+                <stop offset="50%" style="stop-color:#D97706"/>
+                <stop offset="100%" style="stop-color:#B45309"/>
+              </linearGradient>
+              <linearGradient id="rimGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#FEF3C7"/>
+                <stop offset="100%" style="stop-color:#F59E0B"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <!-- 骰子展示区域 -->
+        <div id="dice-area" class="flex flex-wrap justify-center gap-4 mb-6 min-h-[100px] items-center">
+          <!-- 骰子-1（默认显示） -->
+          <div class="dice-container dice-3d">
+            <div class="dice-face" id="dice-1">
+              <span class="text-3xl">⚀</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 结果展示区域 -->
+        <div id="result-area" class="text-center hidden">
+          <div class="text-lg font-bold text-primary mb-2">投掷结果</div>
+          <div id="result-numbers" class="text-3xl font-bold text-on-surface mb-2">6</div>
+          <div id="result-total" class="text-sm text-on-surface-variant">总计: 6</div>
+        </div>
+      </div>
+
+      <!-- 投掷按钮 -->
+      <div class="mt-auto">
+        <button id="roll-btn" class="w-full bg-primary text-white py-4 rounded-2xl text-lg font-bold shadow-float hover:opacity-90 active:scale-[0.98] transition-all btn-press glow-pulsing">
+          <i data-lucide="play" class="w-6 h-6 inline-block mr-2"></i>开始投掷
+        </button>
+      </div>
+    </div>
+
+    <!-- 设置面板模态框 -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-end justify-center">
+      <div class="bg-surface rounded-t-3xl w-full max-h-[80vh] overflow-y-auto modal-slide-up">
+        <div class="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <!-- 模态框标题 -->
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-on-surface">投掷设置</h2>
+            <button id="close-settings" class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-all">
+              <i data-lucide="x" class="w-5 h-5 text-on-surface-variant"></i>
+            </button>
+          </div>
+
+          <!-- 骰子类型选择 -->
+          <div class="mb-6">
+            <h3 class="text-sm font-semibold text-on-surface-variant mb-3">选择骰子类型</h3>
+            <div class="flex gap-2 overflow-x-auto pb-2" id="dice-types">
+              <button class="dice-type-btn flex-shrink-0 px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm font-medium transition-all hover:bg-surface-container-high" data-type="D4">
+                D4
+              </button>
+              <button class="dice-type-btn flex-shrink-0 px-4 py-2 rounded-full bg-primary text-white text-sm font-medium transition-all hover:opacity-90" data-type="D6" aria-current="true">
+                D6
+              </button>
+              <button class="dice-type-btn flex-shrink-0 px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm font-medium transition-all hover:bg-surface-container-high" data-type="D8">
+                D8
+              </button>
+              <button class="dice-type-btn flex-shrink-0 px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm font-medium transition-all hover:bg-surface-container-high" data-type="D10">
+                D10
+              </button>
+              <button class="dice-type-btn flex-shrink-0 px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm font-medium transition-all hover:bg-surface-container-high" data-type="D12">
+                D12
+              </button>
+              <button class="dice-type-btn flex-shrink-0 px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm font-medium transition-all hover:bg-surface-container-high" data-type="D20">
+                D20
+              </button>
+            </div>
+          </div>
+
+          <!-- 骰子数量选择 -->
+          <div class="mb-6">
+            <h3 class="text-sm font-semibold text-on-surface-variant mb-3">选择骰子数量: <span id="dice-count-display" class="text-primary font-bold">1</span></h3>
+            <div class="flex items-center gap-4">
+              <button id="decrease-count" class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all btn-press">
+                <i data-lucide="minus" class="w-5 h-5"></i>
+              </button>
+              <div class="flex-1 h-3 bg-surface-container rounded-full relative">
+                <div id="count-slider-track" class="absolute left-0 top-0 h-full bg-primary rounded-full" style="width: 10%;"></div>
+                <input type="range" id="dice-count-slider" min="1" max="10" value="1" class="absolute inset-0 w-full opacity-0 cursor-pointer">
+              </div>
+              <button id="increase-count" class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all btn-press">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 投掷方式选择 -->
+          <div class="mb-6">
+            <h3 class="text-sm font-semibold text-on-surface-variant mb-3">投掷方式</h3>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 p-4 bg-surface-container rounded-xl cursor-pointer hover:bg-surface-container-high transition-all">
+                <input type="radio" name="roll-mode" value="tap" class="w-5 h-5 text-primary" checked>
+                <div class="flex-1">
+                  <div class="font-medium text-on-surface">点击投掷</div>
+                  <div class="text-sm text-on-surface-variant">点击按钮即可投掷骰子</div>
+                </div>
+                <i data-lucide="mouse-pointer-click" class="w-5 h-5 text-on-surface-variant"></i>
+              </label>
+              <label class="flex items-center gap-3 p-4 bg-surface-container rounded-xl cursor-pointer hover:bg-surface-container-high transition-all">
+                <input type="radio" name="roll-mode" value="shake" class="w-5 h-5 text-primary">
+                <div class="flex-1">
+                  <div class="font-medium text-on-surface">摇一摇投掷</div>
+                  <div class="text-sm text-on-surface-variant">摇动设备触发投掷，配合杯子动画</div>
+                </div>
+                <i data-lucide="smartphone" class="w-5 h-5 text-on-surface-variant"></i>
+              </label>
+            </div>
+          </div>
+
+          <!-- 音效设置 -->
+          <div class="mb-6">
+            <h3 class="text-sm font-semibold text-on-surface-variant mb-3">音效设置</h3>
+            <div class="flex items-center justify-between p-4 bg-surface-container rounded-xl">
+              <div>
+                <div class="font-medium text-on-surface">开启音效</div>
+                <div class="text-sm text-on-surface-variant">摇晃、停止、掀开音效</div>
+              </div>
+              <button id="sound-toggle" class="w-12 h-7 bg-primary rounded-full relative transition-all">
+                <div class="absolute right-1 top-1 w-5 h-5 bg-white rounded-full transition-all shadow" id="sound-toggle-knob"></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 保存按钮 -->
+          <button id="save-settings" class="w-full bg-primary text-white py-3.5 rounded-xl text-base font-semibold hover:opacity-90 active:scale-[0.98] transition-all">
+            保存设置
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- @main-content:end -->
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    // 导航辅助函数
+    function navPush(route) {
+        console.log(`[原型演示] PUSH 到: ${route}`);
+        window.location.href = route;
+    }
+
+    function navReplace(route) {
+        console.log(`[原型演示] REPLACE 为: ${route}`);
+        window.location.replace(route);
+    }
+
+    function navReset(route) {
+        console.log(`[原型演示] RESET 到: ${route}`);
+        window.location.href = route;
+    }
+
+    function navBack() {
+        console.log(`[原型演示] BACK 返回上一页`);
+        if(window.history.length > 1) window.history.back();
+    }
+
+    $(function() {
+      // 状态管理
+      let currentDiceType = 'D6';
+      let currentDiceCount = 1;
+      let rollMode = 'tap';
+      let soundEnabled = true;
+      let isRolling = false;
+
+      // 骰子类型最大值映射
+      const diceMaxValues = {
+        'D4': 4,
+        'D6': 6,
+        'D8': 8,
+        'D10': 10,
+        'D12': 12,
+        'D20': 20
+      };
+
+      // 骰子Unicode符号映射
+      const diceSymbols = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+      // 更新当前配置显示
+      function updateConfigDisplay() {
+        $('#current-config').text(`${currentDiceType} · ${currentDiceCount}个骰子`);
+        $('#current-mode').text(rollMode === 'tap' ? '点击投掷' : '摇一摇投掷');
+        
+        if (soundEnabled) {
+          $('#sound-indicator-mini').removeClass('hidden');
+        } else {
+          $('#sound-indicator-mini').addClass('hidden');
+        }
+      }
+
+      // 骰子类型选择
+      $('.dice-type-btn').on('click', function() {
+        const type = $(this).data('type');
+        currentDiceType = type;
+        
+        // 更新UI
+        $('.dice-type-btn').removeClass('bg-primary text-white').addClass('bg-surface-container text-on-surface-variant');
+        $(this).removeClass('bg-surface-container text-on-surface-variant').addClass('bg-primary text-white');
+        
+        console.log('选择骰子类型:', type);
+      });
+
+      // 骰子数量滑块
+      $('#dice-count-slider').on('input', function() {
+        updateDiceCount($(this).val());
+      });
+
+      // 减少数量按钮
+      $('#decrease-count').on('click', function() {
+        if (currentDiceCount > 1) {
+          updateDiceCount(currentDiceCount - 1);
+        }
+      });
+
+      // 增加数量按钮
+      $('#increase-count').on('click', function() {
+        if (currentDiceCount < 10) {
+          updateDiceCount(currentDiceCount + 1);
+        }
+      });
+
+      // 更新骰子数量
+      function updateDiceCount(count) {
+        currentDiceCount = parseInt(count);
+        $('#dice-count-display').text(currentDiceCount);
+        $('#dice-count-slider').val(currentDiceCount);
+        
+        // 更新滑块进度条
+        const percentage = (currentDiceCount / 10) * 100;
+        $('#count-slider-track').css('width', percentage + '%');
+        
+        // 更新骰子显示
+        renderDice();
+      }
+
+      // 渲染骰子
+      function renderDice() {
+        const diceArea = $('#dice-area');
+        diceArea.empty();
+        
+        for (let i = 1; i <= currentDiceCount; i++) {
+          const diceHtml = `
+            <div class="dice-container dice-3d" id="dice-container-${i}">
+              <div class="dice-face" id="dice-${i}">
+                <span class="text-3xl">⚀</span>
+              </div>
+            </div>
+          `;
+          diceArea.append(diceHtml);
+        }
+        
+        lucide.createIcons();
+      }
+
+      // 设置面板
+      $('#settings-btn').on('click', function() {
+        $('#settings-modal').removeClass('hidden').addClass('flex');
+      });
+
+      $('#close-settings, #settings-modal').on('click', function(e) {
+        if (e.target === this || e.target.closest('#close-settings')) {
+          $('#settings-modal').addClass('hidden').removeClass('flex');
+        }
+      });
+
+      // 投掷方式选择
+      $('input[name="roll-mode"]').on('change', function() {
+        rollMode = $(this).val();
+      });
+
+      // 音效开关
+      $('#sound-toggle').on('click', function() {
+        soundEnabled = !soundEnabled;
+        if (soundEnabled) {
+          $(this).addClass('bg-primary').removeClass('bg-surface-container-highest');
+          $('#sound-toggle-knob').addClass('right-1').removeClass('left-1');
+        } else {
+          $(this).removeClass('bg-primary').addClass('bg-surface-container-highest');
+          $('#sound-toggle-knob').removeClass('right-1').addClass('left-1');
+        }
+      });
+
+      // 保存设置
+      $('#save-settings').on('click', function() {
+        console.log('保存设置:', { currentDiceType, currentDiceCount, rollMode, soundEnabled });
+        updateConfigDisplay();
+        updateRollModeUI();
+        $('#settings-modal').addClass('hidden').removeClass('flex');
+      });
+
+      // 更新投掷方式UI
+      function updateRollModeUI() {
+        if (rollMode === 'shake') {
+          $('#cup-area').removeClass('hidden');
+          $('#dice-area').addClass('hidden');
+          $('#status-message').text('摇动设备开始投掷');
+          $('#roll-btn').text('模拟摇晃');
+        } else {
+          $('#cup-area').addClass('hidden');
+          $('#dice-area').removeClass('hidden');
+          $('#status-message').text('点击下方按钮开始掷骰');
+          $('#roll-btn').html('<i data-lucide="play" class="w-6 h-6 inline-block mr-2"></i>开始投掷');
+          lucide.createIcons();
+        }
+      }
+
+      // 投掷按钮
+      $('#roll-btn').on('click', function() {
+        if (isRolling) return;
+        
+        if (rollMode === 'shake') {
+          simulateShakeRoll();
+        } else {
+          performTapRoll();
+        }
+      });
+
+      // 点击投掷
+      function performTapRoll() {
+        isRolling = true;
+        $('#roll-btn').prop('disabled', true).text('投掷中...');
+        $('#result-area').addClass('hidden');
+        $('#status-message').text('🎲 骰子旋转中...');
+        
+        // 播放开始音效
+        if (soundEnabled) {
+          console.log('🔊 播放摇晃音效');
+        }
+
+        // 添加骰子旋转动画
+        for (let i = 1; i <= currentDiceCount; i++) {
+          $(`#dice-${i}`).addClass('dice-rolling');
+        }
+
+        // 模拟投掷过程
+        setTimeout(() => {
+          // 停止旋转，添加弹跳
+          for (let i = 1; i <= currentDiceCount; i++) {
+            $(`#dice-${i}`).removeClass('dice-rolling').addClass('dice-bouncing');
+          }
+
+          // 播放停止音效
+          if (soundEnabled) {
+            console.log('🔊 播放停止音效');
+          }
+
+          // 生成结果
+          const results = generateDiceResults();
+          
+          setTimeout(() => {
+            // 显示结果
+            displayResults(results);
+            isRolling = false;
+            $('#roll-btn').prop('disabled', false).html('<i data-lucide="refresh-cw" class="w-6 h-6 inline-block mr-2"></i>再来一次');
+            lucide.createIcons();
+          }, 600);
+        }, 1500);
+      }
+
+      // 模拟摇晃投掷
+      function simulateShakeRoll() {
+        isRolling = true;
+        $('#roll-btn').prop('disabled', true).text('摇晃中...');
+        $('#result-area').addClass('hidden');
+        $('#status-message').text('🫗 杯子摇晃中...');
+        
+        // 播放摇晃音效
+        if (soundEnabled) {
+          console.log('🔊 播放摇晃音效（循环）');
+        }
+
+        // 添加杯子摇晃动画
+        $('#cup-svg').addClass('cup-shaking');
+
+        // 模拟摇晃过程
+        setTimeout(() => {
+          // 停止摇晃，开始掀开
+          $('#cup-svg').removeClass('cup-shaking').addClass('cup-lifting');
+          
+          // 播放掀开音效
+          if (soundEnabled) {
+            console.log('🔊 播放杯子掀开音效');
+          }
+
+          // 生成结果
+          const results = generateDiceResults();
+          
+          setTimeout(() => {
+            // 隐藏杯子，显示骰子
+            $('#cup-area').addClass('hidden');
+            $('#dice-area').removeClass('hidden');
+            
+            // 显示结果
+            displayResults(results);
+            
+            isRolling = false;
+            $('#roll-btn').prop('disabled', false).html('<i data-lucide="refresh-cw" class="w-6 h-6 inline-block mr-2"></i>再来一次');
+            lucide.createIcons();
+          }, 800);
+        }, 2000);
+      }
+
+      // 生成骰子结果
+      function generateDiceResults() {
+        const maxValue = diceMaxValues[currentDiceType];
+        const results = [];
+        
+        for (let i = 0; i < currentDiceCount; i++) {
+          results.push(Math.floor(Math.random() * maxValue) + 1);
+        }
+        
+        return results;
+      }
+
+      // 显示结果
+      function displayResults(results) {
+        const diceArea = $('#dice-area');
+        diceArea.empty();
+        
+        results.forEach((result, index) => {
+          const diceIndex = index + 1;
+          const symbolIndex = Math.min(result - 1, diceSymbols.length - 1);
+          const symbol = diceSymbols[symbolIndex] || result;
+          
+          const diceHtml = `
+            <div class="dice-container dice-3d result-popping" id="dice-container-${diceIndex}" style="animation-delay: ${index * 0.1}s">
+              <div class="dice-face" id="dice-${diceIndex}">
+                <span class="text-3xl">${symbol}</span>
+              </div>
+            </div>
+          `;
+          diceArea.append(diceHtml);
+        });
+        
+        // 更新结果区域
+        $('#result-numbers').text(results.join(' · '));
+        if (currentDiceCount > 1) {
+          const total = results.reduce((a, b) => a + b, 0);
+          $('#result-total').text(`总计: ${total}`);
+          $('#result-total').removeClass('hidden');
+        } else {
+          $('#result-total').addClass('hidden');
+        }
+        $('#result-area').removeClass('hidden');
+        
+        $('#status-message').text('✨ 投掷完成！');
+      }
+
+      // 初始化
+      updateConfigDisplay();
+      renderDice();
+    });
+  </script>
+</body>
+
+</html>

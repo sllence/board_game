@@ -58,23 +58,23 @@ page-container {
 :root,
 page,
 root-portal {
-  --background: lab(100% 0 0);
-  --foreground: lab(2.75381% 0 0);
-  --card: lab(100% 0 0);
+  --background: #FAFAF8;
+  --foreground: #1C1917;
+  --card: #FAFAF8;
   --card-foreground: lab(2.75381% 0 0);
   --popover: lab(100% 0 0);
   --popover-foreground: lab(2.75381% 0 0);
-  --primary: #4F46E5;
+  --primary: #F59E0B;
   --primary-foreground: #ffffff;
   --secondary: #EEF2FF;
   --secondary-foreground: #1E1B4B;
-  --muted: #F5F5F7;
-  --muted-foreground: #6B7280;
+  --muted: #F5F5F0;
+  --muted-foreground: #57534E;
   --accent: #EEF2FF;
   --accent-foreground: #4F46E5;
-  --destructive: #EF4444;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: lab(90.952% 0 -0.0000119209);
+  --border: #A8A29E;
   --input: lab(90.952% 0 -0.0000119209);
   --ring: lab(66.128% -0.0000298023 0.0000119209);
   --sidebar: lab(98.26% 0 0);
@@ -91,6 +91,13 @@ root-portal {
   --code-number: lab(48.96% 0 0);
   --selection: lab(2.75381% 0 0);
   --selection-foreground: lab(100% 0 0);
+  --primary-container: #FEF3C7;
+  --surface-container-lowest: #FFFFFF;
+  --surface-container-high: #EBEBE4;
+  --surface-container-highest: #E0E0D8;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --outline-variant: #D6D3D1;
   --tw-shadow: 0 0 #0000;
   --tw-shadow-color: initial;
   --tw-shadow-alpha: 100%;
@@ -183,6 +190,30 @@ root-portal {
   --color-selection-foreground: var(--selection-foreground);
   --color-code: var(--code);
   --radius-full: 9999px;
+  --color-primary-container: var(--primary-container);
+  --color-on-primary: var(--primary-foreground);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface: var(--card);
+  --color-surface-container: var(--muted);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-on-surface: var(--foreground);
+  --color-on-surface-variant: var(--muted-foreground);
+  --color-success: var(--success);
+  --color-error: var(--destructive);
+  --color-warning: var(--warning);
+  --color-outline: var(--border);
+  --color-outline-variant: var(--outline-variant);
+  --shadow-card: 0 4px 12px rgba(245, 158, 11, 0.15);
+  --shadow-float: 0 10px 25px rgba(245, 158, 11, 0.2);
+  --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --font-sans: system-ui, -apple-system, "Noto Sans SC", sans-serif;
+
 }
 
 page,
