@@ -9,9 +9,10 @@ interface WheelIconProps {
 export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: WheelIconProps) {
   const centerX = size / 2
   const centerY = size / 2
-  const radius = size / 2 - 2.5 // 留出边框空间
+  const radius = size / 2 - 2
+  const strokeWidth = 2
   
-  // 只绘制外圆和5条半径分割线，效果更明显
+  // 5条半径分割线，细线条风格
   const lines = []
   
   for (let i = 0; i < 5; i++) {
@@ -28,7 +29,7 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
         x2={x}
         y2={y}
         stroke={color}
-        strokeWidth="5"
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
       />
     )
@@ -36,9 +37,9 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
   
   // 将 SVG 转为 data URI
   const svgContent = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="transparent" stroke="${color}" strokeWidth="5" />
-      ${lines.map(l => `<line x1="${l.props.x1}" y1="${l.props.y1}" x2="${l.props.x2}" y2="${l.props.y2}" stroke="${color}" strokeWidth="5" stroke-linecap="round" />`).join('')}
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="${centerX}" cy="${centerY}" r="${radius}" />
+      ${lines.map(l => `<line x1="${l.props.x1}" y1="${l.props.y1}" x2="${l.props.x2}" y2="${l.props.y2}" />`).join('')}
     </svg>
   `
   const encodedSvg = encodeURIComponent(svgContent)
