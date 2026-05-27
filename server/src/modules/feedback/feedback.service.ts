@@ -1,105 +1,163 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { getSupabaseClient } from '../../storage/database/supabase-client';
 
-interface SubmitFeedbackParams {
+export type FeedbackType = 'bug_report' | 'new_game' | 'new_tool' | 'suggestion';
+
+export interface Feedback {
+  id: string;
   user_id: number;
-  feedback_type: 'bug_report' | 'new_game' | 'new_tool' | 'suggestion';
+  feedback_type: FeedbackType;
   content: string;
-  images?: string[];
+  images: string[];
+  created_at: string;
+  nickname?: string;
 }
 
 @Injectable()
 export class FeedbackService {
   private readonly logger = new Logger(FeedbackService.name);
 
-  // 临时模拟数据
-  private mockFeedbacks = [
-    {
-      id: 1,
-      user_id: 1,
-      feedback_type: 'bug_report',
-      content: '骰子功能在投掷时有时候会出现卡顿的情况，希望能优化一下动画效果',
-      images: [],
-      created_at: new Date('2024-01-15T10:30:00Z').toISOString(),
-    },
-    {
-      id: 2,
-      user_id: 2,
-      feedback_type: 'new_game',
-      content: '建议增加一个"石头剪刀布"的新桌游功能，这个很适合聚会玩',
-      images: [],
-      created_at: new Date('2024-01-14T15:20:00Z').toISOString(),
-    },
-  ];
-
   /**
-   * 提交反馈（临时mock）
+   * 提交反馈
    */
-  async submitFeedback(params: SubmitFeedbackParams) {
-    const { user_id, feedback_type, content, images } = params;
-    this.logger.log('用户提交反馈', { user_id, feedback_type, content: content.substring(0, 30) + '...' });
+  async submitFeedback(
+    userId: number,
+    feedbackType: FeedbackType,
+    content: string,
+    images: string[],
+  ): Promise<{ success: boolean; data: Feedback }> {
+    const supabase = getSupabaseClient();
+    this.logger.log('提交反馈', { userId, feedbackType, content, imagesCount: images.length });
 
-    // 临时返回成功，不实际写入数据库
-    return {
-      success: true,
-      data: {
-        id: Date.now(),
-        user_id,
-        feedback_type,
+    // 插入数据库，注意字段名是 type 不是 feedback_type
+    const { data, error } = await supabase
+      .from('feedbacks')
+      .insert({
+        user_id: userId,
+        type: feedbackType,
         content,
-        images: images || [],
-        created_at: new Date().toISOString(),
-      },
-    };
-  }
+        images,
+      })
+      .select('*')
+      .single();
 
-  /**
-   * 获取当前用户的反馈列表（临时mock）
-   */
-  async findByUserId(userId: number) {
-    this.logger.log('获取用户反馈列表', { userId });
-    return {
-      success: true,
-      data: this.mockFeedbacks.filter((f) => f.user_id === userId),
-    };
-  }
-
-  /**
-   * 获取所有反馈列表（管理员用，临时mock）
-   */
-  async findAll(params: {
-    feedback_type?: string;
-    page?: number;
-    page_size?: number;
-  }) {
-    const { feedback_type, page = 1, page_size = 20 } = params;
-    this.logger.log('管理员获取反馈列表', { feedback_type, page, page_size });
-
-    let filtered = this.mockFeedbacks;
-    if (feedback_type && feedback_type !== 'all') {
-      filtered = filtered.filter((f) => f.feedback_type === feedback_type);
+    if (error) {
+      this.logger.error('插入反馈失败', error);
+      throw error;
     }
 
-    const total = filtered.length;
-    const start = (page - 1) * page_size;
-    const data = filtered.slice(start, start + page_size);
-
-    return {
-      success: true,
-      data,
-      total,
-    };
+    // 数据库返回 type，映射为 feedback_type，删除原始 type 字段
+    const { type: _type, ...rest } = data as any;
+    const result = { ...rest, feedback_type: _type } as Feedback;
+    return { success: true, data: result };
   }
 
   /**
-   * 获取单个反馈详情（临时mock）
+   * 获取我的反馈列表
    */
-  async findById(id: number) {
+  async findMyFeedbacks(
+    userId: number,
+    feedbackType?: FeedbackType,
+  ): Promise<{ success: boolean; data: Feedback[] }> {
+    const supabase = getSupabaseClient();
+    this.logger.log('获取我的反馈列表', { userId, feedbackType });
+
+    let query = supabase
+      .from('feedbacks')
+      .select('*, users(nickname)')
+      .eq('user_id', userId);
+
+    if (feedbackType) {
+      query = query.eq('type', feedbackType);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) {
+      this.logger.error('查询我的反馈失败', error);
+      throw error;
+    }
+
+    const processedData = data?.map((item: any) => ({
+      id: item.id,
+      user_id: item.user_id,
+      feedback_type: item.type,
+      content: item.content,
+      images: item.images || [],
+      created_at: item.created_at,
+      nickname: item.users?.nickname || '未知用户',
+    })) || [];
+
+    return { success: true, data: processedData };
+  }
+
+  /**
+   * 获取所有反馈列表（管理员用）
+   */
+  async findAllFeedbacks(
+    feedbackType?: FeedbackType,
+  ): Promise<{ success: boolean; data: Feedback[]; total: number }> {
+    const supabase = getSupabaseClient();
+    this.logger.log('获取所有反馈列表', { feedbackType });
+
+    let query = supabase
+      .from('feedbacks')
+      .select('*, users(nickname)');
+
+    if (feedbackType) {
+      query = query.eq('type', feedbackType);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+
+    if (error) {
+      this.logger.error('查询反馈列表失败', error);
+      throw error;
+    }
+
+    const processedData = data?.map((item: any) => ({
+      id: item.id,
+      user_id: item.user_id,
+      feedback_type: item.type,
+      content: item.content,
+      images: item.images || [],
+      created_at: item.created_at,
+      nickname: item.users?.nickname || '未知用户',
+    })) || [];
+
+    return { success: true, data: processedData, total: processedData.length };
+  }
+
+  /**
+   * 获取单个反馈详情
+   */
+  async findById(
+    id: string,
+  ): Promise<{ success: boolean; data: Feedback }> {
+    const supabase = getSupabaseClient();
     this.logger.log('获取反馈详情', { id });
-    const feedback = this.mockFeedbacks.find((f) => f.id === id);
-    return {
-      success: !!feedback,
-      data: feedback,
+
+    const { data, error } = await supabase
+      .from('feedbacks')
+      .select('*, users(nickname)')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      this.logger.error('查询反馈详情失败', error);
+      throw error;
+    }
+
+    const processedData: Feedback = {
+      id: data.id,
+      user_id: data.user_id,
+      feedback_type: data.type,
+      content: data.content,
+      images: data.images || [],
+      created_at: data.created_at,
+      nickname: (data as any)?.users?.nickname || '未知用户',
     };
+
+    return { success: true, data: processedData };
   }
 }

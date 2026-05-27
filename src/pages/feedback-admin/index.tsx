@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, MessageSquare, Trophy, Wrench, Lightbulb } from 'lucide-react-taro'
 import { Network } from '@/network'
-import './index.scss'
 
 interface Feedback {
   id: number
@@ -35,14 +34,17 @@ const feedbackTabs = [
   { id: 'suggestion', label: '优化建议' },
 ]
 
-// 模拟管理员判断
-const isAdmin = true
+// 管理员判断：根据用户ID判断
+const ADMIN_USER_IDS = [1, 27, 28] // 管理员用户ID列表
 
 export default function FeedbackAdminPage() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
   const [expandedId, setExpandedId] = useState<number | null>(null)
+
+  const userInfo = Taro.getStorageSync('userInfo')
+  const isAdmin = ADMIN_USER_IDS.includes(userInfo?.id)
 
   const handleBack = () => {
     Taro.navigateBack()
@@ -51,29 +53,32 @@ export default function FeedbackAdminPage() {
   const loadFeedbacks = async () => {
     setLoading(true)
     try {
-      const url = activeTab === 'all' 
-        ? '/api/feedbacks' 
+      const url = activeTab === 'all'
+        ? '/api/feedbacks'
         : `/api/feedbacks?feedback_type=${activeTab}`
-      
+
+      console.log('请求反馈列表:', url)
       const res = await Network.request({ url, method: 'GET' })
       console.log('获取反馈列表返回:', res.data)
 
       if (res.data?.success && Array.isArray(res.data.data)) {
-        setFeedbacks(res.data.data)
+        // 映射后端字段名到前端字段名
+        const mappedFeedbacks = res.data.data.map((item: Record<string, unknown>) => ({
+          id: item.id,
+          user_id: item.user_id,
+          feedback_type: item.feedback_type || item.type,
+          content: item.content,
+          images: item.images || [],
+          created_at: item.created_at,
+          nickname: item.nickname || '匿名用户',
+        }))
+        setFeedbacks(mappedFeedbacks)
       } else {
-        // 如果API返回失败，用模拟数据
-        setFeedbacks([
-          { id: 1, user_id: 1, feedback_type: 'bug_report', content: '骰子功能在iOS上有些卡顿，希望优化一下，谢谢！', created_at: '2024-01-15T10:30:00Z', nickname: '小明' },
-          { id: 2, user_id: 2, feedback_type: 'new_game', content: '希望加入谁是卧底、狼人杀这类经典桌游工具', created_at: '2024-01-14T16:45:00Z', nickname: '小红' },
-        ])
+        setFeedbacks([])
       }
     } catch (err) {
-      console.error('获取反馈失败', err)
-      // 用模拟数据
-      setFeedbacks([
-        { id: 1, user_id: 1, feedback_type: 'bug_report', content: '骰子功能在iOS上有些卡顿，希望优化一下，谢谢！', created_at: '2024-01-15T10:30:00Z', nickname: '小明' },
-        { id: 2, user_id: 2, feedback_type: 'new_game', content: '希望加入谁是卧底、狼人杀这类经典桌游工具', created_at: '2024-01-14T16:45:00Z', nickname: '小红' },
-      ])
+      console.error('加载反馈失败', err)
+      setFeedbacks([])
     } finally {
       setLoading(false)
     }
