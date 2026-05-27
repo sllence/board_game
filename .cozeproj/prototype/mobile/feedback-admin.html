@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #4F46E5;
+      --color-primary-container:    #EEF2FF;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面（M3 色调系统 + Apple HIG 呼吸感） === */
+      --color-background:                 #f5f5f7;
+      --color-surface-container-lowest:   #ffffff;
+      --color-surface:                    #ffffff;
+      --color-surface-container:          #e5e7eb;
+      --color-surface-container-high:     #d1d5db;
+      --color-surface-container-highest:  #9ca3af;
+      /* === 文字 === */
+      --color-on-surface:           #1f2937;
+      --color-on-surface-variant:   #6b7280;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #d1d5db;
+      --color-outline-variant:  #e5e7eb;
+      /* === 圆角 === */
+      --radius-sm:   0.5rem;
+      --radius-md:   0.75rem;
+      --radius-lg:   1rem;
+      --radius-xl:   1.5rem;
+      --radius-2xl:  2rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 4px 12px rgba(0,0,0,0.05);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: system-ui, sans-serif;
+    }
+  </style>
+
+  <style>
+    body {
+      min-height: max(812px, 100dvh);
+      font-family: system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
+  <!-- 二级页导航栏 - 带返回按钮 -->
+  <header class="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline/30">
+    <div class="flex items-center h-14 px-4">
+      <button id="btn-back" class="p-2 -ml-2 rounded-full hover:bg-surface-container">
+        <i data-lucide="arrow-left" class="w-6 h-6 text-on-surface"></i>
+      </button>
+      <h1 class="text-base font-semibold text-on-surface ml-2">反馈管理</h1>
+    </div>
+  </header>
+  <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
+
+  <main class="min-h-screen flex flex-col">
+    <!-- @main-content:start -->
+    
+    <!-- 筛选栏 -->
+    <div class="bg-surface-container-lowest px-4 py-3 border-b border-outline/20">
+      <div class="flex items-center gap-3">
+        <div class="flex-1">
+          <label class="text-xs font-medium text-on-surface-variant mb-1 block">类型</label>
+          <select id="filter-type" class="w-full bg-surface-container border-none rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+            <option value="all">全部</option>
+            <option value="bug">问题反馈</option>
+            <option value="game">新增桌游</option>
+            <option value="tool">新增工具</option>
+            <option value="suggest">优化建议</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 反馈列表 -->
+    <div id="feedback-list" class="flex-1 p-4 space-y-3">
+      
+      <!-- 列表-反馈1 -->
+      <div class="feedback-card bg-surface rounded-xl shadow-card p-4 cursor-pointer" data-id="1" data-type="bug">
+        <div class="flex items-start justify-between mb-2">
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600">问题反馈</span>
+        </div>
+        <p class="text-sm text-on-surface mb-2 line-clamp-2">登录页面在iOS设备上出现闪退，输入密码时键盘弹出后页面会自动关闭。</p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+              <span class="text-xs font-bold text-primary">张</span>
+            </div>
+            <span class="text-xs text-on-surface-variant">张三</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">2024-01-15 10:30</span>
+        </div>
+      </div>
+
+      <!-- 列表-反馈2 -->
+      <div class="feedback-card bg-surface rounded-xl shadow-card p-4 cursor-pointer" data-id="2" data-type="game">
+        <div class="flex items-start justify-between mb-2">
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-600">新增桌游</span>
+        </div>
+        <p class="text-sm text-on-surface mb-2 line-clamp-2">希望增加《阿瓦隆》桌游的角色配置和计分功能，这是一款很受欢迎的社交推理游戏。</p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+              <span class="text-xs font-bold text-primary">李</span>
+            </div>
+            <span class="text-xs text-on-surface-variant">李四</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">2024-01-14 15:45</span>
+        </div>
+      </div>
+
+      <!-- 列表-反馈3 -->
+      <div class="feedback-card bg-surface rounded-xl shadow-card p-4 cursor-pointer" data-id="3" data-type="suggest">
+        <div class="flex items-start justify-between mb-2">
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-600">优化建议</span>
+        </div>
+        <p class="text-sm text-on-surface mb-2 line-clamp-2">建议在历史记录中增加筛选功能，可以按游戏类型和时间范围快速查找对局记录。</p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+              <span class="text-xs font-bold text-primary">王</span>
+            </div>
+            <span class="text-xs text-on-surface-variant">王五</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">2024-01-13 09:20</span>
+        </div>
+      </div>
+
+      <!-- 列表-反馈4 -->
+      <div class="feedback-card bg-surface rounded-xl shadow-card p-4 cursor-pointer" data-id="4" data-type="tool">
+        <div class="flex items-start justify-between mb-2">
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-600">新增工具</span>
+        </div>
+        <p class="text-sm text-on-surface mb-2 line-clamp-2">希望增加一个骰子Roll点工具，可以自定义骰子面数和数量，适合各种桌游使用。</p>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+              <span class="text-xs font-bold text-primary">赵</span>
+            </div>
+            <span class="text-xs text-on-surface-variant">赵六</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">2024-01-12 18:15</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 空状态（默认隐藏） -->
+    <div id="empty-state" class="flex-1 flex flex-col items-center justify-center p-8 hidden">
+      <div class="w-24 h-24 bg-surface-container rounded-full flex items-center justify-center mb-4">
+        <i data-lucide="inbox" class="w-12 h-12 text-on-surface-variant/50"></i>
+      </div>
+      <h3 class="text-base font-semibold text-on-surface mb-1">暂无反馈</h3>
+      <p class="text-sm text-on-surface-variant text-center">还没有收到任何用户反馈</p>
+    </div>
+
+    <!-- @main-content:end -->
+  </main>
+
+  <!-- 反馈详情弹窗 -->
+  <div id="detail-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end">
+    <div class="bg-surface rounded-t-2xl w-full max-h-[80vh] overflow-y-auto">
+      <div class="sticky top-0 bg-surface border-b border-outline/20 px-4 py-3 flex items-center justify-between">
+        <h2 class="text-base font-semibold text-on-surface">反馈详情</h2>
+        <button id="btn-close-modal" class="p-2 -mr-2 rounded-full hover:bg-surface-container">
+          <i data-lucide="x" class="w-5 h-5 text-on-surface"></i>
+        </button>
+      </div>
+      
+      <div class="p-4 space-y-4">
+        <!-- 详情内容 -->
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span id="detail-type" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600">问题反馈</span>
+          </div>
+          <p id="detail-content" class="text-sm text-on-surface mb-3">登录页面在iOS设备上出现闪退，输入密码时键盘弹出后页面会自动关闭。尝试了多次都出现同样的问题，希望能尽快修复。</p>
+          
+          <!-- 图片预览 -->
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=200&h=200&fit=crop" alt="问题截图" data-category="商业科技" class="w-full h-20 object-cover rounded-lg">
+          </div>
+          
+          <div class="bg-surface-container rounded-xl p-3">
+            <div class="flex items-center gap-2 mb-2">
+              <div id="detail-avatar" class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <span class="text-sm font-bold text-primary">张</span>
+              </div>
+              <div>
+                <p id="detail-nickname" class="text-sm font-medium text-on-surface">张三</p>
+                <p id="detail-time" class="text-xs text-on-surface-variant">2024-01-15 10:30</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 导航辅助函数
+    function navPush(route) {
+        console.log(`[原型演示] PUSH 到: ${route}`);
+        window.location.href = route;
+    }
+
+    function navReplace(route) {
+        console.log(`[原型演示] REPLACE 为: ${route}`);
+        window.location.replace(route);
+    }
+
+    function navReset(route) {
+        console.log(`[原型演示] RESET 到: ${route}`);
+        window.location.href = route;
+    }
+
+    function navBack() {
+        console.log('[原型演示] BACK 返回上一页');
+        if(window.history.length > 1) window.history.back();
+    }
+
+    $(function() {
+      lucide.createIcons();
+      
+      // 当前选中的反馈ID
+      let currentFeedbackId = null;
+      
+      // 反馈数据（用于详情展示）
+      const feedbackData = {
+        '1': {
+          type: 'bug',
+          typeText: '问题反馈',
+          typeClass: 'bg-red-100 text-red-600',
+          content: '登录页面在iOS设备上出现闪退，输入密码时键盘弹出后页面会自动关闭。尝试了多次都出现同样的问题，希望能尽快修复。',
+          nickname: '张三',
+          avatar: '张',
+          time: '2024-01-15 10:30',
+          hasImage: true
+        },
+        '2': {
+          type: 'game',
+          typeText: '新增桌游',
+          typeClass: 'bg-purple-100 text-purple-600',
+          content: '希望增加《阿瓦隆》桌游的角色配置和计分功能，这是一款很受欢迎的社交推理游戏。',
+          nickname: '李四',
+          avatar: '李',
+          time: '2024-01-14 15:45',
+          hasImage: false
+        },
+        '3': {
+          type: 'suggest',
+          typeText: '优化建议',
+          typeClass: 'bg-green-100 text-green-600',
+          content: '建议在历史记录中增加筛选功能，可以按游戏类型和时间范围快速查找对局记录。这个功能对经常玩桌游的用户会很有帮助。',
+          nickname: '王五',
+          avatar: '王',
+          time: '2024-01-13 09:20',
+          hasImage: false
+        },
+        '4': {
+          type: 'tool',
+          typeText: '新增工具',
+          typeClass: 'bg-yellow-100 text-yellow-600',
+          content: '希望增加一个骰子Roll点工具，可以自定义骰子面数和数量，适合各种桌游使用。',
+          nickname: '赵六',
+          avatar: '赵',
+          time: '2024-01-12 18:15',
+          hasImage: false
+        }
+      };
+
+      // 返回按钮
+      $('#btn-back').on('click', function() {
+        navBack();
+      });
+
+      // 筛选功能
+      function applyFilters() {
+        const typeFilter = $('#filter-type').val();
+        let visibleCount = 0;
+
+        $('.feedback-card').each(function() {
+          const cardType = $(this).data('type');
+          
+          const typeMatch = typeFilter === 'all' || cardType === typeFilter;
+          
+          if (typeMatch) {
+            $(this).show();
+            visibleCount++;
+          } else {
+            $(this).hide();
+          }
+        });
+
+        // 显示/隐藏空状态
+        if (visibleCount === 0) {
+          $('#feedback-list').hide();
+          $('#empty-state').show();
+        } else {
+          $('#feedback-list').show();
+          $('#empty-state').hide();
+        }
+      }
+
+      $('#filter-type').on('change', function() {
+        applyFilters();
+      });
+
+      // 点击反馈卡片打开详情
+      $('.feedback-card').on('click', function() {
+        currentFeedbackId = $(this).data('id');
+        const data = feedbackData[currentFeedbackId];
+        
+        // 更新详情内容
+        $('#detail-type').text(data.typeText).removeClass().addClass('inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ' + data.typeClass);
+        $('#detail-content').text(data.content);
+        $('#detail-nickname').text(data.nickname);
+        $('#detail-avatar span').text(data.avatar);
+        $('#detail-time').text(data.time);
+        
+        // 显示/隐藏图片
+        if (data.hasImage) {
+          $('#detail-modal .grid').show();
+        } else {
+          $('#detail-modal .grid').hide();
+        }
+        
+        $('#detail-modal').removeClass('hidden');
+        $('body').addClass('overflow-hidden');
+      });
+
+      // 关闭详情弹窗
+      $('#btn-close-modal, #detail-modal').on('click', function(e) {
+        if (e.target === this || e.currentTarget.id === 'btn-close-modal') {
+          $('#detail-modal').addClass('hidden');
+          $('body').removeClass('overflow-hidden');
+        }
+      });
+    });
+  </script>
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

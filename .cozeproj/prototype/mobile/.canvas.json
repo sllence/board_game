@@ -3,9 +3,17 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/mobile/dice.html"
+        "path": ".cozeproj/prototype/mobile/feedback.html"
       },
-      "title": "骰子工具",
+      "title": "问题反馈",
+      "size": "mobile"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/mobile/feedback-admin.html"
+      },
+      "title": "反馈管理",
       "size": "mobile"
     }
   ]

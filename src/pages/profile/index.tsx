@@ -293,11 +293,13 @@ const ProfilePage: FC = () => {
   }
 
   const MENU_ITEMS = [
+    { emoji: '💬', name: '问题反馈', desc: '问题、建议、新桌游等', soon: false, path: '/pages/feedback/index' },
     { emoji: '❤️', name: '我的收藏', desc: '对局与转盘', soon: false, path: '/pages/wheel-favorites/index' },
     { emoji: '⚙️', name: '设置', desc: '主题、通知等偏好', soon: true },
   ]
 
   const ADMIN_MENU_ITEMS = [
+    { emoji: '📋', name: '反馈管理', desc: '查看和处理用户反馈' },
     { emoji: '🛠️', name: '桌游管理', desc: '编辑和管理桌游信息' },
   ]
 
@@ -486,6 +488,8 @@ const ProfilePage: FC = () => {
             onClick={() => {
               if (item.name === '桌游管理') {
                 Taro.navigateTo({ url: '/pages/games-admin/index' })
+              } else if (item.name === '反馈管理') {
+                Taro.navigateTo({ url: '/pages/feedback-admin/index' })
               }
             }}
           >
@@ -526,11 +530,8 @@ const ProfilePage: FC = () => {
                 <Text className="block text-xs text-gray-400 mb-1">{item.desc}</Text>
               </View>
               {item.soon && (
-                <View
-                  className="rounded-full px-2 py-1"
-                  style={{ backgroundColor: 'rgba(99,102,241,0.1)' }}
-                >
-                  <Text className="text-xs text-indigo-500">即将上线</Text>
+                <View className="rounded-full px-2 py-1 bg-primary">
+                  <Text className="text-xs text-primary">即将上线</Text>
                 </View>
               )}
             </CardContent>

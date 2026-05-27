@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+
+  <!-- 字体（按需，系统字体时省略；只能用 Google 字体，CSS 地址前缀：https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google） -->
+  <!-- <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/> -->
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #4F46E5;
+      --color-primary-container:    #EEF2FF;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面（M3 色调系统 + Apple HIG 呼吸感） === */
+      --color-background:                 #f5f5f7;
+      --color-surface-container-lowest:   #ffffff;
+      --color-surface:                    #ffffff;
+      --color-surface-container:          #e5e7eb;
+      --color-surface-container-high:     #d1d5db;
+      --color-surface-container-highest:  #9ca3af;
+      /* === 文字 === */
+      --color-on-surface:           #1f2937;
+      --color-on-surface-variant:   #6b7280;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #d1d5db;
+      --color-outline-variant:  #e5e7eb;
+      /* === 圆角 === */
+      --radius-sm:   0.5rem;
+      --radius-md:   0.75rem;
+      --radius-lg:   1rem;
+      --radius-xl:   1.5rem;
+      --radius-2xl:  2rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 4px 12px rgba(0,0,0,0.05);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: system-ui, sans-serif;
+    }
+  </style>
+
+  <style>
+    body {
+      min-height: max(812px, 100dvh);
+      font-family: system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
+  <!-- 二级页导航栏 - 带返回按钮 -->
+  <header class="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline/30">
+    <div class="flex items-center h-14 px-4">
+      <button id="btn-back" class="p-2 -ml-2 rounded-full hover:bg-surface-container">
+        <i data-lucide="arrow-left" class="w-6 h-6 text-on-surface"></i>
+      </button>
+      <h1 class="flex-1 text-center text-base font-semibold text-on-surface -ml-8">问题反馈</h1>
+      <div class="w-8"></div>
+    </div>
+  </header>
+  <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
+
+  <main class="min-h-screen flex flex-col pb-24">
+    <!-- @main-content:start -->
+    
+    <!-- 反馈类型选择 -->
+    <div class="px-4 py-6">
+      <h2 class="text-base font-semibold text-on-surface mb-4">选择反馈类型</h2>
+      <div class="grid grid-cols-2 gap-3" id="feedback-type-container">
+        <!-- 反馈类型-问题反馈 -->
+        <div class="feedback-type-card bg-surface rounded-xl p-4 cursor-pointer transition-all border-2 border-transparent hover:border-primary/30" data-type="bug">
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+              <i data-lucide="bug" class="w-6 h-6 text-primary"></i>
+            </div>
+            <span class="text-sm font-medium text-on-surface">问题反馈</span>
+          </div>
+        </div>
+        <!-- 反馈类型-新增桌游 -->
+        <div class="feedback-type-card bg-surface rounded-xl p-4 cursor-pointer transition-all border-2 border-transparent hover:border-primary/30" data-type="game">
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+              <i data-lucide="chess-king" class="w-6 h-6 text-primary"></i>
+            </div>
+            <span class="text-sm font-medium text-on-surface">新增桌游</span>
+          </div>
+        </div>
+        <!-- 反馈类型-新增工具 -->
+        <div class="feedback-type-card bg-surface rounded-xl p-4 cursor-pointer transition-all border-2 border-transparent hover:border-primary/30" data-type="tool">
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+              <i data-lucide="toolbox" class="w-6 h-6 text-primary"></i>
+            </div>
+            <span class="text-sm font-medium text-on-surface">新增工具</span>
+          </div>
+        </div>
+        <!-- 反馈类型-优化建议 -->
+        <div class="feedback-type-card bg-surface rounded-xl p-4 cursor-pointer transition-all border-2 border-transparent hover:border-primary/30" data-type="suggest">
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+              <i data-lucide="lightbulb" class="w-6 h-6 text-primary"></i>
+            </div>
+            <span class="text-sm font-medium text-on-surface">优化建议</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 内容输入框 -->
+    <div class="px-4 pb-6">
+      <h2 class="text-base font-semibold text-on-surface mb-4">详细描述</h2>
+      <textarea id="feedback-content" class="w-full bg-surface-container border-none rounded-xl px-4 py-3 text-base text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" rows="6" placeholder="请详细描述您的反馈..."></textarea>
+    </div>
+
+    <!-- 图片上传 -->
+    <div class="px-4 pb-6">
+      <h2 class="text-base font-semibold text-on-surface mb-4">上传图片（可选，最多3张）</h2>
+      <div class="flex flex-wrap gap-3" id="image-upload-container">
+        <!-- 已上传图片1 -->
+        <div class="uploaded-image relative w-24 h-24 rounded-xl overflow-hidden" data-index="0">
+          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71" alt="问题截图示例" data-category="商业科技" class="w-full h-full object-cover">
+          <button class="delete-image-btn absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center">
+            <i data-lucide="x" class="w-4 h-4 text-white"></i>
+          </button>
+        </div>
+        <!-- 已上传图片2 -->
+        <div class="uploaded-image relative w-24 h-24 rounded-xl overflow-hidden" data-index="1">
+          <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3" alt="界面截图示例" data-category="商业科技" class="w-full h-full object-cover">
+          <button class="delete-image-btn absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center">
+            <i data-lucide="x" class="w-4 h-4 text-white"></i>
+          </button>
+        </div>
+        <!-- 上传按钮 -->
+        <button id="btn-upload-image" class="w-24 h-24 bg-surface-container rounded-xl flex flex-col items-center justify-center gap-1 hover:bg-surface-container-high transition-colors">
+          <i data-lucide="plus" class="w-8 h-8 text-on-surface-variant"></i>
+          <span class="text-xs text-on-surface-variant">上传图片</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- @main-content:end -->
+  </main>
+
+  <!-- 底部固定提交按钮 -->
+  <div class="fixed bottom-0 left-0 right-0 bg-surface-container-lowest px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-outline/30">
+    <button id="btn-submit" class="w-full bg-primary/50 text-on-primary py-3.5 rounded-xl text-base font-semibold cursor-not-allowed transition-all inline-flex items-center justify-center gap-2" disabled>
+      <i data-lucide="send" class="w-5 h-5"></i>提交反馈
+    </button>
+  </div>
+
+  <!-- 成功提示弹窗 -->
+  <div id="success-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+    <div class="bg-surface rounded-2xl w-[80%] max-w-sm p-6 text-center">
+      <div class="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="check" class="w-8 h-8 text-success"></i>
+      </div>
+      <h3 class="text-lg font-bold text-on-surface mb-2">提交成功</h3>
+      <p class="text-sm text-on-surface-variant mb-6">感谢您的反馈，我们会尽快处理！</p>
+      <button id="btn-close-success" class="w-full bg-primary text-on-primary py-3 rounded-xl text-base font-semibold">
+        确定
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 导航辅助函数
+    function navPush(route) {
+        console.log(`[原型演示] PUSH 到: ${route}`);
+        window.location.href = route;
+    }
+
+    function navReplace(route) {
+        console.log(`[原型演示] REPLACE 为: ${route}`);
+        window.location.replace(route);
+    }
+
+    function navReset(route) {
+        console.log(`[原型演示] RESET 到: ${route}`);
+        window.location.href = route;
+    }
+
+    function navBack() {
+        console.log('[原型演示] BACK 返回上一页');
+        if(window.history.length > 1) window.history.back();
+    }
+
+    $(function() {
+      let selectedType = null;
+
+      // 返回按钮
+      $('#btn-back').on('click', function() {
+        navBack();
+      });
+
+      // 反馈类型选择
+      $('#feedback-type-container').on('click', '.feedback-type-card', function() {
+        selectedType = $(this).data('type');
+        
+        // 移除所有选中状态
+        $('.feedback-type-card').removeClass('border-primary bg-primary/5');
+        $('.feedback-type-card').addClass('border-transparent');
+        
+        // 添加当前选中状态
+        $(this).removeClass('border-transparent');
+        $(this).addClass('border-primary bg-primary/5');
+        
+        updateSubmitButton();
+      });
+
+      // 内容输入
+      $('#feedback-content').on('input', function() {
+        updateSubmitButton();
+      });
+
+      // 更新提交按钮状态
+      function updateSubmitButton() {
+        const content = $('#feedback-content').val().trim();
+        const btn = $('#btn-submit');
+        
+        if (selectedType && content.length > 0) {
+          btn.removeClass('bg-primary/50 cursor-not-allowed');
+          btn.addClass('bg-primary hover:opacity-90 active:scale-[0.98] cursor-pointer');
+          btn.prop('disabled', false);
+        } else {
+          btn.addClass('bg-primary/50 cursor-not-allowed');
+          btn.removeClass('bg-primary hover:opacity-90 active:scale-[0.98] cursor-pointer');
+          btn.prop('disabled', true);
+        }
+      }
+
+      // 上传图片按钮
+      $('#btn-upload-image').on('click', function() {
+        console.log('需要调用第三方接口实现图片上传功能：选择或拍照上传图片');
+        // 原型演示：直接添加一张示例图片
+        const newImageHtml = `
+          <div class="uploaded-image relative w-24 h-24 rounded-xl overflow-hidden" data-index="2">
+            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f" alt="补充截图示例" data-category="商业科技" class="w-full h-full object-cover">
+            <button class="delete-image-btn absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center">
+              <i data-lucide="x" class="w-4 h-4 text-white"></i>
+            </button>
+          </div>
+        `;
+        $(newImageHtml).insertBefore('#btn-upload-image');
+        lucide.createIcons();
+      });
+
+      // 删除图片按钮
+      $('#image-upload-container').on('click', '.delete-image-btn', function(e) {
+        e.stopPropagation();
+        $(this).closest('.uploaded-image').remove();
+      });
+
+      // 提交按钮
+      $('#btn-submit').on('click', function() {
+        if (!selectedType || !$('#feedback-content').val().trim()) {
+          return;
+        }
+        console.log('提交反馈:', {
+          type: selectedType,
+          content: $('#feedback-content').val()
+        });
+        $('#success-modal').removeClass('hidden');
+      });
+
+      // 关闭成功弹窗
+      $('#btn-close-success').on('click', function() {
+        $('#success-modal').addClass('hidden');
+        navBack();
+      });
+    });
+  </script>
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

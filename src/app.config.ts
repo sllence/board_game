@@ -20,6 +20,8 @@ export default defineAppConfig({
     'pages/wheel-history/index',
     'pages/wheel-favorites/index',
     'pages/finger-picker/index',
+    'pages/feedback/index',
+    'pages/feedback-admin/index',
   ],
   window: {
     backgroundTextStyle: 'light',

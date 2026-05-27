@@ -107,3 +107,18 @@ export const favorites = pgTable("favorites", {
   index("favorites_user_id_idx").on(table.userId),
   index("favorites_game_id_idx").on(table.gameId),
 ]);
+
+// 用户反馈表
+export const feedbacks = pgTable("feedbacks", {
+  id: serial().primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  type: varchar("type", { length: 32 }).notNull(), // bug_report/new_game/new_tool/suggestion
+  content: text("content").notNull(),
+  images: jsonb("images").default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+}, (table) => [
+  index("feedbacks_user_id_idx").on(table.userId),
+  index("feedbacks_type_idx").on(table.type),
+  index("feedbacks_created_at_idx").on(table.createdAt),
+]);

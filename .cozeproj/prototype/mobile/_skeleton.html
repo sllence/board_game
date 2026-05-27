@@ -15,32 +15,26 @@
   <style type="text/tailwindcss">
     @theme {
       /* === 品牌色 === */
-      --color-primary:              #F59E0B;
-      --color-primary-container:    #FEF3C7;
+      --color-primary:              #4F46E5;
+      --color-primary-container:    #EEF2FF;
       --color-on-primary:           #ffffff;
       /* === 背景 / 表面（M3 色调系统 + Apple HIG 呼吸感） === */
-      /* 移动端用背景色层级区分区域（比 shadow 更轻盈），
-         相邻层级之间应有肉眼可感知但不突兀的明度差。
-         ⚠️ surface-container 是 Tonal Fill（输入框/搜索框背景色）的关键层，
-         它必须与 background 有可感知的色差，否则输入框会"看不见"。
-         ⚠️ surface 色阶必须保持中性色调，不要把 primary 的色相混入
-         surface 系统。色彩氛围通过 primary、装饰元素传达，surface 只管层级 */
-      --color-background:                 #FAFAF8;
-      --color-surface-container-lowest:   #FFFFFF;
-      --color-surface:                    #FAFAF8;
-      --color-surface-container:          #F5F5F0;
-      --color-surface-container-high:     #EBEBE4;
-      --color-surface-container-highest:  #E0E0D8;
+      --color-background:                 #f5f5f7;
+      --color-surface-container-lowest:   #ffffff;
+      --color-surface:                    #ffffff;
+      --color-surface-container:          #e5e7eb;
+      --color-surface-container-high:     #d1d5db;
+      --color-surface-container-highest:  #9ca3af;
       /* === 文字 === */
-      --color-on-surface:           #1C1917;
-      --color-on-surface-variant:   #57534E;
+      --color-on-surface:           #1f2937;
+      --color-on-surface-variant:   #6b7280;
       /* === 功能色 === */
       --color-success:  #22c55e;
       --color-error:    #ef4444;
       --color-warning:  #f59e0b;
       /* === 边框 === */
-      --color-outline:          #A8A29E;
-      --color-outline-variant:  #D6D3D1;
+      --color-outline:          #d1d5db;
+      --color-outline-variant:  #e5e7eb;
       /* === 圆角 === */
       --radius-sm:   0.5rem;
       --radius-md:   0.75rem;
@@ -49,14 +43,11 @@
       --radius-2xl:  2rem;
       --radius-full: 9999px;
       /* === 阴影 === */
-      --shadow-card:   0 4px 12px rgba(245, 158, 11, 0.15);
-      --shadow-float:  0 10px 25px rgba(245, 158, 11, 0.2);
+      --shadow-card:   0 4px 12px rgba(0,0,0,0.05);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
       --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
-      /* 正文字体只能使用 system-ui 或常规字体（Noto Sans SC / Noto Serif SC 等）。
-         创意展示体（ZCOOL 系列）和书法手写体（Ma Shan Zheng 等）仅限标题或装饰用途，
-         禁止用作 --font-sans 全局正文字体 */
-      --font-sans: system-ui, -apple-system, "Noto Sans SC", sans-serif;
+      --font-sans: system-ui, sans-serif;
     }
   </style>
 
@@ -89,27 +80,17 @@
 <body class="bg-background text-on-surface font-sans">
 
   <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
-  <header class="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline-variant">
-    <div class="flex items-center justify-between px-5 h-14">
-      <div class="flex items-center gap-3">
-        <button onclick="history.back()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container">
-          <i data-lucide="arrow-left" class="w-5 h-5 text-on-surface-variant"></i>
-        </button>
-        <div class="flex items-center gap-2">
-          <div class="w-9 h-9 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);">
-            <i data-lucide="dices" class="w-5 h-5 text-white"></i>
-          </div>
-          <h1 class="text-xl font-bold text-on-surface">骰子</h1>
-        </div>
-      </div>
-      <button id="settings-btn" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container">
-        <i data-lucide="settings" class="w-5 h-5 text-on-surface-variant"></i>
+  <!-- 二级页导航栏 - 带返回按钮 -->
+  <header class="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline/30">
+    <div class="flex items-center h-14 px-4">
+      <button class="p-2 -ml-2 rounded-full hover:bg-surface-container" onclick="history.back()">
+        <i data-lucide="arrow-left" class="w-6 h-6 text-on-surface"></i>
       </button>
     </div>
   </header>
   <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
 
-  <main class="flex-1">
+  <main class="min-h-screen flex flex-col">
     <!-- @main-content:start -->
     <!-- @main-content:end -->
   </main>
