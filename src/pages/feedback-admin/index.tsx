@@ -40,7 +40,8 @@ export default function FeedbackAdminPage() {
   const [activeTab, setActiveTab] = useState('all')
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
-  const userInfo = Taro.getStorageSync('userInfo')
+  const cachedUserInfo = Taro.getStorageSync('userInfo')
+  const userInfo = cachedUserInfo ? (typeof cachedUserInfo === 'string' ? JSON.parse(cachedUserInfo) : cachedUserInfo) : null
   const isAdmin = userInfo?.is_admin === true
 
   const handleBack = () => {
