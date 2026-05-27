@@ -295,7 +295,7 @@ const ProfilePage: FC = () => {
   const MENU_ITEMS = [
     { emoji: '💬', name: '问题反馈', desc: '问题、建议、新桌游等', soon: false, path: '/pages/feedback/index' },
     { emoji: '❤️', name: '我的收藏', desc: '对局与转盘', soon: false, path: '/pages/wheel-favorites/index' },
-    { emoji: '⚙️', name: '设置', desc: '主题、通知等偏好', soon: true },
+
   ]
 
   const ADMIN_MENU_ITEMS = [
