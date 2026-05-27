@@ -34,9 +34,6 @@ const feedbackTabs = [
   { id: 'suggestion', label: '优化建议' },
 ]
 
-// 管理员判断：根据用户ID判断
-const ADMIN_USER_IDS = [1, 27, 28] // 管理员用户ID列表
-
 export default function FeedbackAdminPage() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,7 +41,7 @@ export default function FeedbackAdminPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   const userInfo = Taro.getStorageSync('userInfo')
-  const isAdmin = ADMIN_USER_IDS.includes(userInfo?.id)
+  const isAdmin = userInfo?.is_admin === true
 
   const handleBack = () => {
     Taro.navigateBack()
