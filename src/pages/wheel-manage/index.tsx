@@ -119,6 +119,11 @@ const WheelManagePage: FC = () => {
       Taro.showToast({ title: '收藏的转盘不可删除', icon: 'none' })
       return
     }
+    const token = Taro.getStorageSync('token')
+    if (!token) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
     Taro.showModal({
       title: '确认删除',
       content: '删除后无法恢复，是否继续？',

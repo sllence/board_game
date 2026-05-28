@@ -86,6 +86,7 @@ export default function FeedbackPage() {
     }
 
     const cachedUser = Taro.getStorageSync('userInfo')
+    const token = Taro.getStorageSync('token')
     let user: UserInfo | null = null
     if (cachedUser) {
       try {
@@ -95,7 +96,7 @@ export default function FeedbackPage() {
       }
     }
 
-    if (!user?.id) {
+    if (!user?.id || !token) {
       Taro.showToast({ title: '请先登录', icon: 'none' })
       setIsSubmitting(false)
       return

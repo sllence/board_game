@@ -130,7 +130,11 @@ const FavoritesPage: FC = () => {
 
   const handleUnfavoriteSession = (session: Session) => {
     const userId = getUserId()
-    if (!userId) return
+    const token = Taro.getStorageSync('token')
+    if (!userId || !token) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
     Taro.showModal({
       title: '取消收藏',
       content: '确定要取消收藏这个对局吗？',
@@ -160,7 +164,11 @@ const FavoritesPage: FC = () => {
 
   const handleUnfavoriteWheel = (wheel: Wheel) => {
     const userId = getUserId()
-    if (!userId) return
+    const token = Taro.getStorageSync('token')
+    if (!userId || !token) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
     Taro.showModal({
       title: '取消收藏',
       content: '确定要取消收藏这个转盘吗？',

@@ -2,7 +2,8 @@ import Taro from '@tarojs/taro'
 
 export const checkLogin = (): boolean => {
   const userInfo = Taro.getStorageSync('userInfo')
-  return !!userInfo
+  const token = Taro.getStorageSync('token')
+  return !!(userInfo && token)
 }
 
 export const getCurrentUser = (): { id: number; [key: string]: any } | null => {
