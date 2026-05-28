@@ -214,6 +214,14 @@ const WheelSpinPage: FC = () => {
 
   const handleSpin = async () => {
     if (spinning || !wheel) return
+    
+    // 检查登录状态
+    const token = Taro.getStorageSync('token')
+    if (!token) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    
     setSpinning(true)
 
     // 归一化累积角度并按最新数据重绘，让上一次转动后的库存变化反映到扇区，
@@ -314,7 +322,8 @@ const WheelSpinPage: FC = () => {
 
   const handleFavorite = async () => {
     const userId = getUserId()
-    if (!userId) {
+    const token = Taro.getStorageSync('token')
+    if (!userId || !token) {
       Taro.showToast({ title: '请先登录', icon: 'none' })
       return
     }

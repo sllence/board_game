@@ -100,8 +100,14 @@ const WheelEditPage: FC = () => {
 
     setSaving(true)
     try {
-      // 获取当前用户ID
+      // 获取当前用户ID和token
       let currentUserId: number | undefined
+      const token = Taro.getStorageSync('token')
+      if (!token) {
+        Taro.showToast({ title: '请先登录', icon: 'none' })
+        setSaving(false)
+        return
+      }
       try {
         const cached = Taro.getStorageSync('userInfo')
         if (cached) {
