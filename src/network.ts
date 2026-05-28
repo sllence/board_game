@@ -2,7 +2,7 @@ import Taro from '@tarojs/taro'
 
 /**
  * 网络请求模块
- * 封装 Taro.request、Taro.uploadFile、Taro.downloadFile，自动添加项目域名前缀
+ * 封装 Taro.request、Taro.uploadFile、Taro.downloadFile，自动添加项目域名前缀和 JWT token
  * 如果请求的 url 以 http:// 或 https:// 开头，则不会添加域名前缀
  *
  * IMPORTANT: 项目已经全局注入 PROJECT_DOMAIN
@@ -16,10 +16,26 @@ export namespace Network {
         return `${PROJECT_DOMAIN}${url}`
     }
 
+    const getAuthHeader = (): { Authorization?: string } => {
+        try {
+            const token = Taro.getStorageSync('token')
+            if (token) {
+                return { Authorization: `Bearer ${token}` }
+            }
+        } catch (e) {
+            // ignore storage error
+        }
+        return {}
+    }
+
     export const request: typeof Taro.request = option => {
         return Taro.request({
             ...option,
             url: createUrl(option.url),
+            header: {
+                ...option.header,
+                ...getAuthHeader(),
+            },
         })
     }
 
@@ -27,6 +43,10 @@ export namespace Network {
         return Taro.uploadFile({
             ...option,
             url: createUrl(option.url),
+            header: {
+                ...option.header,
+                ...getAuthHeader(),
+            },
         })
     }
 
@@ -34,6 +54,10 @@ export namespace Network {
         return Taro.downloadFile({
             ...option,
             url: createUrl(option.url),
+            header: {
+                ...option.header,
+                ...getAuthHeader(),
+            },
         })
     }
 }

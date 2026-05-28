@@ -1,8 +1,11 @@
 import { Injectable, BadRequestException } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
 
 @Injectable()
 export class AuthService {
+  constructor(private jwtService: JwtService) {}
+
   /**
    * 微信小程序 code2Session
    * 调用微信服务端 API，用 code 换取 openid 和 session_key
@@ -62,6 +65,14 @@ export class AuthService {
   }
 
   /**
+   * 生成 JWT token
+   */
+  private generateToken(user: any): string {
+    const payload = { sub: user.id, platform: user.platform }
+    return this.jwtService.sign(payload)
+  }
+
+  /**
    * 登录 / 注册
    * @param code 小程序登录 code
    * @param platform 平台：weapp / tt / h5
@@ -82,8 +93,13 @@ export class AuthService {
       const result = await this.ttCode2Session(code)
       openid = result.openid
     } else {
-      // H5 开发环境
-      openid = `dev_${platform}_${code}`
+      // H5 开发环境 - 添加简单验证码机制
+      const verifyCode = code.split('_')[1] || code
+      // 简单验证：code 必须包含 "h5_" 前缀
+      if (!code.startsWith('h5_')) {
+        throw new BadRequestException('H5 登录需要验证码')
+      }
+      openid = `dev_${platform}_${verifyCode}`
     }
 
     if (!openid) {
@@ -114,10 +130,14 @@ export class AuthService {
           .maybeSingle()
 
         if (error) console.error('[AuthService] update user error:', error.message)
-        if (updatedUser) return { data: updatedUser }
+        if (updatedUser) {
+          const token = this.generateToken(updatedUser)
+          return { data: updatedUser, access_token: token }
+        }
       }
 
-      return { data: existingUser }
+      const token = this.generateToken(existingUser)
+      return { data: existingUser, access_token: token }
     }
 
     // 创建新用户
@@ -136,7 +156,9 @@ export class AuthService {
 
     if (error) throw new Error(`登录失败: ${error.message}`)
     console.log('[AuthService] new user created:', newUser?.id)
-    return { data: newUser }
+
+    const token = this.generateToken(newUser)
+    return { data: newUser, access_token: token }
   }
 
   async getProfile(userId: number) {

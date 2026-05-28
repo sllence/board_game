@@ -12,23 +12,24 @@ export function WheelIcon({ size = 24, color = '#f59e0b', className = '' }: Whee
   const radius = size / 2 - 2
   const strokeWidth = 2
   
-  // 5条半径分割线，细线条风格，直接生成字符串
-  let linesContent = ''
-  
+  // 生成5条半径分割线的SVG字符串
+  const linesSvg: string[] = []
   for (let i = 0; i < 5; i++) {
     const angle = -90 + i * 72
     const rad = (angle * Math.PI) / 180
     const x = centerX + radius * Math.cos(rad)
     const y = centerY + radius * Math.sin(rad)
     
-    linesContent += `<line x1="${centerX}" y1="${centerY}" x2="${x}" y2="${y}" />`
+    linesSvg.push(
+      `<line x1="${centerX}" y1="${centerY}" x2="${x}" y2="${y}" />`
+    )
   }
   
   // 将 SVG 转为 data URI
   const svgContent = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="${centerX}" cy="${centerY}" r="${radius}" />
-      ${linesContent}
+      ${linesSvg.join('')}
     </svg>
   `
   const encodedSvg = encodeURIComponent(svgContent)

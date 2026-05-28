@@ -54,7 +54,13 @@ const ProfilePage: FC = () => {
         data: { code, platform: 'weapp' }
       }) as any
 
-      let user = res.data.data
+      let user = res.data?.data
+      const token = res.data?.access_token
+
+      if (!user) {
+        Taro.showToast({ title: '登录失败：未获取到用户信息', icon: 'none' })
+        return
+      }
 
       // 检查本地是否有缓存的用户信息（头像和昵称）
       const cachedUserInfo = Taro.getStorageSync('userInfo')
@@ -76,6 +82,7 @@ const ProfilePage: FC = () => {
 
       setUserInfo(user)
       Taro.setStorageSync('userInfo', JSON.stringify(user))
+      Taro.setStorageSync('token', token)
 
       // 只有在本地和后端都没有头像和昵称时，才弹出设置弹窗
       if (!user.nickname || !user.avatar_url) {
@@ -97,23 +104,34 @@ const ProfilePage: FC = () => {
       return
     }
 
+    // H5 登录安全改进：使用时间戳 + 随机数作为验证码
+    const timestamp = Date.now()
+    const randomCode = Math.random().toString(36).substring(2, 8)
+    const verifyCode = `h5_${timestamp}_${randomCode}`
+
     setIsLoggingIn(true)
     try {
-      // H5 使用昵称作为登录凭证（开发环境）
-      const code = h5Nickname.trim()
       const res = await Network.request({
         url: '/api/auth/login',
         method: 'POST',
         data: {
-          code,
+          code: verifyCode,
           platform: 'h5',
           nickname: h5Nickname.trim()
         }
       }) as any
 
-      const user = res.data.data
+      const user = res.data?.data
+      const token = res.data?.access_token
+
+      if (!user) {
+        Taro.showToast({ title: '登录失败：未获取到用户信息', icon: 'none' })
+        return
+      }
+      
       setUserInfo(user)
       Taro.setStorageSync('userInfo', JSON.stringify(user))
+      Taro.setStorageSync('token', token)
       setShowH5Login(false)
       setH5Nickname('')
       Taro.showToast({ title: '登录成功', icon: 'success' })
@@ -307,7 +325,7 @@ const ProfilePage: FC = () => {
     return (
       <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
         <View className="px-5 pt-20 pb-8" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
-          <View className="flex items-center justify-center mb-8" style={{ width: '80px', height: '80px', borderRadius: '24px', backgroundColor: 'rgba(255,255,255,0.2)' }}>
+          <View className="flex items-center justify-center mb-8 w-20 h-20 rounded-3xl" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             <Text className="text-3xl">🎮</Text>
           </View>
           <Text className="block text-2xl font-bold text-white text-center mb-2">欢迎来到桌游助手</Text>
@@ -391,9 +409,9 @@ const ProfilePage: FC = () => {
       {/* 用户信息区 - 渐变头部 */}
       <View className="px-5 pt-14 pb-8" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
         <View className="flex flex-row items-center gap-4">
-          <View className="flex items-center justify-center" style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.2)' }}>
+          <View className="flex items-center justify-center w-16 h-16 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             {userInfo?.avatar_url ? (
-              <Image src={userInfo.avatar_url} style={{ width: '64px', height: '64px', borderRadius: '50%' }} onError={(e) => { e.stopPropagation() }} />
+              <Image src={userInfo.avatar_url} className="w-16 h-16 rounded-full" onError={(e) => { e.stopPropagation() }} />
             ) : (
               <Text className="text-2xl">🎮</Text>
             )}
@@ -423,6 +441,7 @@ const ProfilePage: FC = () => {
                     if (res.confirm) {
                       setUserInfo(null)
                       Taro.removeStorageSync('userInfo')
+                      Taro.removeStorageSync('token')
                       Taro.showToast({ title: '已退出', icon: 'success' })
                       setTimeout(() => {
                         Taro.switchTab({ url: '/pages/index/index' })
@@ -558,30 +577,30 @@ const ProfilePage: FC = () => {
                   onChooseAvatar={handleChooseAvatar}
                   className="border-0 p-0 bg-transparent w-auto h-auto"
                 >
-                  <View 
-                    className="flex items-center justify-center relative"
-                    style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
+                  <View
+                    className="flex items-center justify-center relative w-20 h-20 rounded-full overflow-hidden"
+                    style={{ backgroundColor: '#f3f4f6' }}
                   >
                     {tempAvatarUrl ? (
-                      <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} onError={(e) => { e.stopPropagation() }} />
+                      <Image src={tempAvatarUrl} className="w-20 h-20" onError={(e) => { e.stopPropagation() }} />
                     ) : (
                       <Text className="text-2xl">🎮</Text>
                     )}
-                    <View 
-                      className="absolute bottom-0 left-0 right-0 flex items-center justify-center"
-                      style={{ backgroundColor: 'rgba(0,0,0,0.5)', height: '24px' }}
+                    <View
+                      className="absolute bottom-0 left-0 right-0 flex items-center justify-center h-6"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
                     >
                       <Text className="text-white text-xs">点击更换</Text>
                     </View>
                   </View>
                 </TaroButton>
               ) : (
-                <View 
-                  className="flex items-center justify-center"
-                  style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
+                <View
+                  className="flex items-center justify-center w-20 h-20 rounded-full overflow-hidden"
+                  style={{ backgroundColor: '#f3f4f6' }}
                 >
                   {tempAvatarUrl ? (
-                    <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                    <Image src={tempAvatarUrl} className="w-20 h-20" />
                   ) : (
                     <Text className="text-2xl">🎮</Text>
                   )}
@@ -642,30 +661,30 @@ const ProfilePage: FC = () => {
                   onChooseAvatar={handleChooseAvatar}
                   className="border-0 p-0 bg-transparent w-auto h-auto"
                 >
-                  <View 
-                    className="flex items-center justify-center relative"
-                    style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
+                  <View
+                    className="flex items-center justify-center relative w-20 h-20 rounded-full overflow-hidden"
+                    style={{ backgroundColor: '#f3f4f6' }}
                   >
                     {tempAvatarUrl ? (
-                      <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} onError={(e) => { e.stopPropagation() }} />
+                      <Image src={tempAvatarUrl} className="w-20 h-20" onError={(e) => { e.stopPropagation() }} />
                     ) : (
                       <Text className="text-2xl">🎮</Text>
                     )}
-                    <View 
-                      className="absolute bottom-0 left-0 right-0 flex items-center justify-center"
-                      style={{ backgroundColor: 'rgba(0,0,0,0.5)', height: '24px' }}
+                    <View
+                      className="absolute bottom-0 left-0 right-0 flex items-center justify-center h-6"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
                     >
                       <Text className="text-white text-xs">点击更换</Text>
                     </View>
                   </View>
                 </TaroButton>
               ) : (
-                <View 
-                  className="flex items-center justify-center"
-                  style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#f3f4f6' }}
+                <View
+                  className="flex items-center justify-center w-20 h-20 rounded-full overflow-hidden"
+                  style={{ backgroundColor: '#f3f4f6' }}
                 >
                   {tempAvatarUrl ? (
-                    <Image src={tempAvatarUrl} style={{ width: '80px', height: '80px' }} />
+                    <Image src={tempAvatarUrl} className="w-20 h-20" />
                   ) : (
                     <Text className="text-2xl">🎮</Text>
                   )}

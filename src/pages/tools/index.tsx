@@ -130,7 +130,7 @@ const ToolsPage: FC = () => {
           <View key={group.label}>
             {/* 分组标题 */}
             <View className="flex flex-row items-center gap-2 mb-3 px-1">
-              <Text style={{ fontSize: '16px' }}>{group.emoji}</Text>
+              <Text className="text-base">{group.emoji}</Text>
               <Text className="text-sm font-semibold text-gray-500">{group.label}</Text>
               <View className="flex-1 h-px bg-gray-200 ml-1" />
             </View>
@@ -141,7 +141,7 @@ const ToolsPage: FC = () => {
                 <View
                   key={tool.key}
                   className="flex flex-row items-center bg-white rounded-2xl px-4 py-3"
-                  style={{ opacity: tool.soon ? 0.5 : 1, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+                  style={{ opacity: tool.soon ? 0.5 : 1 }}
                   onClick={() => handleToolClick(tool)}
                 >
                   <View

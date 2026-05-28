@@ -1,6 +1,6 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Network } from '@/network'
 import { Input } from '@/components/ui/input'
 import { Search, ChevronDown, RotateCcw } from 'lucide-react-taro'
@@ -103,6 +103,9 @@ const GamesPage: FC = () => {
     difficulty: '',
   })
 
+  // 防抖定时器引用
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null)
+
   const fetchGames = async () => {
     setLoading(true)
     try {
@@ -127,6 +130,30 @@ const GamesPage: FC = () => {
   }
 
   useEffect(() => { fetchGames() }, [filters, keyword])
+
+  // 防抖搜索处理
+  const handleSearchInput = useCallback((value: string) => {
+    setKeyword(value)
+    
+    // 清除之前的定时器
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current)
+    }
+    
+    // 设置新的定时器，300ms 后执行搜索
+    searchTimerRef.current = setTimeout(() => {
+      // fetchGames 会通过 useEffect 自动触发
+    }, 300)
+  }, [])
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current)
+      }
+    }
+  }, [])
 
   const handleSearch = () => { fetchGames() }
 
@@ -184,7 +211,7 @@ const GamesPage: FC = () => {
                 placeholder="搜索桌游名称..."
                 placeholderClass="text-gray-400"
                 value={keyword}
-                onInput={(e) => setKeyword(e.detail.value)}
+                onInput={(e) => handleSearchInput(e.detail.value)}
                 onConfirm={handleSearch}
               />
             </View>

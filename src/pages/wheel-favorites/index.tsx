@@ -7,11 +7,23 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Bookmark, Trash2, Trophy, Timer } from 'lucide-react-taro'
 import type { FC } from 'react'
 
+interface ProbWheelItem {
+  label: string
+  probability: number
+}
+
+interface InvWheelItem {
+  label: string
+  count: number
+}
+
+type WheelItem = ProbWheelItem | InvWheelItem
+
 interface Wheel {
   id: number
   title: string
   type: 'probability' | 'inventory'
-  items: any[]
+  items: WheelItem[]
   created_at: string
 }
 

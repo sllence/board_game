@@ -1,7 +1,8 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from '@/app.module';
 import * as express from 'express';
 import { HttpStatusInterceptor } from '@/interceptors/http-status.interceptor';
+import { JwtAuthGuard, RolesGuard } from './auth/auth.guard';
 
 function parsePort(): number {
   const args = process.argv.slice(2);
@@ -17,14 +18,20 @@ function parsePort(): number {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const reflector = app.get(Reflector);
 
   app.enableCors({
-    origin: true,
+    origin: process.env.NODE_ENV === 'production'
+      ? ['https://your-domain.com']
+      : true,
     credentials: true,
   });
   app.setGlobalPrefix('api');
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+  // 全局守卫：JWT 认证 + 角色权限
+  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
 
   // 全局拦截器：统一将 POST 请求的 201 状态码改为 200
   app.useGlobalInterceptors(new HttpStatusInterceptor());
