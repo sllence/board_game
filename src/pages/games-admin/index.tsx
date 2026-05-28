@@ -153,7 +153,7 @@ const GamesAdminPage: FC = () => {
         method: 'GET',
         data: { is_admin: 'true' }
       })
-      setGames(res.data.data || [])
+      setGames(res.data?.data || [])
     } catch (err) {
       console.error('[loadGames] failed:', err)
       Taro.showToast({ title: '加载失败', icon: 'none' })
@@ -199,7 +199,11 @@ const GamesAdminPage: FC = () => {
         method: 'GET',
         data: { is_admin: 'true' }
       })
-      const fullGame = res.data.data
+      const fullGame = res.data?.data
+      if (!fullGame) {
+        Taro.showToast({ title: '获取游戏详情失败', icon: 'none' })
+        return
+      }
       setEditingGame(fullGame)
       setFormData({
         name: fullGame.name || '',
@@ -431,7 +435,7 @@ const GamesAdminPage: FC = () => {
                     className="rounded-full px-3 py-1"
                     style={{ backgroundColor: getStatusBgColor(game.status) }}
                   >
-                    <Text style={{ color: getStatusColor(game.status), fontSize: '12px', fontWeight: 600 }}>
+                    <Text className="text-xs font-semibold" style={{ color: getStatusColor(game.status) }}>
                       {getStatusText(game.status)}
                     </Text>
                   </View>
@@ -511,7 +515,7 @@ const GamesAdminPage: FC = () => {
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">图片</Text>
                 <View className="flex flex-row items-center gap-4">
-                  <View style={{ width: '80px', height: '80px', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+                  <View className="w-20 h-20 rounded-2xl overflow-hidden" style={{ backgroundColor: '#f3f4f6' }}>
                     {formData.image_url ? (
                       <Image src={formData.image_url} style={{ width: '100%', height: '100%' }} mode="aspectFill" onError={(e) => { e.stopPropagation() }} />
                     ) : (
@@ -694,8 +698,7 @@ const GamesAdminPage: FC = () => {
                 {/* eslint-disable-next-line no-restricted-syntax */}
                 <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                   <TaroTextarea
-                    className="w-full bg-transparent"
-                    style={{ height: '72px' }}
+                    className="w-full bg-transparent h-18"
                     placeholder="请输入桌游简介"
                     value={formData.intro}
                     onInput={(e) => setFormData(prev => ({ ...prev, intro: e.detail.value }))}

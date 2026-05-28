@@ -1,8 +1,10 @@
-import { Controller, Post, Get, Put, Body, Query, UploadedFile, UseInterceptors, HttpCode } from '@nestjs/common'
+import { Controller, Post, Get, Put, Body, Query, UploadedFile, UseInterceptors, HttpCode, Req, UseGuards } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { memoryStorage } from 'multer'
 import { AuthService } from './auth.service'
 import { StorageService } from '../storage/storage.service'
+import { Public } from '../../auth/decorators'
+import { Request } from 'express'
 
 @Controller('auth')
 export class AuthController {
@@ -10,6 +12,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
+  @Public()
   async login(
     @Body() body: { code: string; platform: string; nickname?: string; avatar_url?: string },
   ) {
@@ -31,23 +34,36 @@ export class UserController {
   ) {}
 
   @Get('profile')
-  async getProfile(@Query('user_id') userId: number) {
+  async getProfile(@Req() req: Request) {
+    const userId = (req as any).user?.userId
+    if (!userId) {
+      return { code: 401, msg: '未授权', data: null }
+    }
     return this.authService.getProfile(Number(userId))
   }
 
   @Put('profile')
   @HttpCode(200)
-  async updateProfile(@Body() body: { user_id: number; nickname?: string; avatar_url?: string }) {
-    console.log('[UserController] updateProfile:', { userId: body.user_id, nickname: body.nickname, hasAvatar: !!body.avatar_url })
-    return this.authService.updateProfile(body)
+  async updateProfile(@Req() req: Request, @Body() body: { nickname?: string; avatar_url?: string }) {
+    const userId = (req as any).user?.userId
+    if (!userId) {
+      return { code: 401, msg: '未授权', data: null }
+    }
+    console.log('[UserController] updateProfile:', { userId, nickname: body.nickname, hasAvatar: !!body.avatar_url })
+    return this.authService.updateProfile({ user_id: userId, ...body })
   }
 
   @Post('avatar')
   @HttpCode(200)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }))
-  async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Body() body: { user_id: string }) {
+  async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
+    const userId = (req as any).user?.userId
+    if (!userId) {
+      return { code: 401, msg: '未授权', data: null }
+    }
+
     console.log('[UserController] uploadAvatar:', {
-      userId: body.user_id,
+      userId,
       filename: file?.originalname,
       size: file?.size,
       hasBuffer: !!file?.buffer,
@@ -66,7 +82,6 @@ export class UserController {
     })
 
     // 更新用户头像
-    const userId = Number(body.user_id)
     await this.authService.updateProfile({ user_id: userId, avatar_url: avatarUrl })
 
     console.log('[AuthController] avatar uploaded:', avatarUrl)

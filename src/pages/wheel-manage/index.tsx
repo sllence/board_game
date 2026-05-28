@@ -7,11 +7,23 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Settings, Trash2, Bookmark, Target } from 'lucide-react-taro'
 import type { FC } from 'react'
 
+interface ProbWheelItem {
+  label: string
+  probability: number
+}
+
+interface InvWheelItem {
+  label: string
+  count: number
+}
+
+type WheelItem = ProbWheelItem | InvWheelItem
+
 interface Wheel {
   id: number
   title: string
   type: 'probability' | 'inventory'
-  items: any[]
+  items: WheelItem[]
   created_at: string
   updated_at: string
   is_owner?: boolean

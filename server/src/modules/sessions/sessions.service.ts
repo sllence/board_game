@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common'
 import { getSupabaseClient } from '@/storage/database/supabase-client'
 
+interface Player {
+  name: string
+  score?: number
+}
+
 @Injectable()
 export class SessionsService {
   async create(body: {
     user_id?: number
     game_id: number
     session_name?: string
-    players: any[]
+    players: Player[]
   }) {
     const client = getSupabaseClient()
     const { data, error } = await client

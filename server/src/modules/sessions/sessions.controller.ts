@@ -1,40 +1,48 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req } from '@nestjs/common'
 import { SessionsService } from './sessions.service'
+import { Public } from '../../auth/decorators'
+import { Request } from 'express'
 
 @Controller('sessions')
 export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
   @Post()
-  async create(@Body() body: {
-    user_id?: number
+  async create(@Req() req: Request, @Body() body: {
     game_id: number
     session_name?: string
     players: any[]
   }) {
-    return this.sessionsService.create(body)
+    const userId = (req as any).user?.userId
+    return this.sessionsService.create({ ...body, user_id: userId })
   }
 
   @Get()
-  async findAll(@Query() query: {
-    user_id?: string
+  async findAll(@Req() req: Request, @Query() query: {
     game_id?: string
     status?: string
   }) {
-    return this.sessionsService.findAll(query)
+    const userId = (req as any).user?.userId
+    return this.sessionsService.findAll({ ...query, user_id: userId?.toString() })
   }
 
   @Get('recent')
-  async findRecent(@Query('user_id') userId?: string) {
-    return this.sessionsService.findRecent(userId ? Number(userId) : undefined)
+  async findRecent(@Req() req: Request) {
+    const userId = (req as any).user?.userId
+    return this.sessionsService.findRecent(userId)
   }
 
   @Get('favorites')
-  async getFavorites(@Query('user_id') userId: string) {
-    return this.sessionsService.getFavoriteSessions(Number(userId))
+  async getFavorites(@Req() req: Request) {
+    const userId = (req as any).user?.userId
+    if (!userId) {
+      return { code: 401, msg: '未授权', data: null }
+    }
+    return this.sessionsService.getFavoriteSessions(userId)
   }
 
   @Get(':id')
+  @Public()
   async findOne(@Param('id') id: string) {
     return this.sessionsService.findOne(Number(id))
   }
@@ -45,18 +53,30 @@ export class SessionsController {
   }
 
   @Post(':id/favorite')
-  async favorite(@Param('id') id: string, @Body() body: { user_id: number }) {
-    return this.sessionsService.favoriteSession(Number(id), body.user_id)
+  async favorite(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req as any).user?.userId
+    if (!userId) {
+      return { code: 401, msg: '未授权', data: null }
+    }
+    return this.sessionsService.favoriteSession(Number(id), userId)
   }
 
   @Delete(':id/favorite')
-  async unfavorite(@Param('id') id: string, @Query('user_id') userId: string) {
-    return this.sessionsService.unfavoriteSession(Number(id), Number(userId))
+  async unfavorite(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req as any).user?.userId
+    if (!userId) {
+      return { code: 401, msg: '未授权', data: null }
+    }
+    return this.sessionsService.unfavoriteSession(Number(id), userId)
   }
 
   @Get(':id/is-favorited')
-  async isFavorited(@Param('id') id: string, @Query('user_id') userId: string) {
-    return this.sessionsService.isSessionFavorited(Number(id), Number(userId))
+  async isFavorited(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req as any).user?.userId
+    if (!userId) {
+      return { code: 401, msg: '未授权', data: null }
+    }
+    return this.sessionsService.isSessionFavorited(Number(id), userId)
   }
 
   @Post(':id/finish')

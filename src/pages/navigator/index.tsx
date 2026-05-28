@@ -147,9 +147,12 @@ const NavigatorPage: FC = () => {
       const gameData = res.data?.data
       if (gameData) {
         setGame(gameData)
+      } else {
+        Taro.showToast({ title: '获取游戏信息失败', icon: 'none' })
       }
     } catch (err) {
       console.error('[NavigatorPage] fetchGame error:', err)
+      Taro.showToast({ title: '网络请求失败', icon: 'none' })
     }
   }
 
@@ -180,9 +183,12 @@ const NavigatorPage: FC = () => {
           // 已结束或已取消的对局，只读查看
           setPhase('viewing')
         }
+      } else {
+        Taro.showToast({ title: '获取对局信息失败', icon: 'none' })
       }
     } catch (err) {
       console.error('[NavigatorPage] fetchSession error:', err)
+      Taro.showToast({ title: '网络请求失败', icon: 'none' })
     }
   }
 
@@ -262,10 +268,15 @@ const NavigatorPage: FC = () => {
         data: { game_id: game.id, question: aiQuestion },
       })
       console.log('[NavigatorPage] askAI response:', res.data)
-      setAiAnswer(res.data?.data?.answer || '暂无回答')
+      const answer = res.data?.data?.answer
+      if (answer) {
+        setAiAnswer(answer)
+      } else {
+        setAiAnswer('暂无回答，请换个问题试试')
+      }
     } catch (err) {
       console.error('[NavigatorPage] askAI error:', err)
-      setAiAnswer('AI回答失败，请稍后重试')
+      setAiAnswer('AI 回答失败，请稍后重试')
     } finally {
       setAiLoading(false)
     }

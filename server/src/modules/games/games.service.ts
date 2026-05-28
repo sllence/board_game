@@ -11,7 +11,6 @@ export class GamesService {
     duration?: string
     difficulty?: string
     keyword?: string
-    is_admin?: boolean
   }) {
     const client = getSupabaseClient()
     let query = client
@@ -20,11 +19,7 @@ export class GamesService {
         'id, name, type, scene, min_players, max_players, min_duration, max_duration, difficulty, icon_key, icon_bg, icon_color, image_url, intro, sort_order, status'
       )
       .order('sort_order', { ascending: true })
-
-    // 如果是管理员，可以看到所有状态；否则只能看到online
-    if (!filters.is_admin) {
-      query = query.eq('status', 'online')
-    }
+      .eq('status', 'online')
 
     if (filters.type) query = query.contains('type', [filters.type])
     if (filters.scene) query = query.contains('scene', [filters.scene])

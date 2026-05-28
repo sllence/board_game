@@ -151,7 +151,7 @@ const IndexPage: FC = () => {
             <Sparkles size={22} color="#fbbf24" />
             <Text className="text-base font-bold text-yellow-300 tracking-wide">数智局伴</Text>
           </View>
-          <Text className="block text-sm text-white text-opacity-90 leading-relaxed" style={{ letterSpacing: '0.5px' }}>
+          <Text className="block text-sm text-white text-opacity-90 leading-relaxed tracking-wide">
             您的线下组局伴侣
           </Text>
         </View>

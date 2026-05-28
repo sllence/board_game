@@ -7,11 +7,28 @@ import { Button } from '@/components/ui/button'
 import { RotateCcw, Share2, Bookmark, BookmarkCheck } from 'lucide-react-taro'
 import type { FC } from 'react'
 
+interface ProbWheelItem {
+  label: string
+  probability: number
+  color?: string
+  weight?: number
+}
+
+interface InvWheelItem {
+  label: string
+  count: number
+  inventory?: number
+  weight?: number
+  color?: string
+}
+
+type WheelItem = ProbWheelItem | InvWheelItem
+
 interface Wheel {
   id: number
   title: string
   type: 'probability' | 'inventory'
-  items: any[]
+  items: WheelItem[]
   is_owner?: boolean
   is_favorited?: boolean
 }
@@ -177,9 +194,9 @@ const WheelSpinPage: FC = () => {
     let total = 0
     for (const item of items) {
       if (w.type === 'inventory') {
-        total += (item.inventory || 0)
+        total += ((item as InvWheelItem).inventory || 0)
       } else {
-        total += (item.weight || 1)
+        total += ((item as ProbWheelItem).weight || 1)
       }
     }
     if (total === 0) total = items.length
@@ -187,7 +204,7 @@ const WheelSpinPage: FC = () => {
     const angles: { startDeg: number; endDeg: number }[] = []
     let currentDeg = 0
     for (const item of items) {
-      const value = w.type === 'inventory' ? (item.inventory || 0) : (item.weight || 1)
+      const value = w.type === 'inventory' ? ((item as InvWheelItem).inventory || 0) : ((item as ProbWheelItem).weight || 1)
       const deg = (value / total) * 360
       angles.push({ startDeg: currentDeg, endDeg: currentDeg + deg })
       currentDeg += deg
@@ -218,11 +235,18 @@ const WheelSpinPage: FC = () => {
       })
       console.log('[WheelSpin] spin result:', res.data)
       const spinData = res.data?.data
-      winnerIndex = spinData?.index || 0
-      winnerLabel = spinData?.result || ''
+      
+      if (!spinData || typeof spinData.index !== 'number') {
+        Taro.showToast({ title: '转动失败：无效结果', icon: 'none' })
+        setSpinning(false)
+        return
+      }
+      
+      winnerIndex = spinData.index
+      winnerLabel = spinData.result || ''
     } catch (e) {
       console.error('[WheelSpin] spin error:', e)
-      Taro.showToast({ title: '转动失败', icon: 'none' })
+      Taro.showToast({ title: '转动失败，请重试', icon: 'none' })
       setSpinning(false)
       return
     }
@@ -439,9 +463,9 @@ const WheelSpinPage: FC = () => {
                     <Text className="text-xs text-gray-700">{item.label}</Text>
                     <Text
                       className="text-xs font-medium"
-                      style={{ color: (item.inventory || 0) === 0 ? '#EF4444' : '#166534' }}
+                      style={{ color: ((item as InvWheelItem).inventory || 0) === 0 ? '#EF4444' : '#166534' }}
                     >
-                      {item.inventory || 0}
+                      {(item as InvWheelItem).inventory || 0}
                     </Text>
                   </View>
                 ))}
@@ -464,7 +488,7 @@ const WheelSpinPage: FC = () => {
         </View>
 
         {history.length > 0 && (
-          <View className="flex flex-col flex-shrink-0 px-5 pt-2 pb-4" style={{ height: '300px' }}>
+          <View className="flex flex-col flex-shrink-0 px-5 pt-2 pb-4 h-72">
             <Text className="block text-sm font-medium text-gray-700 mb-2 flex-shrink-0">历史记录</Text>
             <ScrollView className="flex-1" scrollY style={{ overflowY: 'auto' }}>
               <View className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
