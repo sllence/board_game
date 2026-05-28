@@ -93,13 +93,12 @@ export class AuthService {
       const result = await this.ttCode2Session(code)
       openid = result.openid
     } else {
-      // H5 开发环境 - 添加简单验证码机制
-      const verifyCode = code.split('_')[1] || code
-      // 简单验证：code 必须包含 "h5_" 前缀
+      // H5 开发环境 - 使用昵称作为唯一标识，避免重复创建用户
       if (!code.startsWith('h5_')) {
         throw new BadRequestException('H5 登录需要验证码')
       }
-      openid = `dev_${platform}_${verifyCode}`
+      // 用昵称生成固定 openid，相同昵称复用同一用户
+      openid = `dev_${platform}_${nickname || 'anonymous'}`
     }
 
     if (!openid) {
