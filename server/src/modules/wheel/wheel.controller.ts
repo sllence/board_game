@@ -1,19 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req } from '@nestjs/common'
-import { WheelService } from './wheel.service'
+import { WheelService, ProbWheelItem, InvWheelItem, WheelItem } from './wheel.service'
 import { Public } from '../../auth/decorators'
 import { Request } from 'express'
-
-interface ProbWheelItem {
-  label: string
-  probability: number
-}
-
-interface InvWheelItem {
-  label: string
-  count: number
-}
-
-type WheelItem = ProbWheelItem | InvWheelItem
 
 @Controller('wheels')
 export class WheelController {
