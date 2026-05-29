@@ -3,8 +3,9 @@ import Taro from '@tarojs/taro'
 import { useState, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dices, ArrowLeft, Settings, X, Plus, Minus, Volume2, MousePointerClick, Smartphone } from 'lucide-react-taro'
-import { PhysicsDice } from './components/PhysicsDice'
 import type { FC } from 'react'
+
+import { PhysicsDice } from './components/PhysicsDice'
 
 const DICE_TYPES = [
   { key: 'D4', label: 'D4', max: 4 },

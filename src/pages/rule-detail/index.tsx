@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { Users, Clock, Star, BookOpen, Lightbulb, Play, Heart, Volume2, ChevronRight } from 'lucide-react-taro'
 import { requireLogin } from '@/utils/auth'
+import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
 
 interface Section {
@@ -43,32 +44,6 @@ interface Guide {
   desc: string
   cover_icon: string
   cover_bg: string
-}
-
-const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  easy: { label: '简单', color: '#059669', bg: '#ecfdf5' },
-  medium: { label: '中等', color: '#d97706', bg: '#fffbeb' },
-  hard: { label: '困难', color: '#dc2626', bg: '#fef2f2' },
-}
-
-const TYPE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
-  strategy: { label: '策略', emoji: '♟️', color: '#4F46E5', bg: '#eef2ff' },
-  puzzle: { label: '益智', emoji: '🧩', color: '#0EA5E9', bg: '#f0f9ff' },
-  auction: { label: '拍卖', emoji: '🔨', color: '#F59E0B', bg: '#fffbeb' },
-  roleplay: { label: '扮演', emoji: '🎭', color: '#8B5CF6', bg: '#faf5ff' },
-  management: { label: '经营', emoji: '🏗️', color: '#10B981', bg: '#ecfdf5' },
-  cooperative: { label: '合作', emoji: '🤝', color: '#06B6D4', bg: '#ecfeff' },
-  versus: { label: '对抗', emoji: '⚔️', color: '#EF4444', bg: '#fef2f2' },
-  social: { label: '社交', emoji: '💬', color: '#F59E0B', bg: '#fffbeb' },
-  party: { label: '聚会', emoji: '🎉', color: '#8B5CF6', bg: '#faf5ff' },
-}
-
-const SCENE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
-  gathering: { emoji: '🎉', label: '聚会', color: '#7c3aed', bg: '#f5f3ff' },
-  teambuilding: { emoji: '🏢', label: '团建', color: '#0891b2', bg: '#ecfeff' },
-  family: { emoji: '👨‍👩‍👧', label: '亲子', color: '#059669', bg: '#ecfdf5' },
-  couple: { emoji: '💑', label: '情侣', color: '#e11d48', bg: '#fff1f2' },
-  drinking: { emoji: '🍻', label: '酒局', color: '#d97706', bg: '#fffbeb' },
 }
 
 const RuleDetailPage: FC = () => {
@@ -141,7 +116,7 @@ const RuleDetailPage: FC = () => {
   const sections: Section[] = Array.isArray(game.sections) ? game.sections : []
   const tips: string[] = Array.isArray(game.tips) ? game.tips : []
   const scenes: string[] = Array.isArray(game.scene) ? game.scene : game.scene ? [game.scene] : []
-  const diffInfo = DIFFICULTY_MAP[game.difficulty] || { label: game.difficulty, color: '#6b7280', bg: '#f3f4f6' }
+  const diffInfo = DIFFICULTY_META[game.difficulty] || { label: game.difficulty, color: '#6b7280', bg: '#f3f4f6', emoji: '🎲' }
   
   // 显示时长：优先用新字段，否则用旧字段
   const displayDuration = game.min_duration && game.max_duration 

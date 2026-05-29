@@ -3,7 +3,8 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Network } from '@/network'
+import { apiPost } from '@/utils/request'
+import { uploadAvatar, saveProfile } from '@/utils/profile'
 import type { FC } from 'react'
 
 interface UserInfo {
@@ -48,14 +49,14 @@ const ProfilePage: FC = () => {
     setIsLoggingIn(true)
     try {
       const { code } = await Taro.login()
-      const res = await Network.request({
-        url: '/api/auth/login',
-        method: 'POST',
-        data: { code, platform: 'weapp' }
-      }) as any
+      interface LoginResult {
+        data?: Record<string, unknown>
+        access_token?: string
+      }
+      const result = await apiPost<LoginResult>('/api/auth/login', { code, platform: 'weapp' })
 
-      let user = res.data?.data
-      const token = res.data?.access_token
+      let user = result.data as Record<string, unknown> | undefined
+      const token = result.access_token
 
       if (!user) {
         Taro.showToast({ title: '登录失败：未获取到用户信息', icon: 'none' })
@@ -80,7 +81,7 @@ const ProfilePage: FC = () => {
         }
       }
 
-      setUserInfo(user)
+      setUserInfo(user as unknown as UserInfo)
       Taro.setStorageSync('userInfo', JSON.stringify(user))
       Taro.setStorageSync('token', token)
 
@@ -111,18 +112,18 @@ const ProfilePage: FC = () => {
 
     setIsLoggingIn(true)
     try {
-      const res = await Network.request({
-        url: '/api/auth/login',
-        method: 'POST',
-        data: {
-          code: verifyCode,
-          platform: 'h5',
-          nickname: h5Nickname.trim()
-        }
-      }) as any
+      interface LoginResult {
+        data?: Record<string, unknown>
+        access_token?: string
+      }
+      const result = await apiPost<LoginResult>('/api/auth/login', {
+        code: verifyCode,
+        platform: 'h5',
+        nickname: h5Nickname.trim()
+      })
 
-      const user = res.data?.data
-      const token = res.data?.access_token
+      const user = result.data as UserInfo | undefined
+      const token = result.access_token
 
       if (!user) {
         Taro.showToast({ title: '登录失败：未获取到用户信息', icon: 'none' })
@@ -162,63 +163,24 @@ const ProfilePage: FC = () => {
     try {
       let avatarUrl = userInfo?.avatar_url || ''
 
-      // 如果选择了头像，先上传头像
-      if (tempAvatarUrl) {
+      if (tempAvatarUrl && userInfo?.id) {
         try {
-          console.log('[uploadAvatar] uploading avatar...')
-          const uploadRes = await Network.uploadFile({
-            url: '/api/user/avatar',
-            filePath: tempAvatarUrl,
-            name: 'file',
-            formData: {
-              user_id: String(userInfo?.id)
-            }
-          }) as any
-          console.log('[uploadAvatar] response:', uploadRes)
-          
-          // 解析上传结果
-          let uploadData
-          if (typeof uploadRes.data === 'string') {
-            uploadData = JSON.parse(uploadRes.data)
-          } else if (uploadRes.data && typeof uploadRes.data === 'object') {
-            uploadData = uploadRes.data
-          } else {
-            uploadData = uploadRes
-          }
-          
-          // 获取头像URL，兼容不同的返回格式
-          avatarUrl = uploadData.data?.avatar_url || uploadData.data?.url || uploadData.avatar_url || uploadData.url || ''
-          console.log('[uploadAvatar] got avatarUrl:', avatarUrl)
-        } catch (uploadErr) {
-          console.error('[uploadAvatar] upload failed:', uploadErr)
-          // 头像上传失败不阻止昵称保存，继续保存昵称
+          avatarUrl = await uploadAvatar(tempAvatarUrl, userInfo.id)
+        } catch {
+          // 头像上传失败不阻止昵称保存
         }
       }
 
-      // 更新用户信息（昵称 + 头像URL）
-      console.log('[updateProfile] updating profile...')
-      await Network.request({
-        url: '/api/user/profile',
-        method: 'PUT',
-        data: { 
-          user_id: userInfo?.id,
-          nickname: tempNickname,
-          ...(avatarUrl ? { avatar_url: avatarUrl } : {})
-        }
-      })
-
-      // 更新成功
-      const updatedUser = {
-        ...userInfo!,
-        nickname: tempNickname,
-        avatar_url: avatarUrl
+      if (userInfo?.id) {
+        await saveProfile(userInfo.id, tempNickname, avatarUrl)
       }
+
+      const updatedUser = { ...userInfo!, nickname: tempNickname, avatar_url: avatarUrl }
       setUserInfo(updatedUser)
       Taro.setStorageSync('userInfo', JSON.stringify(updatedUser))
       setShowProfileSetup(false)
       Taro.showToast({ title: '保存成功', icon: 'success' })
-    } catch (err) {
-      console.error('[handleConfirmProfile] save failed:', err)
+    } catch {
       Taro.showToast({ title: '保存失败', icon: 'none' })
     } finally {
       setIsLoggingIn(false)
@@ -248,62 +210,26 @@ const ProfilePage: FC = () => {
     try {
       let avatarUrl = userInfo?.avatar_url || ''
 
-      // 如果选择了新头像，先上传头像
-      if (tempAvatarUrl && tempAvatarUrl !== userInfo?.avatar_url) {
+      if (tempAvatarUrl && tempAvatarUrl !== userInfo?.avatar_url && userInfo?.id) {
         try {
-          console.log('[uploadAvatar] uploading new avatar...')
-          const uploadRes = await Network.uploadFile({
-            url: '/api/user/avatar',
-            filePath: tempAvatarUrl,
-            name: 'file',
-            formData: {
-              user_id: String(userInfo?.id)
-            }
-          }) as any
-          console.log('[uploadAvatar] response:', uploadRes)
-          
-          let uploadData
-          if (typeof uploadRes.data === 'string') {
-            uploadData = JSON.parse(uploadRes.data)
-          } else if (uploadRes.data && typeof uploadRes.data === 'object') {
-            uploadData = uploadRes.data
-          } else {
-            uploadData = uploadRes
-          }
-          
-          avatarUrl = uploadData.data?.avatar_url || uploadData.data?.url || uploadData.avatar_url || uploadData.url || ''
-          console.log('[uploadAvatar] got new avatarUrl:', avatarUrl)
-        } catch (uploadErr) {
-          console.error('[uploadAvatar] upload failed:', uploadErr)
+          avatarUrl = await uploadAvatar(tempAvatarUrl, userInfo.id)
+        } catch {
           avatarUrl = userInfo?.avatar_url || ''
         }
       }
 
-      // 更新用户信息
-      console.log('[updateProfile] updating profile...')
-      await Network.request({
-        url: '/api/user/profile',
-        method: 'PUT',
-        data: { 
-          user_id: userInfo?.id,
-          nickname: tempNickname,
-          ...(avatarUrl ? { avatar_url: avatarUrl } : {})
-        }
-      })
-
-      const updatedUser = {
-        ...userInfo!,
-        nickname: tempNickname,
-        avatar_url: avatarUrl
+      if (userInfo?.id) {
+        await saveProfile(userInfo.id, tempNickname, avatarUrl)
       }
+
+      const updatedUser = { ...userInfo!, nickname: tempNickname, avatar_url: avatarUrl }
       setUserInfo(updatedUser)
       Taro.setStorageSync('userInfo', JSON.stringify(updatedUser))
       setShowEditProfile(false)
       setTempAvatarUrl(null)
       setTempNickname(null)
       Taro.showToast({ title: '保存成功', icon: 'success' })
-    } catch (err) {
-      console.error('[handleSaveEditProfile] save failed:', err)
+    } catch {
       Taro.showToast({ title: '保存失败', icon: 'none' })
     } finally {
       setIsLoggingIn(false)

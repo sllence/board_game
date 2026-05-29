@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Network } from '@/network'
 import { Input } from '@/components/ui/input'
 import { Search, ChevronDown, RotateCcw } from 'lucide-react-taro'
+import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -19,31 +20,6 @@ interface BoardGame {
   icon_bg: string
   icon_color: string
   intro: string
-}
-
-// 每种类型对应一个emoji和颜色
-const TYPE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
-  strategy: { label: '策略', emoji: '♟️', color: '#4F46E5', bg: '#eef2ff' },
-  puzzle: { label: '益智', emoji: '🧩', color: '#0EA5E9', bg: '#f0f9ff' },
-  auction: { label: '拍卖', emoji: '🔨', color: '#F59E0B', bg: '#fffbeb' },
-  roleplay: { label: '扮演', emoji: '🎭', color: '#8B5CF6', bg: '#faf5ff' },
-  management: { label: '经营', emoji: '🏗️', color: '#10B981', bg: '#ecfdf5' },
-  cooperative: { label: '合作', emoji: '🤝', color: '#06B6D4', bg: '#ecfeff' },
-  versus: { label: '对抗', emoji: '⚔️', color: '#EF4444', bg: '#fef2f2' },
-}
-
-const DIFFICULTY_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
-  easy: { label: '简单', emoji: '🟢', color: '#059669', bg: '#ecfdf5' },
-  medium: { label: '中等', emoji: '🟡', color: '#d97706', bg: '#fffbeb' },
-  hard: { label: '困难', emoji: '🔴', color: '#dc2626', bg: '#fef2f2' },
-}
-
-const SCENE_META: Record<string, { emoji: string; label: string; color: string; bg: string }> = {
-  gathering: { emoji: '🎉', label: '聚会', color: '#7c3aed', bg: '#f5f3ff' },
-  teambuilding: { emoji: '🏢', label: '团建', color: '#0891b2', bg: '#ecfeff' },
-  family: { emoji: '👨‍👩‍👧', label: '亲子', color: '#059669', bg: '#ecfdf5' },
-  couple: { emoji: '💑', label: '情侣', color: '#e11d48', bg: '#fff1f2' },
-  drinking: { emoji: '🍻', label: '酒局', color: '#d97706', bg: '#fffbeb' },
 }
 
 const FILTER_OPTIONS = {

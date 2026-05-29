@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Dices, Calculator, ArrowRight, Sparkles, Play, History, Hand, Timer } from 'lucide-react-taro'
 import { WheelIcon } from '@/components/wheel-icon'
 import { requireLogin, getCurrentUser } from '@/utils/auth'
+import { TYPE_META, SCENE_META, DIFFICULTY_META, ICON_KEY_MAP } from '@/constants/game'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -44,35 +45,6 @@ const QUICK_TOOLS = [
   { key: 'timer', label: '计时器', icon: <Timer size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', path: '/pages/timer/index' },
   { key: 'scorer', label: '计分', icon: <Calculator size={24} color="#fff" />, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', path: '/pages/scorer/index' },
 ]
-
-const ICON_KEY_MAP: Record<string, string> = {
-  castle: '🏰', gem: '💎', moon: '🌙', shield: '🛡️',
-  landmark: '🏛️', wheat: '🌾',
-}
-
-const TYPE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
-  strategy: { label: '策略', emoji: '♟️', color: '#4F46E5', bg: '#eef2ff' },
-  puzzle: { label: '益智', emoji: '🧩', color: '#0EA5E9', bg: '#f0f9ff' },
-  auction: { label: '拍卖', emoji: '🔨', color: '#F59E0B', bg: '#fffbeb' },
-  roleplay: { label: '扮演', emoji: '🎭', color: '#8B5CF6', bg: '#faf5ff' },
-  management: { label: '经营', emoji: '🏗️', color: '#10B981', bg: '#ecfdf5' },
-  cooperative: { label: '合作', emoji: '🤝', color: '#06B6D4', bg: '#ecfeff' },
-  versus: { label: '对抗', emoji: '⚔️', color: '#EF4444', bg: '#fef2f2' },
-}
-
-const SCENE_META: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
-  gathering: { emoji: '🎉', label: '聚会', color: '#7c3aed', bg: '#f5f3ff' },
-  teambuilding: { emoji: '🏢', label: '团建', color: '#0891b2', bg: '#ecfeff' },
-  family: { emoji: '👨‍👩‍👧', label: '亲子', color: '#059669', bg: '#ecfdf5' },
-  couple: { emoji: '💑', label: '情侣', color: '#e11d48', bg: '#fff1f2' },
-  drinking: { emoji: '🍻', label: '酒局', color: '#d97706', bg: '#fffbeb' },
-}
-
-const DIFFICULTY_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  easy: { label: '简单', color: '#059669', bg: '#ecfdf5' },
-  medium: { label: '中等', color: '#d97706', bg: '#fffbeb' },
-  hard: { label: '困难', color: '#dc2626', bg: '#fef2f2' },
-}
 
 const IndexPage: FC = () => {
   const [hotGames, setHotGames] = useState<BoardGame[]>([])
@@ -274,8 +246,8 @@ const IndexPage: FC = () => {
                         <Text className="text-xs text-gray-300">·</Text>
                         <Text className="text-xs text-gray-500">⏱️ {game.min_duration}-{game.max_duration}分钟</Text>
                         <Text className="text-xs text-gray-300">·</Text>
-                        <Text style={{ fontSize: 11, color: DIFFICULTY_MAP[game.difficulty]?.color || '#6b7280' }}>
-                          {DIFFICULTY_MAP[game.difficulty]?.label || game.difficulty}
+                        <Text style={{ fontSize: 11, color: DIFFICULTY_META[game.difficulty]?.color || '#6b7280' }}>
+                          {DIFFICULTY_META[game.difficulty]?.label || game.difficulty}
                         </Text>
                       </View>
 
