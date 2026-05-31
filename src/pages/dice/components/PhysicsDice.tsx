@@ -160,6 +160,16 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
 
     physicsWorld.step(1 / 60)
 
+    // 限制骰子位置，防止滚出屏幕
+    const BOUND = 3.5
+    bodiesRef.current.forEach((body) => {
+      if (body.position.x > BOUND) body.position.x = BOUND
+      if (body.position.x < -BOUND) body.position.x = -BOUND
+      if (body.position.z > BOUND) body.position.z = BOUND
+      if (body.position.z < -BOUND) body.position.z = -BOUND
+      if (body.position.y < 0.5) body.position.y = 0.5
+    })
+
     bodiesRef.current.forEach((body, index) => {
       if (diceRef.current[index]) {
         updateDiceTransform(diceRef.current[index], body.position, body.quaternion)
