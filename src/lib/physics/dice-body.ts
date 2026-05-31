@@ -51,8 +51,8 @@ export function applyThrowForce(body: CANNON.Body) {
 
   // 施加随机角速度（模拟旋转）
   body.angularVelocity.set(
-    (Math.random() - 0.5) * 12,
-    (Math.random() - 0.5) * 12,
-    (Math.random() - 0.5) * 12
+    (Math.random() - 0.5) * 30,
+    (Math.random() - 0.5) * 30,
+    (Math.random() - 0.5) * 30
   )
 }
