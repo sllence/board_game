@@ -31,6 +31,7 @@ export function createDiceScene(
   renderer.setPixelRatio(Math.min(pixelRatio, 2))
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.setClearColor(0xFFFFFF, 1)
 
   const lights = createLights()
   scene.add(lights.directional, lights.ambient, lights.point)

@@ -15,6 +15,10 @@ class PhysicsWorld {
     this.world.broadphase = new CANNON.NaiveBroadphase()
     ;(this.world.solver as CANNON.GSSolver).iterations = 15 // 提高精度
 
+    // 全局阻尼，帮助骰子更快停下
+    this.world.defaultContactMaterial.friction = 0.5
+    this.world.defaultContactMaterial.restitution = 0.2
+
     // 启用休眠机制优化性能
     this.world.allowSleep = true
 
