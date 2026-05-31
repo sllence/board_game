@@ -49,6 +49,7 @@
     "@tarojs/runtime": "4.1.9",
     "@tarojs/shared": "4.1.9",
     "@tarojs/taro": "4.1.9",
+    "@types/three": "^0.184.1",
     "cannon-es": "^0.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -58,6 +59,7 @@
     "react-dom": "^18.0.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.184.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
