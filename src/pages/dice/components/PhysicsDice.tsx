@@ -1,6 +1,6 @@
 import { View, Canvas } from '@tarojs/components'
 import Taro, { useReady } from '@tarojs/taro'
-import { useRef, useCallback, forwardRef, useImperativeHandle } from 'react'
+import { useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
 import { physicsWorld } from '@/lib/physics/world'
@@ -58,6 +58,8 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const sparkRef = useRef<SparkParticleSystem | null>(null)
   const glowRef = useRef<GlowParticleSystem | null>(null)
   const ambientRef = useRef<AmbientParticleSystem | null>(null)
+  const canvasNodeRef = useRef<any>(null)
+  const resizeCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const onResultRef = useRef(onResult)
   const onAnimationEndRef = useRef(onAnimationEnd)
@@ -131,6 +133,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
           const width = res[0].width || 375
           const height = res[0].height || 400
 
+          canvasNodeRef.current = canvas
           diceSceneRef.current = createDiceScene(canvas, width, height)
 
           postProcessingRef.current = createPostProcessing(
@@ -163,6 +166,33 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
 
     return () => cleanup()
   })
+
+  useEffect(() => {
+    resizeCheckRef.current = setInterval(() => {
+      if (!canvasNodeRef.current || !diceSceneRef.current) return
+      const query = Taro.createSelectorQuery()
+      query
+        .select('#diceCanvas')
+        .fields({ node: true, size: true })
+        .exec((res) => {
+          if (!res[0] || !diceSceneRef.current) return
+          const w = res[0].width
+          const h = res[0].height
+          if (w > 0 && h > 0) {
+            const { renderer, camera } = diceSceneRef.current
+            const currentSize = renderer.getSize(new THREE.Vector2())
+            if (currentSize.width !== w || currentSize.height !== h) {
+              renderer.setSize(w, h)
+              camera.aspect = w / h
+              camera.updateProjectionMatrix()
+            }
+          }
+        })
+    }, 300)
+    return () => {
+      if (resizeCheckRef.current) clearInterval(resizeCheckRef.current)
+    }
+  }, [])
 
   const renderLoopRef = useRef<() => void>(() => {})
 
@@ -295,7 +325,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
 
   return (
-    <View className="w-full h-[400px]">
+    <View className="w-full h-full overflow-hidden">
       <Canvas id="diceCanvas" type="webgl" className="w-full h-full" />
     </View>
   )
