@@ -27,6 +27,7 @@ let tablePlaneCreated = false
 
 const STOP_FRAME_THRESHOLD = 30
 const VELOCITY_THRESHOLD = 0.5
+const MAX_ANIMATION_TIME = 5000 // 最大动画时间5秒
 
 interface PhysicsDiceProps {
   count: number
@@ -47,6 +48,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const bodiesRef = useRef<CANNON.Body[]>([])
   const animatingRef = useRef(false)
   const stopCounterRef = useRef(0)
+  const startTimeRef = useRef(0)
   const animationFrameRef = useRef<number | null>(null)
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const canvasReadyRef = useRef(false)
@@ -207,26 +209,30 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       renderScene(diceSceneRef.current)
     }
 
-    if (bodiesRef.current.length > 0 && bodiesRef.current.every(isDiceStopped)) {
+    // 检查超时或骰子停止
+    const elapsed = Date.now() - startTimeRef.current
+    const allStopped = bodiesRef.current.length > 0 && bodiesRef.current.every(isDiceStopped)
+
+    if (allStopped) {
       stopCounterRef.current++
-
-      if (stopCounterRef.current >= STOP_FRAME_THRESHOLD) {
-        const results = bodiesRef.current.map(getTopFaceD6)
-        onResultRef.current(results)
-        animatingRef.current = false
-        onAnimationEndRef.current()
-
-        if (config.enableGlow && glowRef.current) {
-          bodiesRef.current.forEach((body) => {
-            glowRef.current!.show(
-              new THREE.Vector3(body.position.x, body.position.y, body.position.z)
-            )
-          })
-        }
-        return
-      }
     } else {
       stopCounterRef.current = 0
+    }
+
+    if (stopCounterRef.current >= STOP_FRAME_THRESHOLD || elapsed > MAX_ANIMATION_TIME) {
+      const results = bodiesRef.current.map(getTopFaceD6)
+      onResultRef.current(results)
+      animatingRef.current = false
+      onAnimationEndRef.current()
+
+      if (config.enableGlow && glowRef.current) {
+        bodiesRef.current.forEach((body) => {
+          glowRef.current!.show(
+            new THREE.Vector3(body.position.x, body.position.y, body.position.z)
+          )
+        })
+      }
+      return
     }
 
     if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
@@ -245,6 +251,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     cleanup()
     animatingRef.current = true
     stopCounterRef.current = 0
+    startTimeRef.current = Date.now()
     onAnimationStart()
 
     for (let i = 0; i < count; i++) {
