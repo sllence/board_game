@@ -16,6 +16,12 @@ importers:
       '@babel/runtime':
         specifier: ^7.24.4
         version: 7.28.4
+      '@minisheep/mini-program-polyfill-core':
+        specifier: ^1.1.5
+        version: 1.1.5
+      '@minisheep/three-platform-adapter':
+        specifier: ^2.0.4
+        version: 2.0.4(@minisheep/mini-program-polyfill-core@1.1.5)(three@0.184.0)
       '@tarojs/components':
         specifier: 4.1.9
         version: 4.1.9(@tarojs/helper@4.1.9)(@types/react@18.3.27)(postcss@8.5.6)(rollup@3.29.5)(webpack@5.97.1(@swc/core@1.3.96))
@@ -3149,6 +3155,25 @@ packages:
     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
     engines: {node: '>=8'}
 
+  '@minisheep/mini-program-polyfill-core@1.1.5':
+    resolution: {integrity: sha512-YSK7dZ55IG0XG5QTbIh1/FhkmaqP4sAHHDT+r9ETn5UJeRzpQrIvogeq/3DaX594LJb3GK5Cj+nwhU1pYYUfRw==}
+
+  '@minisheep/three-platform-adapter@2.0.4':
+    resolution: {integrity: sha512-0usFS25O1of3h0Ym7zXs23gFTu3qMx60zb1ZGXbs+E7tR3yjeWGKX4mjvDgXJxOpsxkws2tc82Id2pYnEG0zrg==}
+    peerDependencies:
+      '@minisheep/mini-program-polyfill-core': '*'
+      minigame-api-typings: '*'
+      miniprogram-api-typings: '*'
+      three: '>= 0.151.0'
+      three-stdlib: '>=2.30.0'
+    peerDependenciesMeta:
+      minigame-api-typings:
+        optional: true
+      miniprogram-api-typings:
+        optional: true
+      three-stdlib:
+        optional: true
+
   '@napi-rs/triples@1.2.0':
     resolution: {integrity: sha512-HAPjR3bnCsdXBsATpDIP5WCrw0JcACwhhrwIAQhiR46n+jm+a2F8kBsfseAuWtSyQ+H3Yebt2k43B5dy+04yMA==}
 
@@ -4637,6 +4662,10 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+
+  '@xmldom/xmldom@0.9.10':
+    resolution: {integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==}
+    engines: {node: '>=14.6'}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -6532,6 +6561,10 @@ packages:
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
+
+  event-target-shim@6.0.2:
+    resolution: {integrity: sha512-8q3LsZjRezbFZ2PN+uP+Q7pnHUMmAOziU2vA2OwoFaKIXxlxl38IylhSSgUorWu/rf4er67w0ikBqjBFk/pomA==}
+    engines: {node: '>=10.13.0'}
 
   eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
@@ -10479,6 +10512,10 @@ packages:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
     engines: {node: '>=12.20'}
 
+  type-fest@4.41.0:
+    resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
+    engines: {node: '>=16'}
+
   type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
     engines: {node: '>= 0.6'}
@@ -10702,6 +10739,10 @@ packages:
     resolution: {integrity: sha512-G8Em6CGt/9P7r8rV2mIqnC0OCl6UStzR0XV+55y4Z45x7W1Xxy2dj8PICJ8OJaVoJ8VNR8jXYrlNWQxqLRWQKg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
+
+  web-streams-polyfill@4.3.0:
+    resolution: {integrity: sha512-/Gnggvj9oSrEvJbDyyPtAnxBt5fGQM2iWOKQNu7ie1OxDgK40iZpyV3TKaRiEzVj1oA1UxKnEy9XPXh6PW3eVw==}
+    engines: {node: '>= 8'}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -14414,6 +14455,18 @@ snapshots:
 
   '@lukeed/csprng@1.1.0': {}
 
+  '@minisheep/mini-program-polyfill-core@1.1.5':
+    dependencies:
+      '@xmldom/xmldom': 0.9.10
+      event-target-shim: 6.0.2
+      type-fest: 4.41.0
+      web-streams-polyfill: 4.3.0
+
+  '@minisheep/three-platform-adapter@2.0.4(@minisheep/mini-program-polyfill-core@1.1.5)(three@0.184.0)':
+    dependencies:
+      '@minisheep/mini-program-polyfill-core': 1.1.5
+      three: 0.184.0
+
   '@napi-rs/triples@1.2.0': {}
 
   '@nestjs/cli@10.4.9(@swc/core@1.4.14)(esbuild@0.25.12)':
@@ -16192,6 +16245,8 @@ snapshots:
       '@xtuc/long': 4.2.2
 
   '@xmldom/xmldom@0.8.11': {}
+
+  '@xmldom/xmldom@0.9.10': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -18704,6 +18759,8 @@ snapshots:
   etag@1.8.1: {}
 
   event-target-shim@5.0.1: {}
+
+  event-target-shim@6.0.2: {}
 
   eventemitter3@4.0.7: {}
 
@@ -23213,6 +23270,8 @@ snapshots:
 
   type-fest@2.19.0: {}
 
+  type-fest@4.41.0: {}
+
   type-is@1.6.18:
     dependencies:
       media-typer: 0.3.0
@@ -23457,6 +23516,8 @@ snapshots:
       - magicast
       - supports-color
       - tailwindcss
+
+  web-streams-polyfill@4.3.0: {}
 
   webidl-conversions@3.0.1: {}
 

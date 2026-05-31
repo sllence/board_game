@@ -70,15 +70,6 @@ const DicePage: FC = () => {
     playSound('stop')
   }, [playSound])
 
-  // 投掷按钮处理
-  const handleRoll = useCallback(() => {
-    if (rollMode === 'shake') {
-      simulateShakeRoll()
-    } else {
-      physicsDiceRef.current?.throwDice()
-    }
-  }, [rollMode, simulateShakeRoll])
-
   // 摇一摇投掷
   const simulateShakeRoll = useCallback(() => {
     if (rolling) return
@@ -103,6 +94,15 @@ const DicePage: FC = () => {
     }, 2000)
     shakeTimeoutRef.current.push(t1)
   }, [rolling, playSound, clearShakeTimeouts])
+
+  // 投掷按钮处理
+  const handleRoll = useCallback(() => {
+    if (rollMode === 'shake') {
+      simulateShakeRoll()
+    } else {
+      physicsDiceRef.current?.throwDice()
+    }
+  }, [rollMode, simulateShakeRoll])
 
   // 摇一摇监听
   useEffect(() => {
@@ -377,7 +377,7 @@ const DicePage: FC = () => {
               <Text className="block text-sm font-semibold text-gray-400 mb-3">投掷方式</Text>
               <View className="flex flex-col gap-3">
                 <View
-                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'tap' ? 'bg-amber-500/20' : 'bg-gray-800'}`}
+                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'tap' ? 'bg-amber-500 bg-opacity-20' : 'bg-gray-800'}`}
                   onClick={() => setRollMode('tap')}
                 >
                   <View
@@ -393,7 +393,7 @@ const DicePage: FC = () => {
                 </View>
 
                 <View
-                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'shake' ? 'bg-amber-500/20' : 'bg-gray-800'}`}
+                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'shake' ? 'bg-amber-500 bg-opacity-20' : 'bg-gray-800'}`}
                   onClick={() => setRollMode('shake')}
                 >
                   <View

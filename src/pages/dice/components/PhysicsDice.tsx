@@ -3,6 +3,7 @@ import Taro, { useReady } from '@tarojs/taro'
 import { useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
+import { adapter } from '@minisheep/three-platform-adapter'
 import { physicsWorld } from '@/lib/physics/world'
 import { createD6Body, applyThrowForce } from '@/lib/physics/dice-body'
 import { createTablePlane } from '@/lib/physics/table-plane'
@@ -60,6 +61,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const ambientRef = useRef<AmbientParticleSystem | null>(null)
   const canvasNodeRef = useRef<any>(null)
   const resizeCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const rafRef = useRef<typeof requestAnimationFrame | null>(null)
 
   const onResultRef = useRef(onResult)
   const onAnimationEndRef = useRef(onAnimationEnd)
@@ -77,7 +79,6 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     }
 
     bodiesRef.current.forEach((body) => {
-      body.removeEventListener('collide')
       physicsWorld.world.removeBody(body)
     })
     bodiesRef.current = []
@@ -123,46 +124,98 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   }, [cleanupBodies])
 
   useReady(() => {
-    const query = Taro.createSelectorQuery()
-    query
-      .select('#diceCanvas')
-      .fields({ node: true, size: true })
-      .exec((res) => {
-        if (res[0]?.node) {
-          const canvas = res[0].node
-          const width = res[0].width || 375
-          const height = res[0].height || 400
+    const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
+    const isTT = Taro.getEnv() === Taro.ENV_TYPE.TT
+    const isMini = isWeapp || isTT
 
-          canvasNodeRef.current = canvas
-          diceSceneRef.current = createDiceScene(canvas, width, height)
+    if (isMini) {
+      adapter.useCanvas('#diceCanvas', Taro.createSelectorQuery()).then(({ canvas, requestAnimationFrame }) => {
+        rafRef.current = requestAnimationFrame
+        const query = Taro.createSelectorQuery()
+        query
+          .select('#diceCanvas')
+          .fields({ node: true, size: true })
+          .exec((res) => {
+            if (res[0]?.node) {
+              const width = res[0].width || 375
+              const height = res[0].height || 400
 
-          postProcessingRef.current = createPostProcessing(
-            diceSceneRef.current.renderer,
-            diceSceneRef.current.scene,
-            diceSceneRef.current.camera
-          )
+              canvasNodeRef.current = canvas
+              diceSceneRef.current = createDiceScene(canvas, width, height)
 
-          trailRef.current = new TrailParticleSystem()
-          sparkRef.current = new SparkParticleSystem()
-          glowRef.current = new GlowParticleSystem()
-          ambientRef.current = new AmbientParticleSystem()
+              postProcessingRef.current = createPostProcessing(
+                diceSceneRef.current.renderer,
+                diceSceneRef.current.scene,
+                diceSceneRef.current.camera
+              )
 
-          if (ambientRef.current) {
-            diceSceneRef.current.scene.add(ambientRef.current.getPoints())
-          }
-          if (sparkRef.current) {
-            diceSceneRef.current.scene.add(sparkRef.current.getPoints())
-          }
+              trailRef.current = new TrailParticleSystem()
+              sparkRef.current = new SparkParticleSystem()
+              glowRef.current = new GlowParticleSystem()
+              ambientRef.current = new AmbientParticleSystem()
 
-          performanceRef.current = new PerformanceMonitor()
+              if (ambientRef.current) {
+                diceSceneRef.current.scene.add(ambientRef.current.getPoints())
+              }
+              if (sparkRef.current) {
+                diceSceneRef.current.scene.add(sparkRef.current.getPoints())
+              }
 
-          if (!tablePlaneBodyRef.current) {
-            tablePlaneBodyRef.current = createTablePlane()
-          }
+              performanceRef.current = new PerformanceMonitor()
 
-          canvasReadyRef.current = true
-        }
+              if (!tablePlaneBodyRef.current) {
+                tablePlaneBodyRef.current = createTablePlane()
+              }
+
+              canvasReadyRef.current = true
+            }
+          })
       })
+    } else {
+      const initH5Canvas = (retryCount = 0) => {
+        const canvasEl = document.getElementById('diceCanvas')
+        const canvas = (canvasEl?.querySelector('canvas') || canvasEl) as HTMLCanvasElement
+        if (!canvas || !canvas.getContext) {
+          if (retryCount < 10) {
+            setTimeout(() => initH5Canvas(retryCount + 1), 100)
+          }
+          return
+        }
+        const width = canvas.width || canvas.clientWidth || 375
+        const height = canvas.height || canvas.clientHeight || 400
+
+        canvasNodeRef.current = canvas
+        diceSceneRef.current = createDiceScene(canvas, width, height)
+
+        postProcessingRef.current = createPostProcessing(
+          diceSceneRef.current.renderer,
+          diceSceneRef.current.scene,
+          diceSceneRef.current.camera
+        )
+
+        trailRef.current = new TrailParticleSystem()
+        sparkRef.current = new SparkParticleSystem()
+        glowRef.current = new GlowParticleSystem()
+        ambientRef.current = new AmbientParticleSystem()
+
+        if (ambientRef.current) {
+          diceSceneRef.current.scene.add(ambientRef.current.getPoints())
+        }
+        if (sparkRef.current) {
+          diceSceneRef.current.scene.add(sparkRef.current.getPoints())
+        }
+
+        performanceRef.current = new PerformanceMonitor()
+
+        if (!tablePlaneBodyRef.current) {
+          tablePlaneBodyRef.current = createTablePlane()
+        }
+
+        canvasReadyRef.current = true
+      }
+
+      initH5Canvas()
+    }
 
     return () => cleanup()
   })
@@ -281,7 +334,9 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       return
     }
 
-    if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
+    if (rafRef.current) {
+      rafRef.current(() => renderLoopRef.current())
+    } else if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
       intervalRef.current = setTimeout(() => renderLoopRef.current(), 1000 / 60)
     } else {
       animationFrameRef.current = requestAnimationFrame(() => renderLoopRef.current())
@@ -324,9 +379,20 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
 
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
 
+  const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
+  const isTT = Taro.getEnv() === Taro.ENV_TYPE.TT
+  const isMini = isWeapp || isTT
+
   return (
     <View className="w-full h-full overflow-hidden">
-      <Canvas id="diceCanvas" type="webgl" className="w-full h-full" />
+      {isMini ? (
+        <Canvas id="diceCanvas" type="webgl" className="w-full h-full" />
+      ) : (
+        <canvas
+          id="diceCanvas"
+          style={{ width: '100%', height: '100%' }}
+        />
+      )}
     </View>
   )
 })
