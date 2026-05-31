@@ -1,0 +1,52 @@
+// src/lib/three/postprocessing.ts
+import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js'
+
+export interface PostProcessing {
+  composer: EffectComposer
+  fxaaPass: ShaderPass
+  bloomPass: UnrealBloomPass
+}
+
+export function createPostProcessing(
+  renderer: THREE.WebGLRenderer,
+  scene: THREE.Scene,
+  camera: THREE.Camera
+): PostProcessing {
+  const composer = new EffectComposer(renderer)
+
+  const renderPass = new RenderPass(scene, camera)
+  composer.addPass(renderPass)
+
+  const fxaaPass = new ShaderPass(FXAAShader)
+  const pixelRatio = renderer.getPixelRatio()
+  fxaaPass.material.uniforms['resolution'].value.set(
+    1 / (window.innerWidth * pixelRatio),
+    1 / (window.innerHeight * pixelRatio)
+  )
+  composer.addPass(fxaaPass)
+
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.5,
+    0.4,
+    0.85
+  )
+  composer.addPass(bloomPass)
+
+  return { composer, fxaaPass, bloomPass }
+}
+
+export function renderWithPostProcessing(postProcessing: PostProcessing): void {
+  postProcessing.composer.render()
+}
+
+export function disposePostProcessing(postProcessing: PostProcessing): void {
+  postProcessing.composer.dispose()
+  postProcessing.fxaaPass.dispose()
+  postProcessing.bloomPass.dispose()
+}
