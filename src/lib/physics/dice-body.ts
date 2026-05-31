@@ -28,7 +28,7 @@ export function applyThrowForce(body: CANNON.Body) {
   // 随机初始位置（空中）
   body.position.set(
     (Math.random() - 0.5) * 1.5,
-    2 + Math.random() * 1, // 2-3米高度
+    1.5 + Math.random() * 0.5, // 1.5-2米高度
     (Math.random() - 0.5) * 1.5
   )
 
@@ -39,20 +39,20 @@ export function applyThrowForce(body: CANNON.Body) {
     Math.random() * Math.PI * 2
   )
 
-  // 施加随机冲量（模拟投掷力）- 减小力度
+  // 施加随机冲量（模拟投掷力）
   body.applyImpulse(
     new CANNON.Vec3(
       (Math.random() - 0.5) * 2,
-      Math.random() * 1.5 + 0.5, // 向上的力减小
+      Math.random() * 0.8 + 0.2, // 向上的力减小
       (Math.random() - 0.5) * 2
     ),
     body.position
   )
 
-  // 施加随机角速度（模拟旋转）- 大幅减小
+  // 施加随机角速度（模拟旋转）
   body.angularVelocity.set(
-    (Math.random() - 0.5) * 8,
-    (Math.random() - 0.5) * 8,
-    (Math.random() - 0.5) * 8
+    (Math.random() - 0.5) * 6,
+    (Math.random() - 0.5) * 6,
+    (Math.random() - 0.5) * 6
   )
 }

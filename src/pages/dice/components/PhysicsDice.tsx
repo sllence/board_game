@@ -163,11 +163,13 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     // 限制骰子位置，防止滚出屏幕
     const BOUND = 3.5
     bodiesRef.current.forEach((body) => {
-      if (body.position.x > BOUND) { body.position.x = BOUND; body.velocity.x = 0 }
-      if (body.position.x < -BOUND) { body.position.x = -BOUND; body.velocity.x = 0 }
-      if (body.position.z > BOUND) { body.position.z = BOUND; body.velocity.z = 0 }
-      if (body.position.z < -BOUND) { body.position.z = -BOUND; body.velocity.z = 0 }
+      if (body.position.x > BOUND && body.velocity.x > 0) body.velocity.x = 0
+      if (body.position.x < -BOUND && body.velocity.x < 0) body.velocity.x = 0
+      if (body.position.z > BOUND && body.velocity.z > 0) body.velocity.z = 0
+      if (body.position.z < -BOUND && body.velocity.z < 0) body.velocity.z = 0
       if (body.position.y < 0.5) { body.position.y = 0.5; body.velocity.y = 0 }
+      body.position.x = Math.max(-BOUND, Math.min(BOUND, body.position.x))
+      body.position.z = Math.max(-BOUND, Math.min(BOUND, body.position.z))
     })
 
     bodiesRef.current.forEach((body, index) => {
