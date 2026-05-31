@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 
 const D6_DOTS: Record<number, number[][]> = {
   1: [[50, 50]],
@@ -36,7 +37,8 @@ function generateDiceTexture(faceValue: number): THREE.CanvasTexture {
 }
 
 export function createD6Dice(): THREE.Mesh {
-  const geometry = new THREE.BoxGeometry(1, 1, 1)
+  // 使用圆角立方体，radius 控制圆角大小
+  const geometry = new RoundedBoxGeometry(1, 1, 1, 4, 0.15)
 
   // BoxGeometry face order: +x, -x, +y, -y, +z, -z
   // D6 face mapping: right(3), left(4), top(2), bottom(5), front(1), back(6)

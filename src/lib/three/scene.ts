@@ -15,7 +15,7 @@ export function createDiceScene(
   height: number
 ): DiceScene {
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xF5F5F0)
+  scene.background = new THREE.Color(0xFFFFFF)
 
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
   camera.position.set(0, 5, 8)
@@ -37,7 +37,7 @@ export function createDiceScene(
 
   const groundGeometry = new THREE.PlaneGeometry(20, 20)
   const groundMaterial = new THREE.MeshStandardMaterial({
-    color: 0xE8E8E0,
+    color: 0xFFFFFF,
     roughness: 0.8,
     metalness: 0.0,
   })
