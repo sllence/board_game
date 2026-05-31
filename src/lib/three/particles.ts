@@ -218,19 +218,23 @@ export class GlowParticleSystem {
   }
 
   update(_deltaTime: number): void {
-    this.sprites.forEach((sprite) => {
+    this.sprites = this.sprites.filter((sprite) => {
       const material = sprite.material as THREE.SpriteMaterial
       const progress = 1 - (material.opacity / 0.7)
 
       if (progress < 0.5) {
-        // 淡入
         material.opacity = progress * 1.4
         const scale = this.config.size + (this.config.maxSize - this.config.size) * progress * 2
         sprite.scale.setScalar(scale)
       } else {
-        // 淡出
         material.opacity = (1 - progress) * 1.4
       }
+
+      if (material.opacity <= 0) {
+        material.dispose()
+        return false
+      }
+      return true
     })
   }
 
@@ -246,7 +250,6 @@ export class GlowParticleSystem {
 
 // 环境微光粒子系统
 export class AmbientParticleSystem {
-  private particles: Particle[] = []
   private geometry: THREE.BufferGeometry
   private material: THREE.PointsMaterial
   private points: THREE.Points
@@ -255,7 +258,6 @@ export class AmbientParticleSystem {
     count: 80,
     size: 0.02,
     color: new THREE.Color(0xFFFFCC),
-    lifetime: Infinity,
   }
 
   constructor() {
@@ -270,25 +272,16 @@ export class AmbientParticleSystem {
     })
     this.points = new THREE.Points(this.geometry, this.material)
 
-    // 初始化粒子位置
-    this.initParticles()
+    this.initPositions()
   }
 
-  private initParticles(): void {
+  private initPositions(): void {
     const positions = new Float32Array(this.config.count * 3)
 
     for (let i = 0; i < this.config.count; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 10
       positions[i * 3 + 1] = Math.random() * 3 + 0.5
       positions[i * 3 + 2] = (Math.random() - 0.5) * 10
-
-      this.particles.push(
-        new Particle(
-          new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]),
-          new THREE.Vector3(0, 0, 0),
-          { ...this.config, lifetime: Infinity }
-        )
-      )
     }
 
     this.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
