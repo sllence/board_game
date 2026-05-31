@@ -6,6 +6,7 @@ import { Dices, ArrowLeft, Settings, X, Plus, Minus, Volume2, MousePointerClick,
 import type { FC } from 'react'
 
 import { PhysicsDice } from './components/PhysicsDice'
+import type { PhysicsDiceHandle } from './components/PhysicsDice'
 
 const DICE_TYPES = [
   { key: 'D4', label: 'D4', max: 4 },
@@ -29,6 +30,7 @@ const DicePage: FC = () => {
   const [showCup, setShowCup] = useState(false)
   const [cupShaking, setCupShaking] = useState(false)
   const [cupLifting, setCupLifting] = useState(false)
+  const physicsDiceRef = useRef<PhysicsDiceHandle>(null)
   const lastShakeTimeRef = useRef<number>(0)
 
   // 计算骰子总点数
@@ -65,7 +67,7 @@ const DicePage: FC = () => {
     if (rollMode === 'shake') {
       simulateShakeRoll()
     } else {
-      ;(window as any).__throwDice?.()
+        physicsDiceRef.current?.throwDice()
     }
   }, [rollMode])
 
@@ -86,7 +88,7 @@ const DicePage: FC = () => {
       setTimeout(() => {
         // 掀开杯子，触发物理投掷
         setShowCup(false)
-        ;(window as any).__throwDice?.()
+      physicsDiceRef.current?.throwDice()
       }, 800)
     }, 2000)
   }, [rolling, playSound])
@@ -264,7 +266,7 @@ const DicePage: FC = () => {
         )}
 
         {/* 物理骰子组件 */}
-        {!showCup && <PhysicsDice count={diceCount} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />}
+        {!showCup && <PhysicsDice ref={physicsDiceRef} count={diceCount} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />}
 
         {/* 结果展示区域 */}
         {results.length > 0 && !showCup && (
