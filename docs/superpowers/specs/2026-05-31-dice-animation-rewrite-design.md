@@ -304,7 +304,7 @@ if (averageFPS < 30) {
 | 风险 | 影响 | 缓解措施 |
 |------|------|----------|
 | Three.js 体积过大 | 包体积增加 | 使用 tree-shaking，按需导入 |
-| WebGL 兼容性 | 部分设备无法运行 | 降级到 Canvas 2D 方案 |
+| WebGL 兼容性 | 部分设备无法运行 | 降级到 Canvas 2D 方案（保留现有 PhysicsDice.tsx 作为回退） |
 | 性能不达标 | 用户体验差 | 自适应降级策略 |
 | 内存泄漏 | 崩溃 | 正确 dispose 资源 |
 
