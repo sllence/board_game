@@ -1,6 +1,6 @@
 import { View, Canvas } from '@tarojs/components'
 import Taro, { useReady } from '@tarojs/taro'
-import { FC, useEffect, useRef, useCallback } from 'react'
+import { useRef, useCallback, forwardRef, useImperativeHandle } from 'react'
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
 import { physicsWorld } from '@/lib/physics/world'
@@ -17,12 +17,16 @@ import {
 } from '@/lib/three/particles'
 import {
   createPostProcessing,
+  disposePostProcessing,
   renderWithPostProcessing,
   PostProcessing,
 } from '@/lib/three/postprocessing'
 import { PerformanceMonitor, getEffectsConfig } from '@/lib/three/performance'
 
 let tablePlaneCreated = false
+
+const STOP_FRAME_THRESHOLD = 30
+const VELOCITY_THRESHOLD = 0.5
 
 interface PhysicsDiceProps {
   count: number
@@ -31,12 +35,12 @@ interface PhysicsDiceProps {
   onAnimationEnd: () => void
 }
 
-export const PhysicsDice: FC<PhysicsDiceProps> = ({
-  count,
-  onResult,
-  onAnimationStart,
-  onAnimationEnd,
-}) => {
+export interface PhysicsDiceHandle {
+  throwDice: () => void
+}
+
+export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
+  ({ count, onResult, onAnimationStart, onAnimationEnd }, ref) => {
   const diceSceneRef = useRef<DiceScene | null>(null)
   const postProcessingRef = useRef<PostProcessing | null>(null)
   const diceRef = useRef<THREE.Mesh[]>([])
@@ -80,6 +84,16 @@ export const PhysicsDice: FC<PhysicsDiceProps> = ({
       disposeD6Dice(dice)
     })
     diceRef.current = []
+
+    performanceRef.current?.dispose()
+    if (postProcessingRef.current) {
+      disposePostProcessing(postProcessingRef.current)
+      postProcessingRef.current = null
+    }
+
+    if (ambientRef.current && diceSceneRef.current) {
+      diceSceneRef.current.scene.remove(ambientRef.current.getPoints())
+    }
 
     trailRef.current?.dispose()
     sparkRef.current?.dispose()
@@ -154,7 +168,7 @@ export const PhysicsDice: FC<PhysicsDiceProps> = ({
 
     if (config.enableTrail && trailRef.current) {
       bodiesRef.current.forEach((body) => {
-        if (body.velocity.length() > 0.5) {
+        if (body.velocity.length() > VELOCITY_THRESHOLD) {
           trailRef.current!.emit(
             new THREE.Vector3(body.position.x, body.position.y, body.position.z)
           )
@@ -184,7 +198,7 @@ export const PhysicsDice: FC<PhysicsDiceProps> = ({
     if (bodiesRef.current.length > 0 && bodiesRef.current.every(isDiceStopped)) {
       stopCounterRef.current++
 
-      if (stopCounterRef.current >= 30) {
+      if (stopCounterRef.current >= STOP_FRAME_THRESHOLD) {
         const results = bodiesRef.current.map(getTopFaceD6)
         onResultRef.current(results)
         animatingRef.current = false
@@ -235,13 +249,11 @@ export const PhysicsDice: FC<PhysicsDiceProps> = ({
     renderLoopRef.current()
   }, [count, cleanup, onAnimationStart])
 
-  useEffect(() => {
-    ;(window as any).__throwDice = throwDice
-  }, [throwDice])
+  useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
 
   return (
     <View className="w-full h-[400px]">
       <Canvas id="diceCanvas" type="webgl" className="w-full h-full" />
     </View>
   )
-}
+})
