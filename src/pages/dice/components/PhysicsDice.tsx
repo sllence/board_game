@@ -252,7 +252,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
 
   return (
-    <View className="w-full h-[400px]">
+    <View className="w-full h-[400px] bg-white">
       <Canvas id="diceCanvas" type="webgl" className="w-full h-full" />
     </View>
   )

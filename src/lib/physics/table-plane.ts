@@ -20,7 +20,7 @@ export function createTablePlane(): CANNON.Body {
 
   // 创建四面围墙防止骰子滚出屏幕
   const wallShape = new CANNON.Plane()
-  const wallMaterial = physicsWorld.materials.table
+  const wallMaterial = physicsWorld.materials.wall
 
   // 前墙 (z = +BOUNDARY_SIZE)
   const frontWall = new CANNON.Body({ mass: 0, material: wallMaterial })

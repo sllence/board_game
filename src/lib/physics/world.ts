@@ -6,6 +6,7 @@ class PhysicsWorld {
   public materials: {
     dice: CANNON.Material
     table: CANNON.Material
+    wall: CANNON.Material
   }
 
   private constructor() {
@@ -30,14 +31,15 @@ class PhysicsWorld {
   private createMaterials() {
     const diceMaterial = new CANNON.Material('dice')
     const tableMaterial = new CANNON.Material('table')
+    const wallMaterial = new CANNON.Material('wall')
 
     // 定义接触材质
     const diceTableContact = new CANNON.ContactMaterial(
       diceMaterial,
       tableMaterial,
       {
-        friction: 0.5, // 中等摩擦
-        restitution: 0.4, // 中等弹性
+        friction: 0.6, // 较高摩擦
+        restitution: 0.2, // 低弹性，快速停下
         contactEquationStiffness: 1e7,
         contactEquationRelaxation: 3,
       }
@@ -53,10 +55,21 @@ class PhysicsWorld {
       }
     )
 
+    // 骰子与墙壁的接触（低弹性，让骰子快速停下）
+    const diceWallContact = new CANNON.ContactMaterial(
+      diceMaterial,
+      wallMaterial,
+      {
+        friction: 0.8, // 高摩擦
+        restitution: 0.1, // 低弹性，几乎不反弹
+      }
+    )
+
     this.world.addContactMaterial(diceTableContact)
     this.world.addContactMaterial(diceDiceContact)
+    this.world.addContactMaterial(diceWallContact)
 
-    return { dice: diceMaterial, table: tableMaterial }
+    return { dice: diceMaterial, table: tableMaterial, wall: wallMaterial }
   }
 
   step(deltaTime: number) {
