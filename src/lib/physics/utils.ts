@@ -51,8 +51,8 @@ export function project3DTo2D(
 
 // 检查骰子是否停止
 export function isDiceStopped(body: CANNON.Body): boolean {
-  const velocityThreshold = 0.05 // m/s
-  const angularThreshold = 0.1 // rad/s
+  const velocityThreshold = 0.1 // m/s
+  const angularThreshold = 0.2 // rad/s
 
   const linearSpeed = body.velocity.length()
   const angularSpeed = body.angularVelocity.length()
