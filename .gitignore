@@ -41,3 +41,4 @@ pnpm-debug.log*
 # key/
 .cozeproj/reduction
 .gstack/
+.superpowers/
