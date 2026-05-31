@@ -27,7 +27,8 @@ export function createDiceScene(
     alpha: false,
   })
   renderer.setSize(width, height)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  const pixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio : 1
+  renderer.setPixelRatio(Math.min(pixelRatio, 2))
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
