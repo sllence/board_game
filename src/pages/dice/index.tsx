@@ -1,7 +1,9 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
+import { Switch } from '@/components/ui/switch'
 import { Dices, ArrowLeft, Settings, X, Plus, Minus, Volume2, MousePointerClick, Smartphone } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -32,6 +34,12 @@ const DicePage: FC = () => {
   const [cupLifting, setCupLifting] = useState(false)
   const physicsDiceRef = useRef<PhysicsDiceHandle>(null)
   const lastShakeTimeRef = useRef<number>(0)
+  const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout>[]>([])
+
+  const clearShakeTimeouts = useCallback(() => {
+    shakeTimeoutRef.current.forEach(clearTimeout)
+    shakeTimeoutRef.current = []
+  }, [])
 
   // 计算骰子总点数
   const total = results.reduce((sum, n) => sum + n, 0)
@@ -67,9 +75,9 @@ const DicePage: FC = () => {
     if (rollMode === 'shake') {
       simulateShakeRoll()
     } else {
-        physicsDiceRef.current?.throwDice()
+      physicsDiceRef.current?.throwDice()
     }
-  }, [rollMode])
+  }, [rollMode, simulateShakeRoll])
 
   // 摇一摇投掷
   const simulateShakeRoll = useCallback(() => {
@@ -80,47 +88,51 @@ const DicePage: FC = () => {
     setCupShaking(true)
     playSound('shake')
 
-    setTimeout(() => {
+    clearShakeTimeouts()
+
+    const t1 = setTimeout(() => {
       setCupShaking(false)
       setCupLifting(true)
       playSound('lift')
 
-      setTimeout(() => {
-        // 掀开杯子，触发物理投掷
+      const t2 = setTimeout(() => {
         setShowCup(false)
-      physicsDiceRef.current?.throwDice()
+        physicsDiceRef.current?.throwDice()
       }, 800)
+      shakeTimeoutRef.current.push(t2)
     }, 2000)
-  }, [rolling, playSound])
+    shakeTimeoutRef.current.push(t1)
+  }, [rolling, playSound, clearShakeTimeouts])
 
   // 摇一摇监听
-  useState(() => {
+  useEffect(() => {
     if (rollMode !== 'shake') return
 
     if ([Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv() as any)) {
-      Taro.onAccelerometerChange((res) => {
+      const handler = (res) => {
         const acceleration = Math.sqrt(res.x * res.x + res.y * res.y + res.z * res.z)
         const now = Date.now()
-
-        // 中等灵敏度阈值15，且距离上次触发至少间隔2秒
         if (acceleration > 15 && !rolling && now - lastShakeTimeRef.current > 2000) {
           lastShakeTimeRef.current = now
           simulateShakeRoll()
         }
-      })
+      }
+      Taro.onAccelerometerChange(handler)
       Taro.startAccelerometer({ interval: 'game' })
       return () => {
+        Taro.offAccelerometerChange(handler)
         Taro.stopAccelerometer()
+        clearShakeTimeouts()
       }
     }
-  })
+  }, [rollMode, rolling, simulateShakeRoll, clearShakeTimeouts])
 
   const saveSettings = useCallback(() => {
     setShowSettings(false)
   }, [])
 
   return (
-    <View className="flex flex-col min-h-screen bg-background">
+    <View className="flex flex-col min-h-screen" style={{ backgroundColor: '#1A1A2E' }}>
       {/* CSS动画定义（仅用于杯子） */}
       <View style={{ display: 'none' }}>
         <Text>{`
@@ -151,41 +163,41 @@ const DicePage: FC = () => {
       </View>
 
       {/* 标题栏 */}
-      <View className="sticky top-0 z-30 bg-surface-container-lowest">
+      <View className="sticky top-0 z-30" style={{ backgroundColor: '#1A1A2E' }}>
         <View className="flex items-center justify-between px-5 h-14">
           <View className="flex items-center gap-3">
             {Taro.getCurrentPages().length > 1 && (
               <View
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container"
+                className="w-10 h-10 flex items-center justify-center rounded-full"
                 onClick={() => Taro.navigateBack()}
               >
-                <ArrowLeft size={20} color="#57534E" />
+                <ArrowLeft size={20} color="#A0A0B0" />
               </View>
             )}
             <View className="flex items-center gap-2">
               <View className="w-9 h-9 rounded-2xl flex items-center justify-center bg-gradient-to-br from-primary to-amber-700">
                 <Dices size={20} color="#fff" />
               </View>
-              <Text className="text-xl font-bold text-on-surface">骰子</Text>
+              <Text className="text-xl font-bold text-white">骰子</Text>
             </View>
           </View>
           <View
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container"
+            className="w-10 h-10 flex items-center justify-center rounded-full"
             onClick={() => setShowSettings(true)}
           >
-            <Settings size={20} color="#57534E" />
+            <Settings size={20} color="#A0A0B0" />
           </View>
         </View>
       </View>
 
       {/* 当前配置显示 */}
       <View className="px-4 pt-4">
-        <View className="flex items-center justify-between px-4 py-3 bg-surface-container rounded-2xl">
+        <View className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
           <View className="flex items-center gap-3">
             <Dices size={20} color="#F59E0B" />
             <View>
-              <Text className="block text-sm font-medium text-on-surface">{getCurrentConfigText()}</Text>
-              <Text className="block text-xs text-on-surface-variant">{getCurrentModeText()}</Text>
+              <Text className="block text-sm font-medium text-white">{getCurrentConfigText()}</Text>
+              <Text className="block text-xs text-gray-400">{getCurrentModeText()}</Text>
             </View>
           </View>
           {soundEnabled && <Volume2 size={16} color="#22c55e" />}
@@ -195,7 +207,7 @@ const DicePage: FC = () => {
       {/* 主投掷区域 */}
       <View className="flex-1 flex flex-col items-center justify-center px-4 py-6">
         {/* 状态提示 */}
-        <Text className="block text-sm text-on-surface-variant mb-6 text-center">
+        <Text className="block text-sm text-gray-400 mb-6 text-center">
           {rolling
             ? showCup
               ? '摇晃杯子中...'
@@ -266,14 +278,16 @@ const DicePage: FC = () => {
         )}
 
         {/* 物理骰子组件 */}
-        {!showCup && <PhysicsDice ref={physicsDiceRef} count={diceCount} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />}
+        <View style={{ display: showCup ? 'none' : 'block' }}>
+          <PhysicsDice ref={physicsDiceRef} count={diceCount} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
+        </View>
 
         {/* 结果展示区域 */}
         {results.length > 0 && !showCup && (
           <View className="text-center mt-6">
-            <Text className="block text-lg font-bold text-primary mb-2">投掷结果</Text>
-            <Text className="block text-3xl font-bold text-on-surface mb-2">{results.join(' · ')}</Text>
-            {diceCount > 1 && <Text className="block text-sm text-on-surface-variant">总计: {total}</Text>}
+            <Text className="block text-lg font-bold text-amber-400 mb-2">投掷结果</Text>
+            <Text className="block text-3xl font-bold text-white mb-2">{results.join(' · ')}</Text>
+            {diceCount > 1 && <Text className="block text-sm text-gray-400">总计: {total}</Text>}
           </View>
         )}
       </View>
@@ -281,9 +295,9 @@ const DicePage: FC = () => {
       {/* 投掷按钮 */}
       <View className="px-4 pb-8">
         <Button
-          className="w-full py-4 rounded-2xl text-lg font-bold"
+          className="w-full py-4 rounded-2xl text-lg font-bold bg-gradient-to-r from-amber-500 to-amber-600 border-0"
           style={{
-            boxShadow: '0 10px 25px rgba(245, 158, 11, 0.2)',
+            boxShadow: '0 10px 25px rgba(245, 158, 11, 0.3)',
           }}
           onClick={handleRoll}
           disabled={rolling}
@@ -296,137 +310,125 @@ const DicePage: FC = () => {
               <Text className="text-white">模拟摇晃</Text>
             </View>
           ) : (
-            <Text className="text-white">开始投掷</Text>
+            <Text className="text-white font-bold">开始投掷</Text>
           )}
         </Button>
       </View>
 
       {/* 设置面板 */}
-      {showSettings && (
-        <View className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center">
-          <View className="bg-surface rounded-t-3xl w-full max-h-[80vh] overflow-y-auto">
-            <View className="p-6">
-              {/* 模态框标题 */}
-              <View className="flex items-center justify-between mb-6">
-                <Text className="text-xl font-bold text-on-surface">投掷设置</Text>
-                <View
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container"
-                  onClick={() => setShowSettings(false)}
-                >
-                  <X size={20} color="#57534E" />
-                </View>
-              </View>
-
-              {/* 骰子类型选择 */}
-              <View className="mb-6">
-                <Text className="block text-sm font-semibold text-on-surface-variant mb-3">选择骰子类型</Text>
-                <View className="flex gap-2 overflow-x-auto pb-2">
-                  {DICE_TYPES.map((dice) => (
-                    <View
-                      key={dice.key}
-                      className={`flex-shrink-0 px-4 py-2 rounded-full cursor-pointer transition-all ${
-                        selectedDice.key === dice.key ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant'
-                      }`}
-                      onClick={() => setSelectedDice(dice)}
-                    >
-                      <Text className="text-sm font-medium">{dice.label}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* 骰子数量选择 */}
-              <View className="mb-6">
-                <Text className="block text-sm font-semibold text-on-surface-variant mb-3">
-                  选择骰子数量: <Text className="text-primary font-bold">{diceCount}</Text>
-                </Text>
-                <View className="flex items-center gap-4">
-                  <View
-                    className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center cursor-pointer"
-                    onClick={() => setDiceCount(Math.max(1, diceCount - 1))}
-                  >
-                    <Minus size={20} color="#57534E" />
-                  </View>
-                  <View className="flex-1 h-3 bg-surface-container rounded-full relative">
-                    <View
-                      className="absolute left-0 top-0 h-full bg-primary rounded-full"
-                      style={{ width: `${(diceCount / 10) * 100}%` }}
-                    />
-                  </View>
-                  <View
-                    className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center cursor-pointer"
-                    onClick={() => setDiceCount(Math.min(10, diceCount + 1))}
-                  >
-                    <Plus size={20} color="#57534E" />
-                  </View>
-                </View>
-              </View>
-
-              {/* 投掷方式选择 */}
-              <View className="mb-6">
-                <Text className="block text-sm font-semibold text-on-surface-variant mb-3">投掷方式</Text>
-                <View className="flex flex-col gap-3">
-                  <View
-                    className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'tap' ? 'bg-primary-container' : 'bg-surface-container'}`}
-                    onClick={() => setRollMode('tap')}
-                  >
-                    <View
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rollMode === 'tap' ? 'border-primary' : 'border-outline'}`}
-                    >
-                      {rollMode === 'tap' && <View className="w-3 h-3 rounded-full bg-primary" />}
-                    </View>
-                    <View className="flex-1">
-                      <Text className="block font-medium text-on-surface">点击投掷</Text>
-                      <Text className="block text-sm text-on-surface-variant">点击按钮即可投掷骰子</Text>
-                    </View>
-                    <MousePointerClick size={20} color="#57534E" />
-                  </View>
-
-                  <View
-                    className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'shake' ? 'bg-primary-container' : 'bg-surface-container'}`}
-                    onClick={() => setRollMode('shake')}
-                  >
-                    <View
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rollMode === 'shake' ? 'border-primary' : 'border-outline'}`}
-                    >
-                      {rollMode === 'shake' && <View className="w-3 h-3 rounded-full bg-primary" />}
-                    </View>
-                    <View className="flex-1">
-                      <Text className="block font-medium text-on-surface">摇一摇投掷</Text>
-                      <Text className="block text-sm text-on-surface-variant">摇动设备触发投掷，配合杯子动画</Text>
-                    </View>
-                    <Smartphone size={20} color="#57534E" />
-                  </View>
-                </View>
-              </View>
-
-              {/* 音效设置 */}
-              <View className="mb-6">
-                <Text className="block text-sm font-semibold text-on-surface-variant mb-3">音效设置</Text>
-                <View className="flex items-center justify-between p-4 bg-surface-container rounded-xl">
-                  <View>
-                    <Text className="block font-medium text-on-surface">开启音效</Text>
-                    <Text className="block text-sm text-on-surface-variant">摇晃、停止、掀开音效</Text>
-                  </View>
-                  <View
-                    className={`w-12 h-7 rounded-full relative cursor-pointer ${soundEnabled ? 'bg-primary' : 'bg-surface-container-highest'}`}
-                    onClick={() => setSoundEnabled(!soundEnabled)}
-                  >
-                    <View
-                      className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow ${soundEnabled ? 'right-1' : 'left-1'}`}
-                    />
-                  </View>
-                </View>
-              </View>
-
-              {/* 保存按钮 */}
-              <Button className="w-full py-4 rounded-xl text-base font-semibold" onClick={saveSettings}>
-                <Text className="text-white">保存设置</Text>
-              </Button>
+      <Drawer open={showSettings} onOpenChange={setShowSettings}>
+        <DrawerContent className="bg-gray-900">
+          <DrawerHeader>
+            <View className="flex items-center justify-between">
+              <DrawerTitle className="text-white">投掷设置</DrawerTitle>
+              <DrawerClose className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800">
+                <X size={20} color="#A0A0B0" />
+              </DrawerClose>
             </View>
+          </DrawerHeader>
+          <View className="p-6">
+            {/* 骰子类型选择 */}
+            <View className="mb-6">
+              <Text className="block text-sm font-semibold text-gray-400 mb-3">选择骰子类型</Text>
+              <View className="flex gap-2 overflow-x-auto pb-2">
+                {DICE_TYPES.map((dice) => (
+                  <View
+                    key={dice.key}
+                    className={`flex-shrink-0 px-4 py-2 rounded-full cursor-pointer transition-all ${
+                      selectedDice.key === dice.key ? 'bg-amber-500 text-white' : 'bg-gray-800 text-gray-300'
+                    }`}
+                    onClick={() => setSelectedDice(dice)}
+                  >
+                    <Text className="text-sm font-medium">{dice.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* 骰子数量选择 */}
+            <View className="mb-6">
+              <Text className="block text-sm font-semibold text-gray-400 mb-3">
+                选择骰子数量: <Text className="text-amber-400 font-bold">{diceCount}</Text>
+              </Text>
+              <View className="flex items-center gap-4">
+                <View
+                  className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center cursor-pointer"
+                  onClick={() => setDiceCount(Math.max(1, diceCount - 1))}
+                >
+                  <Minus size={20} color="#A0A0B0" />
+                </View>
+                <View className="flex-1 h-3 bg-gray-800 rounded-full relative">
+                  <View
+                    className="absolute left-0 top-0 h-full bg-amber-500 rounded-full"
+                    style={{ width: `${(diceCount / 10) * 100}%` }}
+                  />
+                </View>
+                <View
+                  className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center cursor-pointer"
+                  onClick={() => setDiceCount(Math.min(10, diceCount + 1))}
+                >
+                  <Plus size={20} color="#A0A0B0" />
+                </View>
+              </View>
+            </View>
+
+            {/* 投掷方式选择 */}
+            <View className="mb-6">
+              <Text className="block text-sm font-semibold text-gray-400 mb-3">投掷方式</Text>
+              <View className="flex flex-col gap-3">
+                <View
+                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'tap' ? 'bg-amber-500/20' : 'bg-gray-800'}`}
+                  onClick={() => setRollMode('tap')}
+                >
+                  <View
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rollMode === 'tap' ? 'border-amber-500' : 'border-gray-600'}`}
+                  >
+                    {rollMode === 'tap' && <View className="w-3 h-3 rounded-full bg-amber-500" />}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="block font-medium text-white">点击投掷</Text>
+                    <Text className="block text-sm text-gray-400">点击按钮即可投掷骰子</Text>
+                  </View>
+                  <MousePointerClick size={20} color="#A0A0B0" />
+                </View>
+
+                <View
+                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'shake' ? 'bg-amber-500/20' : 'bg-gray-800'}`}
+                  onClick={() => setRollMode('shake')}
+                >
+                  <View
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rollMode === 'shake' ? 'border-amber-500' : 'border-gray-600'}`}
+                  >
+                    {rollMode === 'shake' && <View className="w-3 h-3 rounded-full bg-amber-500" />}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="block font-medium text-white">摇一摇投掷</Text>
+                    <Text className="block text-sm text-gray-400">摇动设备触发投掷，配合杯子动画</Text>
+                  </View>
+                  <Smartphone size={20} color="#A0A0B0" />
+                </View>
+              </View>
+            </View>
+
+            {/* 音效设置 */}
+            <View className="mb-6">
+              <Text className="block text-sm font-semibold text-gray-400 mb-3">音效设置</Text>
+              <View className="flex items-center justify-between p-4 bg-gray-800 rounded-xl">
+                <View>
+                  <Text className="block font-medium text-white">开启音效</Text>
+                  <Text className="block text-sm text-gray-400">摇晃、停止、掀开音效</Text>
+                </View>
+                <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+              </View>
+            </View>
+
+            {/* 保存按钮 */}
+            <Button className="w-full py-4 rounded-xl text-base font-semibold bg-amber-500 border-0" onClick={saveSettings}>
+              <Text className="text-white">保存设置</Text>
+            </Button>
           </View>
-        </View>
-      )}
+        </DrawerContent>
+      </Drawer>
     </View>
   )
 }

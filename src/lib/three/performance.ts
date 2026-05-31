@@ -13,6 +13,8 @@ export class PerformanceMonitor {
   private fps: number = 60
   private level: PerformanceLevel = 'high'
   private onLevelChange?: (level: PerformanceLevel) => void
+  private lastLevelChangeTime: number = 0
+  private fpsHistory: number[] = []
 
   constructor(onLevelChange?: (level: PerformanceLevel) => void) {
     this.onLevelChange = onLevelChange
@@ -24,19 +26,26 @@ export class PerformanceMonitor {
     const delta = now - this.lastTime
 
     if (delta >= 1000) {
-      this.fps = (this.frameCount * 1000) / delta
+      const currentFps = (this.frameCount * 1000) / delta
+      this.fpsHistory.push(currentFps)
+      if (this.fpsHistory.length > 3) {
+        this.fpsHistory.shift()
+      }
+      this.fps = this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length
       this.frameCount = 0
       this.lastTime = now
-      this.updateLevel()
+      this.updateLevel(now)
     }
   }
 
-  private updateLevel(): void {
+  private updateLevel(now: number): void {
+    if (now - this.lastLevelChangeTime < 2000) return
+
     let newLevel: PerformanceLevel
 
-    if (this.fps >= 55) {
+    if (this.fps >= 50) {
       newLevel = 'high'
-    } else if (this.fps >= 30) {
+    } else if (this.fps >= 25) {
       newLevel = 'medium'
     } else {
       newLevel = 'low'
@@ -44,6 +53,7 @@ export class PerformanceMonitor {
 
     if (newLevel !== this.level) {
       this.level = newLevel
+      this.lastLevelChangeTime = now
       this.onLevelChange?.(this.level)
     }
   }
@@ -57,7 +67,7 @@ export class PerformanceMonitor {
   }
 
   dispose(): void {
-    // 清理资源
+    this.fpsHistory = []
   }
 }
 

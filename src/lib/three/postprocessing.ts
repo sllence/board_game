@@ -24,14 +24,17 @@ export function createPostProcessing(
 
   const fxaaPass = new ShaderPass(FXAAShader)
   const pixelRatio = renderer.getPixelRatio()
+  const canvas = renderer.domElement
+  const width = canvas.width || 375
+  const height = canvas.height || 400
   fxaaPass.material.uniforms['resolution'].value.set(
-    1 / (window.innerWidth * pixelRatio),
-    1 / (window.innerHeight * pixelRatio)
+    1 / (width * pixelRatio),
+    1 / (height * pixelRatio)
   )
   composer.addPass(fxaaPass)
 
   const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    new THREE.Vector2(width, height),
     0.5,
     0.4,
     0.85

@@ -15,10 +15,10 @@ export function createDiceScene(
   height: number
 ): DiceScene {
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xFFFFFF)
+  scene.background = new THREE.Color(0x1A1A2E)
 
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
-  camera.position.set(0, 5, 8)
+  camera.position.set(0, 6, 6)
   camera.lookAt(0, 0, 0)
 
   const renderer = new THREE.WebGLRenderer({
@@ -31,15 +31,15 @@ export function createDiceScene(
   renderer.setPixelRatio(Math.min(pixelRatio, 2))
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
-  renderer.setClearColor(0xFFFFFF, 1)
+  renderer.setClearColor(0x1A1A2E, 1)
 
   const lights = createLights()
   scene.add(lights.directional, lights.ambient, lights.point)
 
   const groundGeometry = new THREE.PlaneGeometry(20, 20)
   const groundMaterial = new THREE.MeshStandardMaterial({
-    color: 0xFFFFFF,
-    roughness: 0.8,
+    color: 0x2D2D3D,
+    roughness: 0.9,
     metalness: 0.0,
   })
   const ground = new THREE.Mesh(groundGeometry, groundMaterial)

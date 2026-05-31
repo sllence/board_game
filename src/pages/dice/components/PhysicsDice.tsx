@@ -23,11 +23,9 @@ import {
 } from '@/lib/three/postprocessing'
 import { PerformanceMonitor, getEffectsConfig } from '@/lib/three/performance'
 
-let tablePlaneCreated = false
-
 const STOP_FRAME_THRESHOLD = 30
 const VELOCITY_THRESHOLD = 0.5
-const MAX_ANIMATION_TIME = 5000 // 最大动画时间5秒
+const MAX_ANIMATION_TIME = 5000
 
 interface PhysicsDiceProps {
   count: number
@@ -53,6 +51,8 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const canvasReadyRef = useRef(false)
   const performanceRef = useRef<PerformanceMonitor | null>(null)
+  const tablePlaneBodyRef = useRef<CANNON.Body | null>(null)
+  const lastFrameTimeRef = useRef(Date.now())
 
   const trailRef = useRef<TrailParticleSystem | null>(null)
   const sparkRef = useRef<SparkParticleSystem | null>(null)
@@ -64,7 +64,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   onResultRef.current = onResult
   onAnimationEndRef.current = onAnimationEnd
 
-  const cleanup = useCallback(() => {
+  const cleanupBodies = useCallback(() => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = null
@@ -75,6 +75,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     }
 
     bodiesRef.current.forEach((body) => {
+      body.removeEventListener('collide')
       physicsWorld.world.removeBody(body)
     })
     bodiesRef.current = []
@@ -86,6 +87,10 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       disposeD6Dice(dice)
     })
     diceRef.current = []
+  }, [])
+
+  const cleanup = useCallback(() => {
+    cleanupBodies()
 
     performanceRef.current?.dispose()
     if (postProcessingRef.current) {
@@ -96,6 +101,9 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     if (ambientRef.current && diceSceneRef.current) {
       diceSceneRef.current.scene.remove(ambientRef.current.getPoints())
     }
+    if (sparkRef.current && diceSceneRef.current) {
+      diceSceneRef.current.scene.remove(sparkRef.current.getPoints())
+    }
 
     trailRef.current?.dispose()
     sparkRef.current?.dispose()
@@ -105,7 +113,12 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     sparkRef.current = null
     glowRef.current = null
     ambientRef.current = null
-  }, [])
+
+    if (tablePlaneBodyRef.current) {
+      physicsWorld.world.removeBody(tablePlaneBodyRef.current)
+      tablePlaneBodyRef.current = null
+    }
+  }, [cleanupBodies])
 
   useReady(() => {
     const query = Taro.createSelectorQuery()
@@ -134,14 +147,14 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
           if (ambientRef.current) {
             diceSceneRef.current.scene.add(ambientRef.current.getPoints())
           }
+          if (sparkRef.current) {
+            diceSceneRef.current.scene.add(sparkRef.current.getPoints())
+          }
 
-          performanceRef.current = new PerformanceMonitor((level) => {
-            console.log('Performance level:', level)
-          })
+          performanceRef.current = new PerformanceMonitor()
 
-          if (!tablePlaneCreated) {
-            createTablePlane()
-            tablePlaneCreated = true
+          if (!tablePlaneBodyRef.current) {
+            tablePlaneBodyRef.current = createTablePlane()
           }
 
           canvasReadyRef.current = true
@@ -160,10 +173,12 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     const level = performanceRef.current?.getLevel() || 'high'
     const config = getEffectsConfig(level)
 
-    physicsWorld.step(1 / 60)
+    const delta = Math.min((Date.now() - lastFrameTimeRef.current) / 1000, 1 / 30)
+    lastFrameTimeRef.current = Date.now()
+    physicsWorld.step(delta)
 
     // 限制骰子位置，防止滚出屏幕
-    const BOUND = 3.5
+    const BOUND = 2.5
     bodiesRef.current.forEach((body) => {
       if (body.position.x > BOUND && body.velocity.x > 0) body.velocity.x = 0
       if (body.position.x < -BOUND && body.velocity.x < 0) body.velocity.x = 0
@@ -188,19 +203,19 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
           )
         }
       })
-      trailRef.current.update(1 / 60)
+      trailRef.current.update(delta)
     }
 
     if (config.enableSpark) {
-      sparkRef.current?.update(1 / 60)
+      sparkRef.current?.update(delta)
     }
 
     if (config.enableGlow) {
-      glowRef.current?.update(1 / 60)
+      glowRef.current?.update(delta)
     }
 
     if (config.enableAmbient) {
-      ambientRef.current?.update(1 / 60)
+      ambientRef.current?.update(delta)
     }
 
     if (config.enablePostProcessing && postProcessingRef.current) {
@@ -225,10 +240,11 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       animatingRef.current = false
       onAnimationEndRef.current()
 
-      if (config.enableGlow && glowRef.current) {
+      if (config.enableGlow && glowRef.current && diceSceneRef.current) {
         bodiesRef.current.forEach((body) => {
           glowRef.current!.show(
-            new THREE.Vector3(body.position.x, body.position.y, body.position.z)
+            new THREE.Vector3(body.position.x, body.position.y, body.position.z),
+            diceSceneRef.current!.scene
           )
         })
       }
@@ -248,10 +264,11 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       return
     }
 
-    cleanup()
+    cleanupBodies()
     animatingRef.current = true
     stopCounterRef.current = 0
     startTimeRef.current = Date.now()
+    lastFrameTimeRef.current = Date.now()
     onAnimationStart()
 
     for (let i = 0; i < count; i++) {
@@ -260,18 +277,25 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       physicsWorld.world.addBody(body)
       bodiesRef.current.push(body)
 
+      body.addEventListener('collide', (e: any) => {
+        const contactPoint = e.contact?.bi?.position || body.position
+        sparkRef.current?.emit(
+          new THREE.Vector3(contactPoint.x, contactPoint.y, contactPoint.z)
+        )
+      })
+
       const dice = createD6Dice()
       diceSceneRef.current.scene.add(dice)
       diceRef.current.push(dice)
     }
 
     renderLoopRef.current()
-  }, [count, cleanup, onAnimationStart])
+  }, [count, cleanupBodies, onAnimationStart])
 
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
 
   return (
-    <View className="w-full h-[400px] bg-white">
+    <View className="w-full h-[400px]">
       <Canvas id="diceCanvas" type="webgl" className="w-full h-full" />
     </View>
   )

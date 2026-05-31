@@ -5,7 +5,7 @@ export function createLights(): {
   ambient: THREE.AmbientLight
   point: THREE.PointLight
 } {
-  const directional = new THREE.DirectionalLight(0xffffff, 1.0)
+  const directional = new THREE.DirectionalLight(0xFFF5E6, 1.0)
   directional.position.set(5, 10, 5)
   directional.castShadow = true
   directional.shadow.mapSize.width = 1024
@@ -13,7 +13,7 @@ export function createLights(): {
   directional.shadow.camera.near = 0.5
   directional.shadow.camera.far = 50
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.4)
+  const ambient = new THREE.AmbientLight(0xFFE8D6, 0.5)
 
   const point = new THREE.PointLight(0xF59E0B, 0.5, 10)
 

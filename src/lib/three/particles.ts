@@ -53,7 +53,7 @@ class Particle {
 export class TrailParticleSystem {
   private particles: Particle[] = []
   private geometry: THREE.BufferGeometry
-  private material: THREE.PointsMaterial
+  private material: THREE.ShaderMaterial
   private points: THREE.Points
   private config: ParticleConfig = {
     count: 8,
@@ -64,9 +64,30 @@ export class TrailParticleSystem {
 
   constructor() {
     this.geometry = new THREE.BufferGeometry()
-    this.material = new THREE.PointsMaterial({
-      size: this.config.size,
-      color: this.config.color,
+    this.material = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: this.config.color },
+        uSize: { value: this.config.size },
+      },
+      vertexShader: `
+        attribute float alpha;
+        varying float vAlpha;
+        uniform float uSize;
+        void main() {
+          vAlpha = alpha;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = uSize * (300.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        varying float vAlpha;
+        void main() {
+          if (vAlpha <= 0.0) discard;
+          gl_FragColor = vec4(uColor, vAlpha);
+        }
+      `,
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -119,7 +140,7 @@ export class TrailParticleSystem {
 export class SparkParticleSystem {
   private particles: Particle[] = []
   private geometry: THREE.BufferGeometry
-  private material: THREE.PointsMaterial
+  private material: THREE.ShaderMaterial
   private points: THREE.Points
   private config: ParticleConfig = {
     count: 25,
@@ -132,9 +153,30 @@ export class SparkParticleSystem {
 
   constructor() {
     this.geometry = new THREE.BufferGeometry()
-    this.material = new THREE.PointsMaterial({
-      size: this.config.size,
-      color: this.config.color,
+    this.material = new THREE.ShaderMaterial({
+      uniforms: {
+        uColor: { value: this.config.color },
+        uSize: { value: this.config.size },
+      },
+      vertexShader: `
+        attribute float alpha;
+        varying float vAlpha;
+        uniform float uSize;
+        void main() {
+          vAlpha = alpha;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = uSize * (300.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        varying float vAlpha;
+        void main() {
+          if (vAlpha <= 0.0) discard;
+          gl_FragColor = vec4(uColor, vAlpha);
+        }
+      `,
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -191,6 +233,7 @@ export class SparkParticleSystem {
 // 结果光效粒子系统
 export class GlowParticleSystem {
   private sprites: THREE.Sprite[] = []
+  private startTimes: Map<THREE.Sprite, number> = new Map()
   private material: THREE.SpriteMaterial
   private config = {
     size: 0.5,
@@ -209,28 +252,37 @@ export class GlowParticleSystem {
     })
   }
 
-  show(position: THREE.Vector3): void {
+  show(position: THREE.Vector3, scene: THREE.Scene): void {
     const sprite = new THREE.Sprite(this.material.clone())
     sprite.position.copy(position)
     sprite.position.y += 0.5
     sprite.scale.setScalar(this.config.size)
+    this.startTimes.set(sprite, performance.now() / 1000)
     this.sprites.push(sprite)
+    scene.add(sprite)
   }
 
   update(_deltaTime: number): void {
+    const now = performance.now() / 1000
     this.sprites = this.sprites.filter((sprite) => {
       const material = sprite.material as THREE.SpriteMaterial
-      const progress = 1 - (material.opacity / 0.7)
+      const startTime = this.startTimes.get(sprite) ?? now
+      const elapsed = now - startTime
+      const progress = elapsed / this.config.duration
 
       if (progress < 0.5) {
-        material.opacity = progress * 1.4
+        material.opacity = progress * 2
         const scale = this.config.size + (this.config.maxSize - this.config.size) * progress * 2
         sprite.scale.setScalar(scale)
+      } else if (progress < 1.0) {
+        material.opacity = (1 - progress) * 2
+        sprite.scale.setScalar(this.config.maxSize)
       } else {
-        material.opacity = (1 - progress) * 1.4
+        material.opacity = 0
       }
 
-      if (material.opacity <= 0) {
+      if (progress >= 1.0 || material.opacity <= 0) {
+        this.startTimes.delete(sprite)
         material.dispose()
         return false
       }
@@ -293,8 +345,9 @@ export class AmbientParticleSystem {
     const positions = this.geometry.attributes.position as THREE.BufferAttribute
     for (let i = 0; i < this.config.count; i++) {
       const y = positions.getY(i)
-      positions.setY(i, y + Math.sin(this.time + i) * 0.001)
-      positions.setX(i, positions.getX(i) + Math.cos(this.time * 0.5 + i) * 0.0005)
+      positions.setY(i, y + Math.sin(this.time * 0.5 + i * 0.3) * 0.005)
+      positions.setX(i, positions.getX(i) + Math.cos(this.time * 0.3 + i * 0.2) * 0.003)
+      positions.setZ(i, positions.getZ(i) + Math.sin(this.time * 0.4 + i * 0.1) * 0.002)
     }
     positions.needsUpdate = true
   }
