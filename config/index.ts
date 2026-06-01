@@ -141,10 +141,10 @@ export default defineConfig<'vite'>(async (merge, _env) => {
             };
           },
         },
-        threePlatformAdapter(),
         ...(isH5
           ? []
           : [
+              threePlatformAdapter(),
               UnifiedViteWeappTailwindcssPlugin({
                 rem2rpx: true,
                 cssEntries: [path.resolve(__dirname, '../src/app.css')],
