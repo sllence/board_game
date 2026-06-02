@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import tailwindcss from '@tailwindcss/postcss';
-import threePlatformAdapter from '@minisheep/three-platform-adapter/plugin';
 import { UnifiedViteWeappTailwindcssPlugin } from 'weapp-tailwindcss/vite';
 import { defineConfig, type UserConfigExport } from '@tarojs/cli';
 import type { PluginItem } from '@tarojs/taro/types/compile/config/project';
@@ -144,7 +143,6 @@ export default defineConfig<'vite'>(async (merge, _env) => {
         ...(isH5
           ? []
           : [
-              threePlatformAdapter(),
               UnifiedViteWeappTailwindcssPlugin({
                 rem2rpx: true,
                 cssEntries: [path.resolve(__dirname, '../src/app.css')],

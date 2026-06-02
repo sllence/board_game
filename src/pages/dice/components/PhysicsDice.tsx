@@ -1,9 +1,8 @@
 import { View, Canvas } from '@tarojs/components'
 import Taro, { useReady } from '@tarojs/taro'
 import { useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
-import * as THREE from 'three'
+import * as THREE from 'three-platformize'
 import * as CANNON from 'cannon-es'
-import { adapter } from '@minisheep/three-platform-adapter'
 import { physicsWorld } from '@/lib/physics/world'
 import { createD6Body, applyThrowForce } from '@/lib/physics/dice-body'
 import { createTablePlane } from '@/lib/physics/table-plane'
@@ -129,16 +128,26 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     const isMini = isWeapp || isTT
 
     if (isMini) {
-      adapter.useCanvas('#diceCanvas', Taro.createSelectorQuery()).then(({ canvas, requestAnimationFrame }) => {
-        rafRef.current = requestAnimationFrame
+      // Dynamic import to avoid loading WechatPlatform in H5
+      import('three-platformize/src/WechatPlatform').then(({ WechatPlatform }) => {
         const query = Taro.createSelectorQuery()
         query
           .select('#diceCanvas')
           .fields({ node: true, size: true })
           .exec((res) => {
             if (res[0]?.node) {
+              const canvas = res[0].node
               const width = res[0].width || 375
               const height = res[0].height || 400
+
+              // Initialize three-platformize
+              const platform = new WechatPlatform(canvas)
+              THREE.PLATFORM.set(platform)
+
+              // Set up requestAnimationFrame for mini-program
+              rafRef.current = (callback: FrameRequestCallback) => {
+                return canvas.requestAnimationFrame(callback)
+              }
 
               canvasNodeRef.current = canvas
               diceSceneRef.current = createDiceScene(canvas, width, height)

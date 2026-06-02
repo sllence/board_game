@@ -1,10 +1,10 @@
 // src/lib/three/postprocessing.ts
-import * as THREE from 'three'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
-import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js'
+import * as THREE from 'three-platformize'
+import { EffectComposer } from 'three-platformize/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three-platformize/examples/jsm/postprocessing/RenderPass.js'
+import { ShaderPass } from 'three-platformize/examples/jsm/postprocessing/ShaderPass.js'
+import { UnrealBloomPass } from 'three-platformize/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { FXAAShader } from 'three-platformize/examples/jsm/shaders/FXAAShader.js'
 
 export interface PostProcessing {
   composer: EffectComposer
@@ -49,7 +49,8 @@ export function renderWithPostProcessing(postProcessing: PostProcessing): void {
 }
 
 export function disposePostProcessing(postProcessing: PostProcessing): void {
-  postProcessing.composer.dispose()
-  postProcessing.fxaaPass.dispose()
+  // Dispose passes in reverse order
   postProcessing.bloomPass.dispose()
+  // Note: ShaderPass and EffectComposer don't have dispose methods in three-platformize
+  // The passes will be garbage collected
 }

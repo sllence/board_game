@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import * as THREE from 'three-platformize'
 
 export function createLights(): {
   directional: THREE.DirectionalLight

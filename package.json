@@ -39,8 +39,6 @@
   ],
   "dependencies": {
     "@babel/runtime": "^7.24.4",
-    "@minisheep/mini-program-polyfill-core": "^1.1.5",
-    "@minisheep/three-platform-adapter": "^2.0.4",
     "@tarojs/components": "4.1.9",
     "@tarojs/helper": "4.1.9",
     "@tarojs/plugin-framework-react": "4.1.9",
@@ -51,7 +49,6 @@
     "@tarojs/runtime": "4.1.9",
     "@tarojs/shared": "4.1.9",
     "@tarojs/taro": "4.1.9",
-    "@types/three": "^0.184.1",
     "cannon-es": "^0.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -61,7 +58,7 @@
     "react-dom": "^18.0.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.184.0",
+    "three-platformize": "^1.133.3",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

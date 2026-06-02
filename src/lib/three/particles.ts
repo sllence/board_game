@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import * as THREE from 'three-platformize'
 
 // 粒子系统配置
 interface ParticleConfig {

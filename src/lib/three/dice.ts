@@ -1,5 +1,5 @@
-import * as THREE from 'three'
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import * as THREE from 'three-platformize'
+import { RoundedBoxGeometry } from 'three-platformize/examples/jsm/geometries/RoundedBoxGeometry.js'
 
 const D6_DOTS: Record<number, number[][]> = {
   1: [[50, 50]],

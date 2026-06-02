@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import * as THREE from 'three-platformize'
 import { createLights } from './lighting'
 
 export interface DiceScene {
