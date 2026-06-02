@@ -1,5 +1,8 @@
+import Taro from '@tarojs/taro'
 import * as THREE from 'three-platformize'
 import { RoundedBoxGeometry } from 'three-platformize/examples/jsm/geometries/RoundedBoxGeometry.js'
+
+declare const wx: any
 
 const D6_DOTS: Record<number, number[][]> = {
   1: [[50, 50]],
@@ -10,11 +13,24 @@ const D6_DOTS: Record<number, number[][]> = {
   6: [[25, 20], [75, 20], [25, 50], [75, 50], [25, 80], [75, 80]],
 }
 
-function generateDiceTexture(faceValue: number): THREE.CanvasTexture {
+function createCanvas2D(): { canvas: any; ctx: CanvasRenderingContext2D } {
+  const isMini = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT
+  if (isMini) {
+    const canvas = wx.createOffscreenCanvas({ type: '2d' })
+    canvas.width = 256
+    canvas.height = 256
+    const ctx = canvas.getContext('2d')
+    return { canvas, ctx }
+  }
   const canvas = document.createElement('canvas')
   canvas.width = 256
   canvas.height = 256
   const ctx = canvas.getContext('2d')!
+  return { canvas, ctx }
+}
+
+function generateDiceTexture(faceValue: number): THREE.CanvasTexture {
+  const { canvas, ctx } = createCanvas2D()
 
   ctx.fillStyle = '#FFFFFF'
   ctx.fillRect(0, 0, 256, 256)
