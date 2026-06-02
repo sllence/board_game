@@ -158,11 +158,8 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
               canvasNodeRef.current = canvas
               diceSceneRef.current = createDiceScene(canvas, width, height)
 
-              postProcessingRef.current = createPostProcessing(
-                diceSceneRef.current.renderer,
-                diceSceneRef.current.scene,
-                diceSceneRef.current.camera
-              )
+              // 小程序端不启用 PostProcessing（EffectComposer 与小程序 WebGL 不兼容）
+              // postProcessingRef.current = createPostProcessing(...)
 
               trailRef.current = new TrailParticleSystem()
               sparkRef.current = new SparkParticleSystem()
