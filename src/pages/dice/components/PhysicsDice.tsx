@@ -395,7 +395,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   return (
     <View className="w-full h-full overflow-hidden">
       {isMini ? (
-        <Canvas id="diceCanvas" type="webgl" className="w-full h-full" />
+        <Canvas id="diceCanvas" type="webgl" style={{ width: '100%', height: '100%' }} />
       ) : (
         <canvas
           id="diceCanvas"

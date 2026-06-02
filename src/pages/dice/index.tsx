@@ -278,7 +278,7 @@ const DicePage: FC = () => {
         )}
 
         {/* 物理骰子组件 */}
-        <View style={{ display: showCup ? 'none' : 'block' }}>
+        <View style={{ display: showCup ? 'none' : 'flex', width: '100%', height: '400px' }}>
           <PhysicsDice ref={physicsDiceRef} count={diceCount} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
         </View>
 
