@@ -1,8 +1,5 @@
-import Taro from '@tarojs/taro'
 import * as THREE from 'three-platformize'
 import { RoundedBoxGeometry } from 'three-platformize/examples/jsm/geometries/RoundedBoxGeometry.js'
-
-declare const wx: any
 
 const D6_DOTS: Record<number, number[][]> = {
   1: [[50, 50]],
@@ -13,41 +10,40 @@ const D6_DOTS: Record<number, number[][]> = {
   6: [[25, 20], [75, 20], [25, 50], [75, 50], [25, 80], [75, 80]],
 }
 
-function createCanvas2D(): { canvas: any; ctx: CanvasRenderingContext2D } {
-  const isMini = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT
-  if (isMini) {
-    const canvas = wx.createOffscreenCanvas({ type: '2d' })
-    canvas.width = 256
-    canvas.height = 256
-    const ctx = canvas.getContext('2d')
-    return { canvas, ctx }
-  }
-  const canvas = document.createElement('canvas')
-  canvas.width = 256
-  canvas.height = 256
-  const ctx = canvas.getContext('2d')!
-  return { canvas, ctx }
-}
+const TEX_SIZE = 256
 
-function generateDiceTexture(faceValue: number): THREE.CanvasTexture {
-  const { canvas, ctx } = createCanvas2D()
-
-  ctx.fillStyle = '#FFFFFF'
-  ctx.fillRect(0, 0, 256, 256)
-
-  ctx.fillStyle = '#1A1A1A'
+function generateDiceTexture(faceValue: number): THREE.Texture {
+  const data = new Uint8Array(TEX_SIZE * TEX_SIZE * 4)
   const dots = D6_DOTS[faceValue] || []
   const radius = 20
 
-  dots.forEach(([px, py]) => {
-    const x = (px / 100) * 256
-    const y = (py / 100) * 256
-    ctx.beginPath()
-    ctx.arc(x, y, radius, 0, Math.PI * 2)
-    ctx.fill()
-  })
+  for (let y = 0; y < TEX_SIZE; y++) {
+    for (let x = 0; x < TEX_SIZE; x++) {
+      const i = (y * TEX_SIZE + x) * 4
+      let isDot = false
+      for (const [px, py] of dots) {
+        const cx = (px / 100) * TEX_SIZE
+        const cy = (py / 100) * TEX_SIZE
+        if ((x - cx) ** 2 + (y - cy) ** 2 <= radius * radius) {
+          isDot = true
+          break
+        }
+      }
+      if (isDot) {
+        data[i] = 0x1A
+        data[i + 1] = 0x1A
+        data[i + 2] = 0x1A
+        data[i + 3] = 255
+      } else {
+        data[i] = 0xFF
+        data[i + 1] = 0xFF
+        data[i + 2] = 0xFF
+        data[i + 3] = 255
+      }
+    }
+  }
 
-  const texture = new THREE.CanvasTexture(canvas)
+  const texture = new THREE.DataTexture(data, TEX_SIZE, TEX_SIZE, THREE.RGBAFormat)
   texture.needsUpdate = true
   return texture
 }
