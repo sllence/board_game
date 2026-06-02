@@ -5,12 +5,20 @@ import tailwindcss from '@tailwindcss/postcss';
 import { UnifiedViteWeappTailwindcssPlugin } from 'weapp-tailwindcss/vite';
 import { defineConfig, type UserConfigExport } from '@tarojs/cli';
 import type { PluginItem } from '@tarojs/taro/types/compile/config/project';
+import type { Plugin as VitePlugin } from 'vite';
 import dotenv from 'dotenv';
 import devConfig from './dev';
 import prodConfig from './prod';
 import pkg from '../package.json';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+
+const MINIPROGRAM_POLYFILLS = `
+;if(typeof globalThis!=='undefined'&&typeof globalThis.performance==='undefined'){
+var __pf_s=Date.now();
+globalThis.performance={now:function(){return Date.now()-__pf_s},timing:{startTime:__pf_s}};
+}
+`;
 
 const generateTTProjectConfig = (outputRoot: string) => {
   const config = {
@@ -143,6 +151,18 @@ export default defineConfig<'vite'>(async (merge, _env) => {
         ...(isH5
           ? []
           : [
+              {
+                name: 'inject-miniprogram-polyfills',
+                enforce: 'post',
+                generateBundle(_opts, bundle) {
+                  for (const fileName of Object.keys(bundle)) {
+                    const chunk = bundle[fileName];
+                    if (chunk.type === 'chunk' && fileName.endsWith('.js')) {
+                      chunk.code = MINIPROGRAM_POLYFILLS + chunk.code;
+                    }
+                  }
+                },
+              } as VitePlugin,
               UnifiedViteWeappTailwindcssPlugin({
                 rem2rpx: true,
                 cssEntries: [path.resolve(__dirname, '../src/app.css')],
