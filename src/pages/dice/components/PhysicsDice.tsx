@@ -128,20 +128,26 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     const isMini = isWeapp || isTT
 
     if (isMini) {
-      // Dynamic import to avoid loading WechatPlatform in H5
-      import('three-platformize/src/WechatPlatform').then(({ WechatPlatform }) => {
+      const initMiniPlatform = async () => {
         const query = Taro.createSelectorQuery()
         query
           .select('#diceCanvas')
           .fields({ node: true, size: true })
-          .exec((res) => {
+          .exec(async (res) => {
             if (res[0]?.node) {
               const canvas = res[0].node
               const width = res[0].width || 375
               const height = res[0].height || 400
 
-              // Initialize three-platformize
-              const platform = new WechatPlatform(canvas)
+              // 根据平台选择对应的 Platform
+              let platform: any
+              if (isWeapp) {
+                const { WechatPlatform } = await import('three-platformize/src/WechatPlatform')
+                platform = new WechatPlatform(canvas)
+              } else if (isTT) {
+                const { BytePlatform } = await import('three-platformize/src/BytePlatform')
+                platform = new BytePlatform(canvas, width, height)
+              }
               THREE.PLATFORM.set(platform)
 
               // Set up requestAnimationFrame for mini-program
@@ -179,7 +185,8 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
               canvasReadyRef.current = true
             }
           })
-      })
+      }
+      initMiniPlatform()
     } else {
       const initH5Canvas = (retryCount = 0) => {
         const canvasEl = document.getElementById('diceCanvas')
