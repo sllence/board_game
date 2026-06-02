@@ -12,7 +12,8 @@ export interface DiceScene {
 export function createDiceScene(
   canvas: HTMLCanvasElement | Record<string, any>,
   width: number,
-  height: number
+  height: number,
+  renderScale: number = 1
 ): DiceScene {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(0x1A1A2E)
@@ -26,8 +27,7 @@ export function createDiceScene(
     antialias: true,
     alpha: false,
   })
-  const pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
-  renderer.setPixelRatio(Math.min(pixelRatio, 2))
+  renderer.setPixelRatio(renderScale)
   renderer.setSize(width, height)
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap

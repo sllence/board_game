@@ -156,7 +156,8 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
               }
 
               canvasNodeRef.current = canvas
-              diceSceneRef.current = createDiceScene(canvas, width, height)
+              // 小程序端提高渲染分辨率以抗锯齿（2x 超采样）
+              diceSceneRef.current = createDiceScene(canvas, width, height, 2)
 
               // 小程序端不启用 PostProcessing（EffectComposer 与小程序 WebGL 不兼容）
               // postProcessingRef.current = createPostProcessing(...)
