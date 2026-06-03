@@ -209,17 +209,6 @@ const DicePage: FC = () => {
 
       {/* 主投掷区域 */}
       <View className="flex-1 flex flex-col items-center justify-center px-4 py-6">
-        {/* 状态提示 */}
-        <Text className="block text-sm mb-6 text-center" style={{ color: selectedTheme.subTextColor }}>
-          {rolling
-            ? showCup
-              ? '摇晃杯子中...'
-              : '骰子滚动中...'
-            : results.length > 0
-              ? '投掷完成！'
-              : '点击下方按钮开始掷骰'}
-        </Text>
-
         {/* 杯子区域 */}
         {showCup && (
           <View
@@ -285,14 +274,28 @@ const DicePage: FC = () => {
           <PhysicsDice ref={physicsDiceRef} count={diceCount} color={selectedColor} theme={selectedTheme} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
         </View>
 
-        {/* 结果展示区域 */}
-        {results.length > 0 && !showCup && (
-          <View className="text-center mt-6">
-            <Text className="block text-lg font-bold text-amber-400 mb-2">投掷结果</Text>
-            <Text className="block text-3xl font-bold mb-2" style={{ color: selectedTheme.textColor }}>{results.join(' · ')}</Text>
-            {diceCount > 1 && <Text className="block text-sm" style={{ color: selectedTheme.subTextColor }}>总计: {total}</Text>}
-          </View>
-        )}
+        {/* 进度提示和结果展示（合并区域，始终展示） */}
+        <View className="text-center mt-6">
+          <Text className="block text-lg font-bold mb-2" style={{ color: selectedTheme.textColor }}>
+            {rolling
+              ? showCup
+                ? '摇晃杯子中...'
+                : '骰子滚动中...'
+              : '投掷结果'}
+          </Text>
+          {rolling ? (
+            <Text className="block text-2xl font-bold" style={{ color: selectedTheme.subTextColor }}>...</Text>
+          ) : results.length > 0 ? (
+            <>
+              <Text className="block text-3xl font-bold mb-2" style={{ color: selectedTheme.textColor }}>
+                {[...results].sort((a, b) => a - b).join(' · ')}
+              </Text>
+              {diceCount > 1 && <Text className="block text-sm" style={{ color: selectedTheme.subTextColor }}>总计: {total}</Text>}
+            </>
+          ) : (
+            <Text className="block text-sm" style={{ color: selectedTheme.subTextColor }}>点击下方按钮开始掷骰</Text>
+          )}
+        </View>
       </View>
 
       {/* 投掷按钮 */}

@@ -255,6 +255,18 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
 
   const renderLoopRef = useRef<() => void>(() => {})
 
+  // 静态渲染：动画结束后保持场景绘制，防止 React re-render 清空 canvas
+  const staticRenderRef = useRef<() => void>(() => {})
+
+  staticRenderRef.current = () => {
+    if (!diceSceneRef.current || animatingRef.current) return
+    diceSceneRef.current.scene.background = new THREE.Color(theme.sceneBg)
+    diceSceneRef.current.renderer.setClearColor(theme.sceneBg, 1)
+    const groundMaterial = diceSceneRef.current.ground.material as THREE.MeshBasicMaterial
+    groundMaterial.color.set(theme.groundColor)
+    renderScene(diceSceneRef.current)
+  }
+
   renderLoopRef.current = () => {
     if (!animatingRef.current || !diceSceneRef.current) return
 
@@ -304,6 +316,16 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       const results = bodiesRef.current.map(getTopFaceD6)
       onResultRef.current(results)
       animatingRef.current = false
+
+      // 动画结束后再渲染一帧，防止 React re-render 导致 canvas 清空
+      if (diceSceneRef.current) {
+        diceSceneRef.current.scene.background = new THREE.Color(theme.sceneBg)
+        diceSceneRef.current.renderer.setClearColor(theme.sceneBg, 1)
+        const groundMaterial = diceSceneRef.current.ground.material as THREE.MeshBasicMaterial
+        groundMaterial.color.set(theme.groundColor)
+        renderScene(diceSceneRef.current)
+      }
+
       onAnimationEndRef.current()
       return
     }
@@ -345,6 +367,11 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   }, [count, color, theme, cleanupBodies, onAnimationStart])
 
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
+
+  // 动画结束后每次渲染都重绘场景，防止 React re-render 清空 canvas
+  useEffect(() => {
+    staticRenderRef.current()
+  })
 
   const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
   const isTT = Taro.getEnv() === Taro.ENV_TYPE.TT
