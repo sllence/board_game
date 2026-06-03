@@ -8,7 +8,7 @@ import { createD6Body, applyThrowForce } from '@/lib/physics/dice-body'
 import { createTablePlane } from '@/lib/physics/table-plane'
 import { getTopFaceD6, isDiceStopped } from '@/lib/physics/utils'
 import { createDiceScene, renderScene, DiceScene } from '@/lib/three/scene'
-import { createD6Dice, updateDiceTransform, disposeD6Dice, DiceTheme } from '@/lib/three/dice'
+import { createD6Dice, updateDiceTransform, disposeD6Dice, DiceColor, DiceTheme } from '@/lib/three/dice'
 import {
   createPostProcessing,
   disposePostProcessing,
@@ -22,6 +22,7 @@ const MAX_ANIMATION_TIME = 5000
 
 interface PhysicsDiceProps {
   count: number
+  color: DiceColor
   theme: DiceTheme
   onResult: (results: number[]) => void
   onAnimationStart: () => void
@@ -33,7 +34,7 @@ export interface PhysicsDiceHandle {
 }
 
 export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
-  ({ count, theme, onResult, onAnimationStart, onAnimationEnd }, ref) => {
+  ({ count, color, theme, onResult, onAnimationStart, onAnimationEnd }, ref) => {
   const diceSceneRef = useRef<DiceScene | null>(null)
   const postProcessingRef = useRef<PostProcessing | null>(null)
   const diceRef = useRef<THREE.Mesh[]>([])
@@ -293,13 +294,13 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       physicsWorld.world.addBody(body)
       bodiesRef.current.push(body)
 
-      const dice = createD6Dice(theme)
+      const dice = createD6Dice(color)
       diceSceneRef.current.scene.add(dice)
       diceRef.current.push(dice)
     }
 
     renderLoopRef.current()
-  }, [count, theme, cleanupBodies, onAnimationStart])
+  }, [count, color, theme, cleanupBodies, onAnimationStart])
 
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
 

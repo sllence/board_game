@@ -6,7 +6,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@
 import { Switch } from '@/components/ui/switch'
 import { Dices, ArrowLeft, Settings, X, Plus, Minus, Volume2, MousePointerClick, Smartphone } from 'lucide-react-taro'
 import type { FC } from 'react'
-import { DICE_THEMES, DiceTheme } from '@/lib/three/dice'
+import { DICE_COLORS, DICE_THEMES, DiceColor, DiceTheme } from '@/lib/three/dice'
 
 import { PhysicsDice } from './components/PhysicsDice'
 import type { PhysicsDiceHandle } from './components/PhysicsDice'
@@ -24,6 +24,7 @@ type RollMode = 'tap' | 'shake'
 
 const DicePage: FC = () => {
   const [selectedDice, setSelectedDice] = useState(DICE_TYPES[1])
+  const [selectedColor, setSelectedColor] = useState<DiceColor>(DICE_COLORS[0])
   const [selectedTheme, setSelectedTheme] = useState<DiceTheme>(DICE_THEMES[0])
   const [diceCount, setDiceCount] = useState(1)
   const [rollMode, setRollMode] = useState<RollMode>('tap')
@@ -281,7 +282,7 @@ const DicePage: FC = () => {
 
         {/* 物理骰子组件 */}
         <View style={{ display: showCup ? 'none' : 'flex', width: '100%', height: '400px' }}>
-          <PhysicsDice ref={physicsDiceRef} count={diceCount} theme={selectedTheme} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
+          <PhysicsDice ref={physicsDiceRef} count={diceCount} color={selectedColor} theme={selectedTheme} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
         </View>
 
         {/* 结果展示区域 */}
@@ -347,9 +348,33 @@ const DicePage: FC = () => {
               </View>
             </View>
 
-            {/* 骰子主题选择 */}
+            {/* 骰子颜色选择 */}
             <View className="mb-6">
-              <Text className="block text-sm font-semibold text-gray-400 mb-3">骰子主题</Text>
+              <Text className="block text-sm font-semibold text-gray-400 mb-3">骰子颜色</Text>
+              <View className="flex gap-2 flex-wrap">
+                {DICE_COLORS.map((color) => (
+                  <View
+                    key={color.key}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer transition-all ${
+                      selectedColor.key === color.key ? 'bg-amber-500 text-white' : 'bg-gray-800 text-gray-300'
+                    }`}
+                    onClick={() => setSelectedColor(color)}
+                  >
+                    <View
+                      className="w-4 h-4 rounded-full border border-gray-500"
+                      style={{
+                        backgroundColor: `rgb(${color.bgColor[0]}, ${color.bgColor[1]}, ${color.bgColor[2]})`,
+                      }}
+                    />
+                    <Text className="text-sm font-medium">{color.label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* 界面主题选择 */}
+            <View className="mb-6">
+              <Text className="block text-sm font-semibold text-gray-400 mb-3">界面主题</Text>
               <View className="flex gap-2 flex-wrap">
                 {DICE_THEMES.map((theme) => (
                   <View
@@ -362,7 +387,7 @@ const DicePage: FC = () => {
                     <View
                       className="w-4 h-4 rounded-full border border-gray-500"
                       style={{
-                        backgroundColor: `rgb(${theme.bgColor[0]}, ${theme.bgColor[1]}, ${theme.bgColor[2]})`,
+                        backgroundColor: theme.pageBg,
                       }}
                     />
                     <Text className="text-sm font-medium">{theme.label}</Text>
