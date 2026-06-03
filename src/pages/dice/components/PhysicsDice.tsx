@@ -101,16 +101,22 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const initStaticDice = useCallback(() => {
     if (!diceSceneRef.current) return
 
-    const dice = createD6Dice(color)
-    // 点数1在 +z 面（前面），绕 x 轴旋转 -90度 让它朝上
-    dice.position.set(0, 0.6, 0)
-    dice.rotation.x = -Math.PI / 2
-    diceSceneRef.current.scene.add(dice)
-    diceRef.current.push(dice)
+    // 根据数量创建多个骰子，水平排列
+    const spacing = 1.2
+    const startX = -((count - 1) * spacing) / 2
+
+    for (let i = 0; i < count; i++) {
+      const dice = createD6Dice(color)
+      // 点数1在 +z 面（前面），绕 x 轴旋转 -90度 让它朝上
+      dice.position.set(startX + i * spacing, 0.6, 0)
+      dice.rotation.x = -Math.PI / 2
+      diceSceneRef.current.scene.add(dice)
+      diceRef.current.push(dice)
+    }
 
     // 渲染一帧
     renderScene(diceSceneRef.current)
-  }, [color])
+  }, [count, color])
 
   useReady(() => {
     const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
@@ -231,6 +237,21 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       if (resizeCheckRef.current) clearInterval(resizeCheckRef.current)
     }
   }, [])
+
+  // 当属性变化时重新初始化静态骰子
+  useEffect(() => {
+    if (!canvasReadyRef.current || !diceSceneRef.current || animatingRef.current) return
+
+    // 清除当前静态骰子
+    diceRef.current.forEach((dice) => {
+      diceSceneRef.current?.scene.remove(dice)
+      disposeD6Dice(dice)
+    })
+    diceRef.current = []
+
+    // 重新创建静态骰子
+    initStaticDice()
+  }, [count, color, theme, initStaticDice])
 
   const renderLoopRef = useRef<() => void>(() => {})
 
