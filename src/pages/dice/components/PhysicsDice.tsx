@@ -1,6 +1,6 @@
 import { View, Canvas } from '@tarojs/components'
 import Taro, { useReady } from '@tarojs/taro'
-import { useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useRef, useCallback, useEffect, useLayoutEffect, forwardRef, useImperativeHandle } from 'react'
 import * as THREE from 'three-platformize'
 import * as CANNON from 'cannon-es'
 import { physicsWorld } from '@/lib/physics/world'
@@ -47,6 +47,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const canvasReadyRef = useRef(false)
   const performanceRef = useRef<PerformanceMonitor | null>(null)
   const tablePlaneBodyRef = useRef<CANNON.Body | null>(null)
+  const resultsReportedRef = useRef(false)
   const lastFrameTimeRef = useRef(Date.now())
 
   const canvasNodeRef = useRef<any>(null)
@@ -259,7 +260,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const staticRenderRef = useRef<() => void>(() => {})
 
   staticRenderRef.current = () => {
-    if (!diceSceneRef.current || animatingRef.current) return
+    if (!diceSceneRef.current) return
     diceSceneRef.current.scene.background = new THREE.Color(theme.sceneBg)
     diceSceneRef.current.renderer.setClearColor(theme.sceneBg, 1)
     const groundMaterial = diceSceneRef.current.ground.material as THREE.MeshBasicMaterial
@@ -313,21 +314,17 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     }
 
     if (stopCounterRef.current >= STOP_FRAME_THRESHOLD || elapsed > MAX_ANIMATION_TIME) {
-      const results = bodiesRef.current.map(getTopFaceD6)
-      onResultRef.current(results)
-      animatingRef.current = false
+      if (!resultsReportedRef.current) {
+        const results = bodiesRef.current.map(getTopFaceD6)
+        onResultRef.current(results)
+        resultsReportedRef.current = true
+        animatingRef.current = false
 
-      // 动画结束后再渲染一帧，防止 React re-render 导致 canvas 清空
-      if (diceSceneRef.current) {
-        diceSceneRef.current.scene.background = new THREE.Color(theme.sceneBg)
-        diceSceneRef.current.renderer.setClearColor(theme.sceneBg, 1)
-        const groundMaterial = diceSceneRef.current.ground.material as THREE.MeshBasicMaterial
-        groundMaterial.color.set(theme.groundColor)
+        // 立即重绘一帧，确保 canvas 有内容
         renderScene(diceSceneRef.current)
-      }
 
-      onAnimationEndRef.current()
-      return
+        onAnimationEndRef.current()
+      }
     }
 
     if (rafRef.current) {
@@ -342,12 +339,14 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const throwDice = useCallback(() => {
     if (!canvasReadyRef.current || !diceSceneRef.current) {
       console.warn('[PhysicsDice] Canvas 未就绪，无法投掷')
+      onAnimationEndRef.current()
       return
     }
 
     cleanupBodies()
     animatingRef.current = true
     stopCounterRef.current = 0
+    resultsReportedRef.current = false
     startTimeRef.current = Date.now()
     lastFrameTimeRef.current = Date.now()
     onAnimationStart()
@@ -369,7 +368,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
 
   // 动画结束后每次渲染都重绘场景，防止 React re-render 清空 canvas
-  useEffect(() => {
+  useLayoutEffect(() => {
     staticRenderRef.current()
   })
 

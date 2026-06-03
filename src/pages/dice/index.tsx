@@ -276,24 +276,13 @@ const DicePage: FC = () => {
 
         {/* 进度提示和结果展示（合并区域，始终展示） */}
         <View className="text-center mt-6">
-          <Text className="block text-lg font-bold mb-2" style={{ color: selectedTheme.textColor }}>
-            {rolling
-              ? showCup
-                ? '摇晃杯子中...'
-                : '骰子滚动中...'
-              : '投掷结果'}
-          </Text>
-          {rolling ? (
-            <Text className="block text-2xl font-bold" style={{ color: selectedTheme.subTextColor }}>...</Text>
-          ) : results.length > 0 ? (
+          {results.length > 0 && (
             <>
               <Text className="block text-3xl font-bold mb-2" style={{ color: selectedTheme.textColor }}>
                 {[...results].sort((a, b) => a - b).join(' · ')}
               </Text>
               {diceCount > 1 && <Text className="block text-sm" style={{ color: selectedTheme.subTextColor }}>总计: {total}</Text>}
             </>
-          ) : (
-            <Text className="block text-sm" style={{ color: selectedTheme.subTextColor }}>点击下方按钮开始掷骰</Text>
           )}
         </View>
       </View>
