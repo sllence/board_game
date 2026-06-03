@@ -39,10 +39,8 @@ export function createDiceScene(
   scene.add(lights.directional, lights.ambient, lights.point)
 
   const groundGeometry = new THREE.PlaneGeometry(20, 20)
-  const groundMaterial = new THREE.MeshStandardMaterial({
+  const groundMaterial = new THREE.MeshBasicMaterial({
     color: groundColor,
-    roughness: 0.9,
-    metalness: 0.0,
   })
   const ground = new THREE.Mesh(groundGeometry, groundMaterial)
   ground.rotation.x = -Math.PI / 2
