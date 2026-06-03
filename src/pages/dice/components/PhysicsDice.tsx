@@ -97,6 +97,21 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     }
   }, [cleanupBodies])
 
+  // 初始化静态骰子，点数1面朝上
+  const initStaticDice = useCallback(() => {
+    if (!diceSceneRef.current) return
+
+    const dice = createD6Dice(color)
+    // 点数1在 +z 面（前面），绕 x 轴旋转 -90度 让它朝上
+    dice.position.set(0, 0.6, 0)
+    dice.rotation.x = -Math.PI / 2
+    diceSceneRef.current.scene.add(dice)
+    diceRef.current.push(dice)
+
+    // 渲染一帧
+    renderScene(diceSceneRef.current)
+  }, [color])
+
   useReady(() => {
     const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
     const isTT = Taro.getEnv() === Taro.ENV_TYPE.TT
@@ -143,6 +158,9 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
               }
 
               canvasReadyRef.current = true
+
+              // 初始化静态骰子，点数1面朝上
+              initStaticDice()
             }
           })
       }
@@ -176,6 +194,9 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
         }
 
         canvasReadyRef.current = true
+
+        // 初始化静态骰子，点数1面朝上
+        initStaticDice()
       }
 
       initH5Canvas()
