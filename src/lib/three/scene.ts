@@ -14,7 +14,8 @@ export function createDiceScene(
   width: number,
   height: number,
   renderScale: number = 1,
-  sceneBg: number = 0x1A1A2E
+  sceneBg: number = 0x1A1A2E,
+  groundColor: number = 0x2D2D3D
 ): DiceScene {
   const scene = new THREE.Scene()
   scene.background = new THREE.Color(sceneBg)
@@ -39,7 +40,7 @@ export function createDiceScene(
 
   const groundGeometry = new THREE.PlaneGeometry(20, 20)
   const groundMaterial = new THREE.MeshStandardMaterial({
-    color: 0x2D2D3D,
+    color: groundColor,
     roughness: 0.9,
     metalness: 0.0,
   })
