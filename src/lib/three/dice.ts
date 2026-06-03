@@ -1,6 +1,22 @@
 import * as THREE from 'three-platformize'
 import { RoundedBoxGeometry } from 'three-platformize/examples/jsm/geometries/RoundedBoxGeometry.js'
 
+export interface DiceTheme {
+  key: string
+  label: string
+  bgColor: [number, number, number]
+  dotColor: [number, number, number]
+}
+
+export const DICE_THEMES: DiceTheme[] = [
+  { key: 'white', label: '白色', bgColor: [0xFF, 0xFF, 0xFF], dotColor: [0x1A, 0x1A, 0x1A] },
+  { key: 'black', label: '黑色', bgColor: [0x1A, 0x1A, 0x1A], dotColor: [0xFF, 0xFF, 0xFF] },
+  { key: 'red', label: '红色', bgColor: [0xDC, 0x26, 0x26], dotColor: [0xFF, 0xFF, 0xFF] },
+  { key: 'blue', label: '蓝色', bgColor: [0x25, 0x63, 0xEB], dotColor: [0xFF, 0xFF, 0xFF] },
+  { key: 'green', label: '绿色', bgColor: [0x16, 0xA3, 0x4A], dotColor: [0xFF, 0xFF, 0xFF] },
+  { key: 'purple', label: '紫色', bgColor: [0x93, 0x33, 0xEA], dotColor: [0xFF, 0xFF, 0xFF] },
+]
+
 const D6_DOTS: Record<number, number[][]> = {
   1: [[50, 50]],
   2: [[25, 25], [75, 75]],
@@ -12,7 +28,11 @@ const D6_DOTS: Record<number, number[][]> = {
 
 const TEX_SIZE = 256
 
-function generateDiceTexture(faceValue: number): THREE.Texture {
+function generateDiceTexture(
+  faceValue: number,
+  bgColor: [number, number, number],
+  dotColor: [number, number, number]
+): THREE.Texture {
   const data = new Uint8Array(TEX_SIZE * TEX_SIZE * 4)
   const dots = D6_DOTS[faceValue] || []
   const radius = 20
@@ -30,14 +50,14 @@ function generateDiceTexture(faceValue: number): THREE.Texture {
         }
       }
       if (isDot) {
-        data[i] = 0x1A
-        data[i + 1] = 0x1A
-        data[i + 2] = 0x1A
+        data[i] = dotColor[0]
+        data[i + 1] = dotColor[1]
+        data[i + 2] = dotColor[2]
         data[i + 3] = 255
       } else {
-        data[i] = 0xFF
-        data[i + 1] = 0xFF
-        data[i + 2] = 0xFF
+        data[i] = bgColor[0]
+        data[i + 1] = bgColor[1]
+        data[i + 2] = bgColor[2]
         data[i + 3] = 255
       }
     }
@@ -48,8 +68,7 @@ function generateDiceTexture(faceValue: number): THREE.Texture {
   return texture
 }
 
-export function createD6Dice(): THREE.Mesh {
-  // 使用圆角立方体，radius 控制圆角大小
+export function createD6Dice(theme: DiceTheme = DICE_THEMES[0]): THREE.Mesh {
   const geometry = new RoundedBoxGeometry(1, 1, 1, 4, 0.15)
 
   // BoxGeometry face order: +x, -x, +y, -y, +z, -z
@@ -57,7 +76,7 @@ export function createD6Dice(): THREE.Mesh {
   const faceValues = [3, 4, 2, 5, 1, 6]
 
   const materials = faceValues.map((faceValue) => {
-    const texture = generateDiceTexture(faceValue)
+    const texture = generateDiceTexture(faceValue, theme.bgColor, theme.dotColor)
     return new THREE.MeshStandardMaterial({
       map: texture,
       roughness: 0.3,
