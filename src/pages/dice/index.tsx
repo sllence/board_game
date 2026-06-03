@@ -134,7 +134,7 @@ const DicePage: FC = () => {
   }, [])
 
   return (
-    <View className="flex flex-col min-h-screen" style={{ backgroundColor: '#1A1A2E' }}>
+    <View className="flex flex-col min-h-screen" style={{ backgroundColor: selectedTheme.pageBg }}>
       {/* CSS动画定义（仅用于杯子） */}
       <View style={{ display: 'none' }}>
         <Text>{`
@@ -165,7 +165,7 @@ const DicePage: FC = () => {
       </View>
 
       {/* 标题栏 */}
-      <View className="sticky top-0 z-30" style={{ backgroundColor: '#1A1A2E' }}>
+      <View className="sticky top-0 z-30" style={{ backgroundColor: selectedTheme.pageBg }}>
         <View className="flex items-center justify-between px-5 h-14">
           <View className="flex items-center gap-3">
             {Taro.getCurrentPages().length > 1 && (
@@ -180,7 +180,7 @@ const DicePage: FC = () => {
               <View className="w-9 h-9 rounded-2xl flex items-center justify-center bg-gradient-to-br from-primary to-amber-700">
                 <Dices size={20} color="#fff" />
               </View>
-              <Text className="text-xl font-bold text-white">骰子</Text>
+              <Text className="text-xl font-bold" style={{ color: selectedTheme.textColor }}>骰子</Text>
             </View>
           </View>
           <View
@@ -194,12 +194,12 @@ const DicePage: FC = () => {
 
       {/* 当前配置显示 */}
       <View className="px-4 pt-4">
-        <View className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+        <View className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ backgroundColor: selectedTheme.key === 'white' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)' }}>
           <View className="flex items-center gap-3">
             <Dices size={20} color="#F59E0B" />
             <View>
-              <Text className="block text-sm font-medium text-white">{getCurrentConfigText()}</Text>
-              <Text className="block text-xs text-gray-400">{getCurrentModeText()}</Text>
+              <Text className="block text-sm font-medium" style={{ color: selectedTheme.textColor }}>{getCurrentConfigText()}</Text>
+              <Text className="block text-xs" style={{ color: selectedTheme.subTextColor }}>{getCurrentModeText()}</Text>
             </View>
           </View>
           {soundEnabled && <Volume2 size={16} color="#22c55e" />}
@@ -209,7 +209,7 @@ const DicePage: FC = () => {
       {/* 主投掷区域 */}
       <View className="flex-1 flex flex-col items-center justify-center px-4 py-6">
         {/* 状态提示 */}
-        <Text className="block text-sm text-gray-400 mb-6 text-center">
+        <Text className="block text-sm mb-6 text-center" style={{ color: selectedTheme.subTextColor }}>
           {rolling
             ? showCup
               ? '摇晃杯子中...'
@@ -288,8 +288,8 @@ const DicePage: FC = () => {
         {results.length > 0 && !showCup && (
           <View className="text-center mt-6">
             <Text className="block text-lg font-bold text-amber-400 mb-2">投掷结果</Text>
-            <Text className="block text-3xl font-bold text-white mb-2">{results.join(' · ')}</Text>
-            {diceCount > 1 && <Text className="block text-sm text-gray-400">总计: {total}</Text>}
+            <Text className="block text-3xl font-bold mb-2" style={{ color: selectedTheme.textColor }}>{results.join(' · ')}</Text>
+            {diceCount > 1 && <Text className="block text-sm" style={{ color: selectedTheme.subTextColor }}>总计: {total}</Text>}
           </View>
         )}
       </View>

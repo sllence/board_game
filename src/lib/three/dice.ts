@@ -6,15 +6,19 @@ export interface DiceTheme {
   label: string
   bgColor: [number, number, number]
   dotColor: [number, number, number]
+  pageBg: string
+  sceneBg: number
+  textColor: string
+  subTextColor: string
 }
 
 export const DICE_THEMES: DiceTheme[] = [
-  { key: 'white', label: '白色', bgColor: [0xFF, 0xFF, 0xFF], dotColor: [0x1A, 0x1A, 0x1A] },
-  { key: 'black', label: '黑色', bgColor: [0x1A, 0x1A, 0x1A], dotColor: [0xFF, 0xFF, 0xFF] },
-  { key: 'red', label: '红色', bgColor: [0xDC, 0x26, 0x26], dotColor: [0xFF, 0xFF, 0xFF] },
-  { key: 'blue', label: '蓝色', bgColor: [0x25, 0x63, 0xEB], dotColor: [0xFF, 0xFF, 0xFF] },
-  { key: 'green', label: '绿色', bgColor: [0x16, 0xA3, 0x4A], dotColor: [0xFF, 0xFF, 0xFF] },
-  { key: 'purple', label: '紫色', bgColor: [0x93, 0x33, 0xEA], dotColor: [0xFF, 0xFF, 0xFF] },
+  { key: 'white', label: '白色', bgColor: [0xFF, 0xFF, 0xFF], dotColor: [0x1A, 0x1A, 0x1A], pageBg: '#F5F5F5', sceneBg: 0xE8E8E8, textColor: '#1A1A1A', subTextColor: '#6B7280' },
+  { key: 'black', label: '黑色', bgColor: [0x1A, 0x1A, 0x1A], dotColor: [0xFF, 0xFF, 0xFF], pageBg: '#1A1A2E', sceneBg: 0x1A1A2E, textColor: '#FFFFFF', subTextColor: '#9CA3AF' },
+  { key: 'red', label: '红色', bgColor: [0xDC, 0x26, 0x26], dotColor: [0xFF, 0xFF, 0xFF], pageBg: '#1A1A2E', sceneBg: 0x2D1A1A, textColor: '#FFFFFF', subTextColor: '#9CA3AF' },
+  { key: 'blue', label: '蓝色', bgColor: [0x25, 0x63, 0xEB], dotColor: [0xFF, 0xFF, 0xFF], pageBg: '#1A1A2E', sceneBg: 0x1A1A2E, textColor: '#FFFFFF', subTextColor: '#9CA3AF' },
+  { key: 'green', label: '绿色', bgColor: [0x16, 0xA3, 0x4A], dotColor: [0xFF, 0xFF, 0xFF], pageBg: '#1A1A2E', sceneBg: 0x1A2D1A, textColor: '#FFFFFF', subTextColor: '#9CA3AF' },
+  { key: 'purple', label: '紫色', bgColor: [0x93, 0x33, 0xEA], dotColor: [0xFF, 0xFF, 0xFF], pageBg: '#1A1A2E', sceneBg: 0x2D1A2E, textColor: '#FFFFFF', subTextColor: '#9CA3AF' },
 ]
 
 const D6_DOTS: Record<number, number[][]> = {

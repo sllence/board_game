@@ -13,10 +13,11 @@ export function createDiceScene(
   canvas: HTMLCanvasElement | Record<string, any>,
   width: number,
   height: number,
-  renderScale: number = 1
+  renderScale: number = 1,
+  sceneBg: number = 0x1A1A2E
 ): DiceScene {
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color(0x1A1A2E)
+  scene.background = new THREE.Color(sceneBg)
 
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
   camera.position.set(0, 6, 6)
@@ -31,7 +32,7 @@ export function createDiceScene(
   renderer.setSize(width, height)
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
-  renderer.setClearColor(0x1A1A2E, 1)
+  renderer.setClearColor(sceneBg, 1)
 
   const lights = createLights()
   scene.add(lights.directional, lights.ambient, lights.point)
