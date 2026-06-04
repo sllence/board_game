@@ -1,8 +1,8 @@
 import * as THREE from 'three-platformize'
 import * as CANNON from 'cannon-es'
+import { physicsWorld } from '@/lib/physics/world'
 import type { DiceColor, DiceDefinition } from './types'
 import { generateNumberTexture } from './textures'
-import { physicsWorld } from '@/lib/physics/world'
 
 const D8_SIZE = 0.7
 
