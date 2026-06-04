@@ -70,6 +70,10 @@ const D20_NORMALS = d20Data.faces.map((face) =>
 export const D20Definition: DiceDefinition = {
   createMesh(color: DiceColor): THREE.Mesh {
     const geometry = new THREE.IcosahedronGeometry(D20_SIZE, 0)
+    // IcosahedronGeometry has 20 triangles (1 per face), add groups for multi-material
+    for (let i = 0; i < 20; i++) {
+      geometry.addGroup(i * 3, 3, i)
+    }
     const materials = Array.from({ length: 20 }, (_, i) => {
       const texture = generateNumberTexture(i + 1, color.bgColor, color.dotColor)
       return new THREE.MeshStandardMaterial({

@@ -70,6 +70,10 @@ const D12_NORMALS = d12Data.faces.map((face) =>
 export const D12Definition: DiceDefinition = {
   createMesh(color: DiceColor): THREE.Mesh {
     const geometry = new THREE.DodecahedronGeometry(D12_SIZE, 0)
+    // DodecahedronGeometry has 36 triangles (3 per pentagonal face × 12 faces)
+    for (let i = 0; i < 12; i++) {
+      geometry.addGroup(i * 3, 3, i)
+    }
     const materials = Array.from({ length: 12 }, (_, i) => {
       const texture = generateNumberTexture(i + 1, color.bgColor, color.dotColor)
       return new THREE.MeshStandardMaterial({

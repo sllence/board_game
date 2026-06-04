@@ -44,6 +44,10 @@ const D8_NORMALS = D8_FACES.map((face) =>
 export const D8Definition: DiceDefinition = {
   createMesh(color: DiceColor): THREE.Mesh {
     const geometry = new THREE.OctahedronGeometry(D8_SIZE, 0)
+    // OctahedronGeometry has 8 triangles (1 per face), add groups for multi-material
+    for (let i = 0; i < 8; i++) {
+      geometry.addGroup(i * 3, 3, i)
+    }
     const materials = Array.from({ length: 8 }, (_, i) => {
       const texture = generateNumberTexture(i + 1, color.bgColor, color.dotColor)
       return new THREE.MeshStandardMaterial({

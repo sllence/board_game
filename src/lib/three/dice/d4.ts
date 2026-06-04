@@ -38,6 +38,10 @@ const D4_NORMALS = D4_FACES.map((face) =>
 export const D4Definition: DiceDefinition = {
   createMesh(color: DiceColor): THREE.Mesh {
     const geometry = new THREE.TetrahedronGeometry(D4_SIZE, 0)
+    // TetrahedronGeometry has 4 triangles (1 per face), add groups for multi-material
+    for (let i = 0; i < 4; i++) {
+      geometry.addGroup(i * 3, 3, i)
+    }
     const materials = Array.from({ length: 4 }, (_, i) => {
       const texture = generateNumberTexture(i + 1, color.bgColor, color.dotColor)
       return new THREE.MeshStandardMaterial({
