@@ -342,18 +342,25 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
 
     const def = getDiceDefinition(diceType)
 
-    for (let i = 0; i < count; i++) {
-      const body = def.createBody()
-      applyThrowForce(body)
-      physicsWorld.world.addBody(body)
-      bodiesRef.current.push(body)
+    try {
+      for (let i = 0; i < count; i++) {
+        const body = def.createBody()
+        applyThrowForce(body)
+        physicsWorld.world.addBody(body)
+        bodiesRef.current.push(body)
 
-      const dice = def.createMesh(color)
-      diceSceneRef.current.scene.add(dice)
-      diceRef.current.push(dice)
+        const dice = def.createMesh(color)
+        diceSceneRef.current.scene.add(dice)
+        diceRef.current.push(dice)
+      }
+
+      renderLoopRef.current()
+    } catch (e) {
+      console.error('[PhysicsDice] throwDice error:', e)
+      animatingRef.current = false
+      cleanupBodies()
+      onAnimationEndRef.current()
     }
-
-    renderLoopRef.current()
   }, [count, color, theme, diceType, cleanupBodies, onAnimationStart])
 
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
