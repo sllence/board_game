@@ -83,3 +83,21 @@ export function getCubeVertices(
     return new CANNON.Vec3(position.x + rotated.x, position.y + rotated.y, position.z + rotated.z)
   })
 }
+
+// 通用面检测：对任意骰子类型检测朝上的面
+export function getTopFace(faceNormals: CANNON.Vec3[], body: CANNON.Body): number {
+  const up = new CANNON.Vec3(0, 1, 0)
+  let maxDot = -Infinity
+  let topIndex = 0
+
+  for (let i = 0; i < faceNormals.length; i++) {
+    const worldNormal = body.quaternion.vmult(faceNormals[i])
+    const dot = worldNormal.dot(up)
+    if (dot > maxDot) {
+      maxDot = dot
+      topIndex = i
+    }
+  }
+
+  return topIndex
+}
