@@ -6,7 +6,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@
 import { Switch } from '@/components/ui/switch'
 import { Dices, ArrowLeft, Settings, X, Plus, Minus, Volume2, MousePointerClick, Smartphone } from 'lucide-react-taro'
 import type { FC } from 'react'
-import { DICE_COLORS, DICE_THEMES, DiceColor, DiceTheme } from '@/lib/three/dice'
+import { DICE_COLORS, DICE_THEMES, type DiceColor, type DiceTheme, type DiceType } from '@/lib/three/dice'
 
 import { PhysicsDice } from './components/PhysicsDice'
 import type { PhysicsDiceHandle } from './components/PhysicsDice'
@@ -271,7 +271,7 @@ const DicePage: FC = () => {
 
         {/* 物理骰子组件 */}
         <View style={{ display: showCup ? 'none' : 'flex', width: '100%', height: '400px' }}>
-          <PhysicsDice ref={physicsDiceRef} count={diceCount} color={selectedColor} theme={selectedTheme} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
+          <PhysicsDice ref={physicsDiceRef} diceType={selectedDice.key as DiceType} count={diceCount} color={selectedColor} theme={selectedTheme} onResult={handleResult} onAnimationStart={handleAnimationStart} onAnimationEnd={handleAnimationEnd} />
         </View>
 
         {/* 进度提示和结果展示（合并区域，始终展示） */}

@@ -4,11 +4,11 @@ import { useRef, useCallback, useEffect, useLayoutEffect, forwardRef, useImperat
 import * as THREE from 'three-platformize'
 import * as CANNON from 'cannon-es'
 import { physicsWorld } from '@/lib/physics/world'
-import { createD6Body, applyThrowForce } from '@/lib/physics/dice-body'
+import { applyThrowForce } from '@/lib/physics/dice-body'
 import { createTablePlane } from '@/lib/physics/table-plane'
-import { getTopFaceD6, isDiceStopped } from '@/lib/physics/utils'
+import { getTopFace, isDiceStopped } from '@/lib/physics/utils'
 import { createDiceScene, renderScene, DiceScene } from '@/lib/three/scene'
-import { createD6Dice, updateDiceTransform, disposeD6Dice, DiceColor, DiceTheme } from '@/lib/three/dice'
+import { getDiceDefinition, updateDiceTransform, type DiceColor, type DiceTheme, type DiceType } from '@/lib/three/dice'
 import {
   createPostProcessing,
   disposePostProcessing,
@@ -21,6 +21,7 @@ const STOP_FRAME_THRESHOLD = 30
 const MAX_ANIMATION_TIME = 5000
 
 interface PhysicsDiceProps {
+  diceType: DiceType
   count: number
   color: DiceColor
   theme: DiceTheme
@@ -34,7 +35,7 @@ export interface PhysicsDiceHandle {
 }
 
 export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
-  ({ count, color, theme, onResult, onAnimationStart, onAnimationEnd }, ref) => {
+  ({ diceType, count, color, theme, onResult, onAnimationStart, onAnimationEnd }, ref) => {
   const diceSceneRef = useRef<DiceScene | null>(null)
   const postProcessingRef = useRef<PostProcessing | null>(null)
   const diceRef = useRef<THREE.Mesh[]>([])
@@ -53,6 +54,9 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const canvasNodeRef = useRef<any>(null)
   const resizeCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const rafRef = useRef<typeof requestAnimationFrame | null>(null)
+
+  const diceTypeRef = useRef(diceType)
+  diceTypeRef.current = diceType
 
   const onResultRef = useRef(onResult)
   const onAnimationEndRef = useRef(onAnimationEnd)
@@ -78,7 +82,7 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       if (diceSceneRef.current) {
         diceSceneRef.current.scene.remove(dice)
       }
-      disposeD6Dice(dice)
+      getDiceDefinition(diceTypeRef.current).dispose(dice)
     })
     diceRef.current = []
   }, [])
@@ -98,26 +102,23 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     }
   }, [cleanupBodies])
 
-  // 初始化静态骰子，点数1面朝上
   const initStaticDice = useCallback(() => {
     if (!diceSceneRef.current) return
 
-    // 根据数量创建多个骰子，水平排列
+    const def = getDiceDefinition(diceType)
     const spacing = 1.2
     const startX = -((count - 1) * spacing) / 2
 
     for (let i = 0; i < count; i++) {
-      const dice = createD6Dice(color)
-      // 点数1在 +z 面（前面），绕 x 轴旋转 -90度 让它朝上
+      const dice = def.createMesh(color)
       dice.position.set(startX + i * spacing, 0.6, 0)
       dice.rotation.x = -Math.PI / 2
       diceSceneRef.current.scene.add(dice)
       diceRef.current.push(dice)
     }
 
-    // 渲染一帧
     renderScene(diceSceneRef.current)
-  }, [count, color])
+  }, [count, color, diceType])
 
   useReady(() => {
     const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
@@ -136,7 +137,6 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
               const width = res[0].width || 375
               const height = res[0].height || 400
 
-              // 根据平台选择对应的 Platform
               let platform: any
               if (isWeapp) {
                 const { WechatPlatform } = await import('three-platformize/src/WechatPlatform')
@@ -147,16 +147,12 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
               }
               THREE.PLATFORM.set(platform)
 
-              // Set up requestAnimationFrame for mini-program
               rafRef.current = (callback: FrameRequestCallback) => {
                 return canvas.requestAnimationFrame(callback)
               }
 
               canvasNodeRef.current = canvas
-              // 小程序端提高渲染分辨率以抗锯齿（2x 超采样）
               diceSceneRef.current = createDiceScene(canvas, width, height, 2, theme.sceneBg, theme.groundColor)
-
-              // 小程序端不启用 PostProcessing（EffectComposer 与小程序 WebGL 不兼容）
 
               performanceRef.current = new PerformanceMonitor()
 
@@ -165,8 +161,6 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
               }
 
               canvasReadyRef.current = true
-
-              // 初始化静态骰子，点数1面朝上
               initStaticDice()
             }
           })
@@ -201,8 +195,6 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
         }
 
         canvasReadyRef.current = true
-
-        // 初始化静态骰子，点数1面朝上
         initStaticDice()
       }
 
@@ -239,24 +231,20 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     }
   }, [])
 
-  // 当属性变化时重新初始化静态骰子
   useEffect(() => {
     if (!canvasReadyRef.current || !diceSceneRef.current || animatingRef.current) return
 
-    // 清除当前静态骰子
     diceRef.current.forEach((dice) => {
       diceSceneRef.current?.scene.remove(dice)
-      disposeD6Dice(dice)
+      getDiceDefinition(diceTypeRef.current).dispose(dice)
     })
     diceRef.current = []
 
-    // 重新创建静态骰子
     initStaticDice()
-  }, [count, color, theme, initStaticDice])
+  }, [count, color, theme, diceType, initStaticDice])
 
   const renderLoopRef = useRef<() => void>(() => {})
 
-  // 静态渲染：动画结束后保持场景绘制，防止 React re-render 清空 canvas
   const staticRenderRef = useRef<() => void>(() => {})
 
   staticRenderRef.current = () => {
@@ -279,7 +267,6 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     lastFrameTimeRef.current = Date.now()
     physicsWorld.step(delta)
 
-    // 限制骰子位置，防止滚出屏幕
     const BOUND = 2.5
     bodiesRef.current.forEach((body) => {
       if (body.position.x > BOUND && body.velocity.x > 0) body.velocity.x = 0
@@ -303,7 +290,6 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
       renderScene(diceSceneRef.current)
     }
 
-    // 检查超时或骰子停止
     const elapsed = Date.now() - startTimeRef.current
     const allStopped = bodiesRef.current.length > 0 && bodiesRef.current.every(isDiceStopped)
 
@@ -315,12 +301,15 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
 
     if (stopCounterRef.current >= STOP_FRAME_THRESHOLD || elapsed > MAX_ANIMATION_TIME) {
       if (!resultsReportedRef.current) {
-        const results = bodiesRef.current.map(getTopFaceD6)
+        const def = getDiceDefinition(diceTypeRef.current)
+        const results = bodiesRef.current.map((body) => {
+          const faceIndex = getTopFace(def.faceNormals, body)
+          return def.getFaceValue(faceIndex)
+        })
         onResultRef.current(results)
         resultsReportedRef.current = true
         animatingRef.current = false
 
-        // 立即重绘一帧，确保 canvas 有内容
         renderScene(diceSceneRef.current)
 
         onAnimationEndRef.current()
@@ -351,23 +340,24 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     lastFrameTimeRef.current = Date.now()
     onAnimationStart()
 
+    const def = getDiceDefinition(diceType)
+
     for (let i = 0; i < count; i++) {
-      const body = createD6Body()
+      const body = def.createBody()
       applyThrowForce(body)
       physicsWorld.world.addBody(body)
       bodiesRef.current.push(body)
 
-      const dice = createD6Dice(color)
+      const dice = def.createMesh(color)
       diceSceneRef.current.scene.add(dice)
       diceRef.current.push(dice)
     }
 
     renderLoopRef.current()
-  }, [count, color, theme, cleanupBodies, onAnimationStart])
+  }, [count, color, theme, diceType, cleanupBodies, onAnimationStart])
 
   useImperativeHandle(ref, () => ({ throwDice }), [throwDice])
 
-  // 动画结束后每次渲染都重绘场景，防止 React re-render 清空 canvas
   useLayoutEffect(() => {
     staticRenderRef.current()
   })
