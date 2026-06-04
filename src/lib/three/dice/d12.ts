@@ -8,7 +8,7 @@ const D12_SIZE = 0.7
 
 function extractConvexData(geometry: THREE.BufferGeometry): { vertices: CANNON.Vec3[]; faces: number[][] } {
   const posAttr = geometry.attributes.position as THREE.BufferAttribute
-  const indexAttr = geometry.index as THREE.BufferAttribute
+  const indexAttr = geometry.index
 
   const vertexMap = new Map<string, number>()
   const vertices: CANNON.Vec3[] = []
@@ -24,15 +24,25 @@ function extractConvexData(geometry: THREE.BufferGeometry): { vertices: CANNON.V
     }
   }
 
+  const keyFromIndex = (idx: number) => {
+    const x = posAttr.getX(idx)
+    const y = posAttr.getY(idx)
+    const z = posAttr.getZ(idx)
+    return `${x.toFixed(6)},${y.toFixed(6)},${z.toFixed(6)}`
+  }
+
   const faces: number[][] = []
-  for (let i = 0; i < indexAttr.count; i += 3) {
-    const a = indexAttr.getX(i)
-    const b = indexAttr.getX(i + 1)
-    const c = indexAttr.getX(i + 2)
-    const keyA = `${posAttr.getX(a).toFixed(6)},${posAttr.getY(a).toFixed(6)},${posAttr.getZ(a).toFixed(6)}`
-    const keyB = `${posAttr.getX(b).toFixed(6)},${posAttr.getY(b).toFixed(6)},${posAttr.getZ(b).toFixed(6)}`
-    const keyC = `${posAttr.getX(c).toFixed(6)},${posAttr.getY(c).toFixed(6)},${posAttr.getZ(c).toFixed(6)}`
-    faces.push([vertexMap.get(keyA)!, vertexMap.get(keyB)!, vertexMap.get(keyC)!])
+  if (indexAttr) {
+    for (let i = 0; i < indexAttr.count; i += 3) {
+      const a = indexAttr.getX(i)
+      const b = indexAttr.getX(i + 1)
+      const c = indexAttr.getX(i + 2)
+      faces.push([vertexMap.get(keyFromIndex(a))!, vertexMap.get(keyFromIndex(b))!, vertexMap.get(keyFromIndex(c))!])
+    }
+  } else {
+    for (let i = 0; i < posAttr.count; i += 3) {
+      faces.push([vertexMap.get(keyFromIndex(i))!, vertexMap.get(keyFromIndex(i + 1))!, vertexMap.get(keyFromIndex(i + 2))!])
+    }
   }
 
   geometry.dispose()
