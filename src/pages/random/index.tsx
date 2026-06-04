@@ -53,7 +53,7 @@ const RandomPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* 标题 */}
       <View className="px-5 pt-12 pb-4 bg-white">
         <View className="flex flex-row items-center justify-between">
@@ -61,7 +61,7 @@ const RandomPage: FC = () => {
             <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
               <Shuffle size={18} color="#fff" />
             </View>
-            <Text className="block text-xl font-bold text-[#1e1b4b]">随机选人</Text>
+            <Text className="block text-xl font-bold text-foreground">随机选人</Text>
           </View>
           {Taro.getCurrentPages().length > 1 && (
             <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
@@ -115,7 +115,7 @@ const RandomPage: FC = () => {
             <View className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
               <User size={24} color="#fff" />
             </View>
-            <Text className="block text-xl font-bold text-[#1e1b4b]">{result}</Text>
+            <Text className="block text-xl font-bold text-foreground">{result}</Text>
           </View>
         ) : (
           <View className="flex flex-col items-center opacity-30">

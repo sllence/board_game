@@ -123,7 +123,7 @@ const ToolsPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* 分组工具列表 */}
       <View className="px-4 pt-4 pb-24 flex flex-col gap-4">
         {TOOL_GROUPS.map((group) => (

@@ -99,7 +99,7 @@ const RuleDetailPage: FC = () => {
 
   if (loading) {
     return (
-      <View className="flex items-center justify-center min-h-screen bg-[#f5f5f7]">
+      <View className="flex items-center justify-center min-h-screen bg-background">
         <Text className="block text-gray-400 text-sm">加载中...</Text>
       </View>
     )
@@ -107,7 +107,7 @@ const RuleDetailPage: FC = () => {
 
   if (!game) {
     return (
-      <View className="flex items-center justify-center min-h-screen bg-[#f5f5f7]">
+      <View className="flex items-center justify-center min-h-screen bg-background">
         <Text className="block text-gray-400 text-sm">未找到桌游信息</Text>
       </View>
     )
@@ -124,7 +124,7 @@ const RuleDetailPage: FC = () => {
     : game.duration ? String(game.duration) : '30-60'
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* Hero 头部 */}
       <View
         className="px-5 pt-12 pb-8"
@@ -167,7 +167,7 @@ const RuleDetailPage: FC = () => {
 
       {game.image_url && (
         <View className="px-4 -mt-4">
-          <Card className="border-0 shadow-lg">
+          <Card className="shadow-lg">
             <CardContent className="p-0">
               <Image src={game.image_url} className="w-full h-48" mode="aspectFill" onError={(e) => { e.stopPropagation() }} />
             </CardContent>
@@ -177,7 +177,7 @@ const RuleDetailPage: FC = () => {
 
       {/* 简介卡片 */}
       <View className="px-4 -mt-4">
-        <Card className="border-0 shadow-sm">
+        <Card className="shadow-sm">
           <CardContent className="p-4">
             <Text className="block text-sm text-[#374151] leading-relaxed">{game.intro}</Text>
           </CardContent>
@@ -195,12 +195,12 @@ const RuleDetailPage: FC = () => {
               <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
                 <BookOpen size={14} color="#fff" />
               </View>
-              <Text className="block text-base font-semibold text-[#1e1b4b]">游戏规则</Text>
+              <Text className="block text-base font-semibold text-foreground">游戏规则</Text>
             </View>
             <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
           </View>
           {rulesExpanded && (
-            <Card className="border-0 shadow-sm">
+            <Card className="shadow-sm">
               <CardContent className="p-4">
                 <RichText nodes={convertToRichText(game.rules)} />
               </CardContent>
@@ -220,12 +220,12 @@ const RuleDetailPage: FC = () => {
               <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
                 <BookOpen size={14} color="#fff" />
               </View>
-              <Text className="block text-base font-semibold text-[#1e1b4b]">游戏规则</Text>
+              <Text className="block text-base font-semibold text-foreground">游戏规则</Text>
             </View>
             <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
           </View>
           {rulesExpanded && (
-            <Card className="border-0 shadow-sm">
+            <Card className="shadow-sm">
               <CardContent className="p-0">
                 <Accordion type="multiple" defaultValue={sections.map((_, i) => `section-${i}`)}>
                   {sections.map((section, idx) => (
@@ -235,7 +235,7 @@ const RuleDetailPage: FC = () => {
                           <View className="w-5 h-5 rounded flex items-center justify-center bg-indigo-100">
                             <Text className="text-xs font-bold text-indigo-600">{idx + 1}</Text>
                           </View>
-                          <Text className="text-sm font-medium text-[#1e1b4b]">{section.title}</Text>
+                          <Text className="text-sm font-medium text-foreground">{section.title}</Text>
                         </View>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -258,7 +258,7 @@ const RuleDetailPage: FC = () => {
             <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
               <Lightbulb size={14} color="#fff" />
             </View>
-            <Text className="block text-base font-semibold text-[#1e1b4b]">小贴士</Text>
+            <Text className="block text-base font-semibold text-foreground">小贴士</Text>
           </View>
           <View className="flex flex-col gap-2">
             {tips.map((tip, idx) => (
@@ -280,9 +280,9 @@ const RuleDetailPage: FC = () => {
             <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>
               <Star size={14} color="#fff" />
             </View>
-            <Text className="block text-base font-semibold text-[#1e1b4b]">相关攻略</Text>
+            <Text className="block text-base font-semibold text-foreground">相关攻略</Text>
           </View>
-          <Card className="border-0 shadow-sm">
+          <Card className="shadow-sm">
             <CardContent className="p-0">
               {guides.map((guide, idx) => (
                 <View
@@ -298,7 +298,7 @@ const RuleDetailPage: FC = () => {
                     <BookOpen size={18} color="#6b7280" />
                   </View>
                   <View className="flex-1 min-w-0">
-                    <Text className="block text-sm font-medium text-[#1e1b4b] truncate">{guide.title}</Text>
+                    <Text className="block text-sm font-medium text-foreground truncate">{guide.title}</Text>
                     <Text className="block text-xs text-gray-400 mt-1 truncate">{guide.desc}</Text>
                   </View>
                   <ChevronRight size={16} color="#d1d5db" />

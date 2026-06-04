@@ -3,6 +3,7 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
+import { Empty } from '@/components/ui/empty'
 import { Clock, History, Trophy, Bookmark } from 'lucide-react-taro'
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import type { FC } from 'react'
@@ -151,7 +152,7 @@ const HistoryPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* 顶部标题区 */}
       <View className="px-5 pt-12 pb-5" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
         <View className="flex flex-row items-center gap-2 mb-1">
@@ -188,14 +189,12 @@ const HistoryPage: FC = () => {
             <Text className="block text-gray-400 text-sm">加载中...</Text>
           </View>
         ) : sessions.length === 0 ? (
-          <Card className="border-0 mt-2">
-            <CardContent className="flex flex-col items-center p-10">
-              <View className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
-                <Trophy size={28} color="#d1d5db" />
-              </View>
-              <Text className="block text-sm text-gray-400">暂无对局记录</Text>
-              <Text className="block text-xs text-gray-300 mt-1">开始你的第一局桌游吧！</Text>
-            </CardContent>
+          <Card className="mt-2">
+            <Empty
+              icon="🏆"
+              title="暂无对局记录"
+              description="开始你的第一局桌游吧！"
+            />
           </Card>
         ) : (
           <View className="flex flex-col gap-3">
@@ -206,13 +205,13 @@ const HistoryPage: FC = () => {
               return (
                 <Card
                   key={session.id}
-                  className="border-0 shadow-sm"
+                  className="shadow-sm"
                   onClick={() => Taro.navigateTo({ url: `/pages/navigator/index?sessionId=${session.id}` })}
                 >
                   <CardContent className="p-4">
                     {/* 头部 */}
                     <View className="flex flex-row items-center justify-between mb-3">
-                      <Text className="block text-base font-semibold text-[#1e1b4b] flex-1 mr-2">
+                      <Text className="block text-base font-semibold text-foreground flex-1 mr-2">
                         {session.game?.name || session.session_name || '未命名对局'}
                       </Text>
                       <View className="flex flex-row items-center gap-2 flex-shrink-0">

@@ -177,7 +177,7 @@ const DicePage: FC = () => {
               </View>
             )}
             <View className="flex items-center gap-2">
-              <View className="w-9 h-9 rounded-2xl flex items-center justify-center bg-gradient-to-br from-primary to-amber-700">
+              <View className="w-9 h-9 rounded-2xl flex items-center justify-center bg-gradient-to-br from-primary to-indigo-700">
                 <Dices size={20} color="#fff" />
               </View>
               <Text className="text-xl font-bold" style={{ color: selectedTheme.textColor }}>骰子</Text>
@@ -196,7 +196,7 @@ const DicePage: FC = () => {
       <View className="px-4 pt-4">
         <View className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ backgroundColor: selectedTheme.key === 'white' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)' }}>
           <View className="flex items-center gap-3">
-            <Dices size={20} color="#F59E0B" />
+            <Dices size={20} color="#4F46E5" />
             <View>
               <Text className="block text-sm font-medium" style={{ color: selectedTheme.textColor }}>{getCurrentConfigText()}</Text>
               <Text className="block text-xs" style={{ color: selectedTheme.subTextColor }}>{getCurrentModeText()}</Text>
@@ -289,9 +289,9 @@ const DicePage: FC = () => {
       {/* 投掷按钮 */}
       <View className="px-4 pb-8">
         <Button
-          className="w-full py-4 rounded-2xl text-lg font-bold bg-gradient-to-r from-amber-500 to-amber-600 border-0"
+          className="w-full py-4 rounded-2xl text-lg font-bold bg-gradient-to-r from-primary to-indigo-600 border-0"
           style={{
-            boxShadow: '0 10px 25px rgba(245, 158, 11, 0.3)',
+            boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)',
           }}
           onClick={handleRoll}
           disabled={rolling}
@@ -329,7 +329,7 @@ const DicePage: FC = () => {
                   <View
                     key={dice.key}
                     className={`flex-shrink-0 px-4 py-2 rounded-full cursor-pointer transition-all ${
-                      selectedDice.key === dice.key ? 'bg-amber-500 text-white' : 'bg-gray-800 text-gray-300'
+                      selectedDice.key === dice.key ? 'bg-primary text-white' : 'bg-gray-800 text-gray-300'
                     }`}
                     onClick={() => setSelectedDice(dice)}
                   >
@@ -347,7 +347,7 @@ const DicePage: FC = () => {
                   <View
                     key={color.key}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer transition-all ${
-                      selectedColor.key === color.key ? 'bg-amber-500 text-white' : 'bg-gray-800 text-gray-300'
+                      selectedColor.key === color.key ? 'bg-primary text-white' : 'bg-gray-800 text-gray-300'
                     }`}
                     onClick={() => setSelectedColor(color)}
                   >
@@ -371,7 +371,7 @@ const DicePage: FC = () => {
                   <View
                     key={theme.key}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer transition-all ${
-                      selectedTheme.key === theme.key ? 'bg-amber-500 text-white' : 'bg-gray-800 text-gray-300'
+                      selectedTheme.key === theme.key ? 'bg-primary text-white' : 'bg-gray-800 text-gray-300'
                     }`}
                     onClick={() => setSelectedTheme(theme)}
                   >
@@ -390,7 +390,7 @@ const DicePage: FC = () => {
             {/* 骰子数量选择 */}
             <View className="mb-6">
               <Text className="block text-sm font-semibold text-gray-400 mb-3">
-                选择骰子数量: <Text className="text-amber-400 font-bold">{diceCount}</Text>
+                选择骰子数量: <Text className="text-indigo-400 font-bold">{diceCount}</Text>
               </Text>
               <View className="flex items-center gap-4">
                 <View
@@ -401,7 +401,7 @@ const DicePage: FC = () => {
                 </View>
                 <View className="flex-1 h-3 bg-gray-800 rounded-full relative">
                   <View
-                    className="absolute left-0 top-0 h-full bg-amber-500 rounded-full"
+                    className="absolute left-0 top-0 h-full bg-primary rounded-full"
                     style={{ width: `${(diceCount / 10) * 100}%` }}
                   />
                 </View>
@@ -419,13 +419,13 @@ const DicePage: FC = () => {
               <Text className="block text-sm font-semibold text-gray-400 mb-3">投掷方式</Text>
               <View className="flex flex-col gap-3">
                 <View
-                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'tap' ? 'bg-amber-500 bg-opacity-20' : 'bg-gray-800'}`}
+                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'tap' ? 'bg-primary bg-opacity-20' : 'bg-gray-800'}`}
                   onClick={() => setRollMode('tap')}
                 >
                   <View
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rollMode === 'tap' ? 'border-amber-500' : 'border-gray-600'}`}
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rollMode === 'tap' ? 'border-primary' : 'border-gray-600'}`}
                   >
-                    {rollMode === 'tap' && <View className="w-3 h-3 rounded-full bg-amber-500" />}
+                    {rollMode === 'tap' && <View className="w-3 h-3 rounded-full bg-primary" />}
                   </View>
                   <View className="flex-1">
                     <Text className="block font-medium text-white">点击投掷</Text>
@@ -435,13 +435,13 @@ const DicePage: FC = () => {
                 </View>
 
                 <View
-                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'shake' ? 'bg-amber-500 bg-opacity-20' : 'bg-gray-800'}`}
+                  className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer ${rollMode === 'shake' ? 'bg-primary bg-opacity-20' : 'bg-gray-800'}`}
                   onClick={() => setRollMode('shake')}
                 >
                   <View
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rollMode === 'shake' ? 'border-amber-500' : 'border-gray-600'}`}
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rollMode === 'shake' ? 'border-primary' : 'border-gray-600'}`}
                   >
-                    {rollMode === 'shake' && <View className="w-3 h-3 rounded-full bg-amber-500" />}
+                    {rollMode === 'shake' && <View className="w-3 h-3 rounded-full bg-primary" />}
                   </View>
                   <View className="flex-1">
                     <Text className="block font-medium text-white">摇一摇投掷</Text>
@@ -465,7 +465,7 @@ const DicePage: FC = () => {
             </View>
 
             {/* 保存按钮 */}
-            <Button className="w-full py-4 rounded-xl text-base font-semibold bg-amber-500 border-0" onClick={saveSettings}>
+            <Button className="w-full py-4 rounded-xl text-base font-semibold bg-primary border-0" onClick={saveSettings}>
               <Text className="text-white">保存设置</Text>
             </Button>
           </View>
