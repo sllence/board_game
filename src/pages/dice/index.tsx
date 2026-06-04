@@ -15,7 +15,6 @@ const DICE_TYPES = [
   { key: 'D4', label: 'D4', max: 4 },
   { key: 'D6', label: 'D6', max: 6 },
   { key: 'D8', label: 'D8', max: 8 },
-  { key: 'D10', label: 'D10', max: 10 },
   { key: 'D12', label: 'D12', max: 12 },
   { key: 'D20', label: 'D20', max: 20 },
 ]
