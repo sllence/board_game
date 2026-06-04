@@ -48,7 +48,7 @@ const GuideDetailPage: FC = () => {
 
   if (loading) {
     return (
-      <View className="flex items-center justify-center min-h-screen bg-[#f5f5f7]">
+      <View className="flex items-center justify-center min-h-screen bg-background">
         <Text className="block text-gray-400 text-sm">加载中...</Text>
       </View>
     )
@@ -56,7 +56,7 @@ const GuideDetailPage: FC = () => {
 
   if (!guide) {
     return (
-      <View className="flex items-center justify-center min-h-screen bg-[#f5f5f7]">
+      <View className="flex items-center justify-center min-h-screen bg-background">
         <Text className="block text-gray-400 text-sm">未找到攻略信息</Text>
       </View>
     )
@@ -66,7 +66,7 @@ const GuideDetailPage: FC = () => {
   const tips: string[] = Array.isArray(guide.tips) ? guide.tips : []
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* 头部 */}
       <View className="px-5 pt-12 pb-6 bg-white">
         <View className="flex flex-row items-center gap-3">
@@ -77,7 +77,7 @@ const GuideDetailPage: FC = () => {
             <BookOpen size={20} color="#4F46E5" />
           </View>
           <View className="flex-1">
-            <Text className="block text-xl font-bold text-[#1e1b4b]">{guide.title}</Text>
+            <Text className="block text-xl font-bold text-foreground">{guide.title}</Text>
             <Text className="block text-sm text-gray-400 mt-1">{guide.desc}</Text>
           </View>
         </View>
@@ -89,9 +89,9 @@ const GuideDetailPage: FC = () => {
           <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
             <BookOpen size={14} color="#fff" />
           </View>
-          <Text className="block text-base font-semibold text-[#1e1b4b]">攻略步骤</Text>
+          <Text className="block text-base font-semibold text-foreground">攻略步骤</Text>
         </View>
-        <Card className="border-0 shadow-sm">
+        <Card className="shadow-sm">
           <CardContent className="p-0">
             <Accordion type="multiple" defaultValue={steps.map((_, i) => `step-${i}`)}>
               {steps.map((step, idx) => (
@@ -101,7 +101,7 @@ const GuideDetailPage: FC = () => {
                       <View className="w-5 h-5 rounded flex items-center justify-center bg-indigo-100">
                         <Text className="text-xs font-bold text-indigo-600">{idx + 1}</Text>
                       </View>
-                      <Text className="text-sm font-medium text-[#1e1b4b]">{step.title}</Text>
+                      <Text className="text-sm font-medium text-foreground">{step.title}</Text>
                     </View>
                   </AccordionTrigger>
                   <AccordionContent>
@@ -123,7 +123,7 @@ const GuideDetailPage: FC = () => {
             <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
               <Lightbulb size={14} color="#fff" />
             </View>
-            <Text className="block text-base font-semibold text-[#1e1b4b]">提示</Text>
+            <Text className="block text-base font-semibold text-foreground">提示</Text>
           </View>
           <View className="flex flex-col gap-2">
             {tips.map((tip, idx) => (
