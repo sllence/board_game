@@ -66,7 +66,7 @@ const RandomPage: FC = () => {
           {Taro.getCurrentPages().length > 1 && (
             <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
               <ArrowLeft size={14} color="#ef4444" />
-              <Text className="text-sm text-red-500">返回对局</Text>
+              <Text className="text-sm text-red-500">返回</Text>
             </View>
           )}
         </View>

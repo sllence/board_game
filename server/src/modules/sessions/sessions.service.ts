@@ -88,7 +88,7 @@ export class SessionsService {
     const client = getSupabaseClient()
     const { data, error } = await client
       .from('game_sessions')
-      .select('*, game:board_games(id, name, min_players, max_players, sections, tips, icon_bg, hero_bg, scoring_config)')
+      .select('*, game:board_games(id, name, min_players, max_players, rules, tips, icon_bg, hero_bg, scoring_config)')
       .eq('id', id)
       .maybeSingle()
     if (error) throw new Error(`查询对局详情失败: ${error.message}`)

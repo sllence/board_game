@@ -1,4 +1,4 @@
-import { View, Text } from '@tarojs/components'
+import { View, Text, RichText } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
+import { markdownToRichText } from '@/lib/markdown'
 import {
   Play, Plus, X, User, Dices, Timer, Layers,
   Shuffle, Calculator, BookOpen,
@@ -25,7 +25,7 @@ interface BoardGame {
   icon_bg: string
   icon_color: string
   hero_bg: string
-  sections: { title: string; content: string }[]
+  rules?: string
   tips: string[]
   scoring_config: Record<string, unknown>
 }
@@ -347,7 +347,6 @@ const NavigatorPage: FC = () => {
     }
   }
 
-  const sections = Array.isArray(game?.sections) ? game.sections : []
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score)
   const rankColors = ['#eab308', '#9ca3af', '#b45309']
 
@@ -452,25 +451,18 @@ const NavigatorPage: FC = () => {
           )}
 
           {/* 规则速查 */}
-          {sections.length > 0 && (
+          {game?.rules && (
             <View className="mb-5">
               <View className="flex flex-row items-center gap-2 mb-3">
                 <View className="w-1 h-4 rounded-full bg-blue-500" />
                 <BookOpen size={16} color="#3b82f6" />
                 <Text className="block text-sm font-bold text-foreground">规则速查</Text>
               </View>
-              <Accordion type="multiple" defaultValue={[]}>
-                {sections.map((section, idx) => (
-                  <AccordionItem key={idx} value={`nav-section-${idx}`}>
-                    <AccordionTrigger>
-                      <Text className="text-xs font-medium">{section.title}</Text>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <Text className="block text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{section.content}</Text>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+              <Card className="shadow-sm">
+                <CardContent className="p-3">
+                  <RichText nodes={markdownToRichText(game.rules)} />
+                </CardContent>
+              </Card>
             </View>
           )}
         </View>
@@ -712,25 +704,18 @@ const NavigatorPage: FC = () => {
         </View>
 
         {/* 规则速查 */}
-        {sections.length > 0 && (
+        {game?.rules && (
           <View className="mb-5">
             <View className="flex flex-row items-center gap-2 mb-3">
               <View className="w-1 h-4 rounded-full bg-blue-500" />
               <BookOpen size={16} color="#3b82f6" />
               <Text className="block text-sm font-bold text-foreground">规则速查</Text>
             </View>
-            <Accordion type="multiple" defaultValue={[]}>
-              {sections.map((section, idx) => (
-                <AccordionItem key={idx} value={`nav-section-${idx}`}>
-                  <AccordionTrigger>
-                    <Text className="text-xs font-medium">{section.title}</Text>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <Text className="block text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{section.content}</Text>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            <Card className="shadow-sm">
+              <CardContent className="p-3">
+                <RichText nodes={markdownToRichText(game.rules)} />
+              </CardContent>
+            </Card>
           </View>
         )}
 

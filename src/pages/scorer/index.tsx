@@ -83,7 +83,7 @@ const ScorerPage: FC = () => {
               }}
             >
               <ArrowLeft size={14} color="#8b5cf6" />
-              <Text className="text-sm text-purple-500">返回对局</Text>
+              <Text className="text-sm text-purple-500">返回</Text>
               {linkedSessionId !== null && (
                 <View className="ml-1 w-2 h-2 rounded-full bg-green-400" />
               )}

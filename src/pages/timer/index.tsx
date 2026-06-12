@@ -111,7 +111,7 @@ const TimerPage: FC = () => {
           {Taro.getCurrentPages().length > 1 && (
             <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
               <ArrowLeft size={14} color="#10b981" />
-              <Text className="text-sm text-emerald-500">返回对局</Text>
+              <Text className="text-sm text-emerald-500">返回</Text>
             </View>
           )}
         </View>

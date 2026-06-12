@@ -10,16 +10,14 @@ export class AiService {
     // 查询桌游规则
     const { data: game, error } = await client
       .from('board_games')
-      .select('name, sections, tips')
+      .select('name, rules, tips')
       .eq('id', gameId)
       .maybeSingle()
     if (error) throw new Error(`查询桌游失败: ${error.message}`)
     if (!game) throw new Error('桌游不存在')
 
     // 组装 Prompt
-    const sectionsContent = Array.isArray(game.sections)
-      ? game.sections.map((s: any) => `## ${s.title}\n${s.content}`).join('\n\n')
-      : ''
+    const rulesContent = typeof game.rules === 'string' ? game.rules : ''
     const tipsContent = Array.isArray(game.tips)
       ? game.tips.map((t: string) => `- ${t}`).join('\n')
       : ''
@@ -28,7 +26,7 @@ export class AiService {
 如果问题与该桌游无关，请礼貌拒绝。
 
 桌游规则：
-${sectionsContent}
+${rulesContent}
 
 新手技巧：
 ${tipsContent}

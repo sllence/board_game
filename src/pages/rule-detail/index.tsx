@@ -5,16 +5,10 @@ import { markdownToRichText } from '@/lib/markdown'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { Users, Clock, Star, BookOpen, Lightbulb, Play, Heart, Volume2, ChevronRight } from 'lucide-react-taro'
 import { requireLogin } from '@/utils/auth'
 import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
-
-interface Section {
-  title: string
-  content: string
-}
 
 interface BoardGameDetail {
   id: number
@@ -30,7 +24,6 @@ interface BoardGameDetail {
   icon_color: string
   hero_bg: string
   intro: string
-  sections?: Section[]
   tips?: string[]
   rules?: string
   image_url?: string
@@ -113,7 +106,6 @@ const RuleDetailPage: FC = () => {
     )
   }
 
-  const sections: Section[] = Array.isArray(game.sections) ? game.sections : []
   const tips: string[] = Array.isArray(game.tips) ? game.tips : []
   const scenes: string[] = Array.isArray(game.scene) ? game.scene : game.scene ? [game.scene] : []
   const diffInfo = DIFFICULTY_META[game.difficulty] || { label: game.difficulty, color: '#6b7280', bg: '#f3f4f6', emoji: '🎲' }
@@ -203,49 +195,6 @@ const RuleDetailPage: FC = () => {
             <Card className="shadow-sm">
               <CardContent className="p-4">
                 <RichText nodes={convertToRichText(game.rules)} />
-              </CardContent>
-            </Card>
-          )}
-        </View>
-      )}
-
-      {/* 旧的规则章节 - 保持向后兼容 */}
-      {!game.rules && sections.length > 0 && (
-        <View className="px-4 mt-5">
-          <View
-            className="flex flex-row items-center justify-between mb-3"
-            onClick={() => setRulesExpanded(v => !v)}
-          >
-            <View className="flex flex-row items-center gap-2">
-              <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                <BookOpen size={14} color="#fff" />
-              </View>
-              <Text className="block text-base font-semibold text-foreground">游戏规则</Text>
-            </View>
-            <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
-          </View>
-          {rulesExpanded && (
-            <Card className="shadow-sm">
-              <CardContent className="p-0">
-                <Accordion type="multiple" defaultValue={sections.map((_, i) => `section-${i}`)}>
-                  {sections.map((section, idx) => (
-                    <AccordionItem key={idx} value={`section-${idx}`}>
-                      <AccordionTrigger>
-                        <View className="flex flex-row items-center gap-2">
-                          <View className="w-5 h-5 rounded flex items-center justify-center bg-indigo-100">
-                            <Text className="text-xs font-bold text-indigo-600">{idx + 1}</Text>
-                          </View>
-                          <Text className="text-sm font-medium text-foreground">{section.title}</Text>
-                        </View>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <Text className="block text-sm text-gray-500 leading-relaxed whitespace-pre-line pl-7">
-                          {section.content}
-                        </Text>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
               </CardContent>
             </Card>
           )}

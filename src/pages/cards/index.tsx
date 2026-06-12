@@ -100,7 +100,7 @@ const CardsPage: FC = () => {
           {Taro.getCurrentPages().length > 1 && (
             <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>
               <ArrowLeft size={14} color="#f59e0b" />
-              <Text className="text-sm text-amber-500">返回对局</Text>
+              <Text className="text-sm text-amber-500">返回</Text>
             </View>
           )}
         </View>
