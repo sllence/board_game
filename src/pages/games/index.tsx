@@ -3,7 +3,10 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Network } from '@/network'
 import { Input } from '@/components/ui/input'
-import { Search, ChevronDown, RotateCcw } from 'lucide-react-taro'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Search, RotateCcw } from 'lucide-react-taro'
 import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
 
@@ -43,18 +46,18 @@ const FILTER_OPTIONS = {
   ],
   players: [
     { key: '', label: '人数' },
-    { key: '2', label: '2人' },
-    { key: '3', label: '3人' },
-    { key: '4', label: '4人' },
-    { key: '5', label: '5人' },
-    { key: '6', label: '6人+' },
+    { key: '2', label: '2 人' },
+    { key: '3', label: '3 人' },
+    { key: '4', label: '4 人' },
+    { key: '5', label: '5 人' },
+    { key: '6', label: '6 人+' },
   ],
   duration: [
     { key: '', label: '时长' },
-    { key: '15', label: '15分钟内' },
-    { key: '30', label: '30分钟内' },
-    { key: '45', label: '45分钟内' },
-    { key: '60', label: '60分钟内' },
+    { key: '15', label: '15 分钟内' },
+    { key: '30', label: '30 分钟内' },
+    { key: '45', label: '45 分钟内' },
+    { key: '60', label: '60 分钟内' },
   ],
   difficulty: [
     { key: '', label: '难度' },
@@ -204,20 +207,12 @@ const GamesPage: FC = () => {
               className="flex-1 relative"
               onClick={() => setActiveFilter(activeFilter === filterKey ? null : filterKey)}
             >
-              <View
-                className="flex flex-row items-center justify-center gap-1 rounded-lg py-2"
-                style={{
-                  backgroundColor: isFilterActive(filterKey) ? '#eef2ff' : '#f3f4f6',
-                  borderWidth: 1,
-                  borderColor: activeFilter === filterKey ? '#4F46E5' : (isFilterActive(filterKey) ? '#c7d2fe' : 'transparent'),
-                  borderStyle: 'solid',
-                }}
+              <Button
+                variant={isFilterActive(filterKey) ? 'secondary' : 'outline'}
+                className={`flex-1 justify-center py-2 h-auto ${isFilterActive(filterKey) ? 'bg-indigo-50 border-indigo-600' : 'border-gray-200'}`}
               >
-                <Text className="text-xs" style={{ color: isFilterActive(filterKey) ? '#4F46E5' : '#6b7280' }}>
-                  {getFilterLabel(filterKey)}
-                </Text>
-                <ChevronDown size={12} color={isFilterActive(filterKey) ? '#4F46E5' : '#9ca3af'} />
-              </View>
+                <Text className="text-xs">{getFilterLabel(filterKey)}</Text>
+              </Button>
               {/* 下拉选项 */}
               {activeFilter === filterKey && (
                 <View
@@ -247,11 +242,10 @@ const GamesPage: FC = () => {
           ))}
           {/* 重置按钮 */}
           {hasAnyFilter && (
-            <View className="flex-shrink-0 ml-1" onClick={resetFilters}>
-              <View className="flex flex-row items-center justify-center rounded-lg py-2 px-2" style={{ backgroundColor: '#fef2f2' }}>
-                <RotateCcw size={12} color="#EF4444" />
-              </View>
-            </View>
+            <Button variant="ghost" size="sm" className="h-auto py-2 px-3" onClick={resetFilters}>
+              <RotateCcw size={12} className="mr-1" />
+              <Text className="text-xs">重置</Text>
+            </Button>
           )}
         </View>
       </View>
@@ -263,13 +257,13 @@ const GamesPage: FC = () => {
           {filterKeys.map(key => {
             if (!filters[key]) return null
             return (
-              <View key={key} className="flex flex-row items-center rounded-full px-2 py-1" style={{ backgroundColor: '#eef2ff' }}>
-                <Text className="text-xs text-indigo-600">{getFilterLabel(key)}</Text>
+              <Badge key={key} variant="secondary" className="text-xs" style={{ '--badge-bg': '#eef2ff' as string }}>
+                <Text className="text-indigo-600">{getFilterLabel(key)}</Text>
                 <Text
-                  className="text-xs text-indigo-400 ml-1"
+                  className="ml-2 text-indigo-400 hover:text-indigo-600 cursor-pointer"
                   onClick={() => handleFilterSelect(key, '')}
                 >✕</Text>
-              </View>
+              </Badge>
             )
           })}
         </View>
@@ -305,15 +299,13 @@ const GamesPage: FC = () => {
               const gameBg = getGameBg(game)
               const difficultyInfo = DIFFICULTY_META[game.difficulty] || DIFFICULTY_META.medium
               return (
-                <View
+                <Card
                   key={game.id}
-                  className="rounded-2xl overflow-hidden bg-white shadow-sm"
-                  style={{ borderWidth: 1, borderColor: '#f3f4f6', borderStyle: 'solid' }}
+                  className="overflow-hidden"
+                  style={{ borderTopWidth: 4, borderTopColor: gameColor }}
                   onClick={() => goToDetail(game.id)}
                 >
-                  {/* 顶部色条 */}
-                  <View style={{ height: 4, backgroundColor: gameColor }} />
-                  <View className="p-3">
+                  <CardContent className="p-3">
                     <View className="flex flex-row items-start">
                       {/* 左侧图标 */}
                       <View className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mr-3" style={{ backgroundColor: gameBg }}>
@@ -330,9 +322,9 @@ const GamesPage: FC = () => {
                               <Text className="text-xs text-gray-400">⏱ {game.duration}min</Text>
                             </View>
                           </View>
-                          <View className="rounded px-2 py-1 flex-shrink-0" style={{ backgroundColor: difficultyInfo.bg }}>
-                            <Text style={{ fontSize: 11, color: difficultyInfo.color }}>{difficultyInfo.emoji} {difficultyInfo.label}</Text>
-                          </View>
+                          <Badge variant="outline" style={{ backgroundColor: difficultyInfo.bg, color: difficultyInfo.color }}>
+                            <Text className="text-xs">{difficultyInfo.emoji} {difficultyInfo.label}</Text>
+                          </Badge>
                         </View>
                         <Text className="block text-xs text-gray-400 mt-1 line-clamp-1">{game.intro}</Text>
 
@@ -341,24 +333,24 @@ const GamesPage: FC = () => {
                           {game.type?.map((t) => {
                             const meta = TYPE_META[t]
                             return meta ? (
-                              <View key={t} className="rounded px-2 py-1" style={{ backgroundColor: meta.bg }}>
-                                <Text style={{ fontSize: 11, color: meta.color }}>{meta.emoji} {meta.label}</Text>
-                              </View>
+                              <Badge key={t} variant="outline" style={{ backgroundColor: meta.bg, color: meta.color }}>
+                                <Text className="text-xs">{meta.emoji} {meta.label}</Text>
+                              </Badge>
                             ) : null
                           })}
                           {game.scene?.map((s) => {
                             const meta = SCENE_META[s]
                             return meta ? (
-                              <View key={s} className="rounded px-2 py-1" style={{ backgroundColor: meta.bg }}>
-                                <Text style={{ fontSize: 11, color: meta.color }}>{meta.emoji} {meta.label}</Text>
-                              </View>
+                              <Badge key={s} variant="outline" style={{ backgroundColor: meta.bg, color: meta.color }}>
+                                <Text className="text-xs">{meta.emoji} {meta.label}</Text>
+                              </Badge>
                             ) : null
                           })}
                         </View>
                       </View>
                     </View>
-                  </View>
-                </View>
+                  </CardContent>
+                </Card>
               )
             })}
           </View>

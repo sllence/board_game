@@ -22,8 +22,8 @@ const Textarea = React.forwardRef<
   return (
     <View
       className={cn(
-        "flex h-20 w-full rounded-md border border-input bg-background px-3 py-2 ring-offset-background focus-within:border-ring focus-within:ring-4 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
-        isFocused && "border-ring ring-4 ring-ring ring-offset-2 ring-offset-background",
+        "flex min-h-24 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm shadow-sm transition-all duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-indigo-200 focus-within:ring-offset-2 focus-within:ring-offset-background",
+        isFocused && "border-primary ring-2 ring-indigo-200 ring-offset-2 ring-offset-background",
         className
       )}
       onTouchStart={() => {

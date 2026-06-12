@@ -59,7 +59,7 @@ const ScorerPage: FC = () => {
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score)
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* 标题 */}
       <View className="px-5 pt-12 pb-4 bg-white">
         <View className="flex flex-row items-center justify-between">
@@ -67,7 +67,7 @@ const ScorerPage: FC = () => {
             <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }}>
               <Calculator size={18} color="#fff" />
             </View>
-            <Text className="block text-xl font-bold text-[#1e1b4b]">计分器</Text>
+            <Text className="block text-xl font-bold text-foreground">计分器</Text>
           </View>
           {Taro.getCurrentPages().length > 1 && (
             <View
@@ -165,7 +165,7 @@ const ScorerPage: FC = () => {
                   <View className="flex-1 min-w-0">
                     <View className="flex flex-row items-center gap-2">
                       <User size={14} color="#9ca3af" />
-                      <Text className="block text-sm font-medium text-[#1e1b4b] truncate">{player.name}</Text>
+                      <Text className="block text-sm font-medium text-foreground truncate">{player.name}</Text>
                     </View>
                     <Text className="block text-2xl font-bold text-indigo-600 mt-1">{player.score}</Text>
                   </View>

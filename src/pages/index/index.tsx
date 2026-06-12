@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Dices, Calculator, ArrowRight, Sparkles, Play, History, Hand, Timer } from 'lucide-react-taro'
+import { Empty } from '@/components/ui/empty'
+import { Dices, Calculator, ArrowRight, Sparkles, History, Hand, Timer } from 'lucide-react-taro'
 import { WheelIcon } from '@/components/wheel-icon'
 import { requireLogin, getCurrentUser } from '@/utils/auth'
 import { TYPE_META, SCENE_META, DIFFICULTY_META, ICON_KEY_MAP } from '@/constants/game'
@@ -49,7 +50,6 @@ const QUICK_TOOLS = [
 const IndexPage: FC = () => {
   const [hotGames, setHotGames] = useState<BoardGame[]>([])
   const [recentSessions, setRecentSessions] = useState<GameSession[]>([])
-  const [activeSession, setActiveSession] = useState<GameSession | null>(null)
   const [loading, setLoading] = useState(false)
 
   useDidShow(() => {
@@ -71,7 +71,6 @@ const IndexPage: FC = () => {
     const currentUser = getCurrentUser()
     if (!currentUser?.id) {
       setRecentSessions([])
-      setActiveSession(null)
       return
     }
 
@@ -83,10 +82,6 @@ const IndexPage: FC = () => {
       console.log('[IndexPage] fetchRecentSessions response:', res.data)
       const sessions = res.data?.data || []
       setRecentSessions(sessions)
-      
-      // 找到第一个进行中的对局
-      const active = sessions.find((s: GameSession) => s.status === 'playing')
-      setActiveSession(active || null)
     } catch (err) {
       console.error('[IndexPage] fetchRecentSessions error:', err)
     } finally {
@@ -115,7 +110,7 @@ const IndexPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* Hero 区域 - 靛蓝渐变 */}
       <View className="px-5 pt-14 pb-10" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
         <View className="flex flex-col items-start">
@@ -131,7 +126,7 @@ const IndexPage: FC = () => {
 
       {/* 快捷工具 - Bento Grid 风格 */}
       <View className="px-4 -mt-5 mb-5">
-        <Card className="border-0 shadow-lg">
+        <Card className="shadow-lg">
           <CardContent className="p-4">
             <View className="flex flex-row justify-between">
               {QUICK_TOOLS.map((tool) => (
@@ -154,47 +149,12 @@ const IndexPage: FC = () => {
         </Card>
       </View>
 
-      {/* 继续游戏 - 如果有进行中的对局 */}
-      {activeSession && (
-        <View className="px-4 mb-5">
-          <View
-            className="cursor-pointer"
-            onClick={() => goToSession(activeSession.id)}
-          >
-            <Card className="border-0 overflow-hidden">
-              <View className="h-1" style={{ background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)' }} />
-              <CardContent className="p-4">
-                <View className="flex flex-row items-center justify-between">
-                  <View className="flex flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                      <Play size={20} color="#4F46E5" />
-                    </View>
-                    <View>
-                      <Text className="block text-base font-semibold text-foreground">
-                        {activeSession.game?.name || activeSession.session_name}
-                      </Text>
-                      <Text className="block text-xs text-gray-500 mt-1">
-                        进行中 · {formatDate(activeSession.created_at)}
-                      </Text>
-                    </View>
-                  </View>
-                  <View className="flex flex-row items-center gap-1">
-                    <Text className="text-xs text-primary">继续</Text>
-                    <ArrowRight size={12} color="#4F46E5" />
-                  </View>
-                </View>
-              </CardContent>
-            </Card>
-          </View>
-        </View>
-      )}
-
       {/* 热门桌游 - 优化后的卡片 */}
       <View className="px-4 mb-5">
         <View className="flex flex-row items-center justify-between mb-3">
           <View className="flex flex-row items-center gap-2">
             <Sparkles size={16} color="#4F46E5" />
-            <Text className="block text-base font-semibold text-[#1e1b4b]">热门桌游</Text>
+            <Text className="block text-base font-semibold text-foreground">热门桌游</Text>
           </View>
           <View
             className="flex flex-row items-center gap-1 cursor-pointer"
@@ -211,7 +171,7 @@ const IndexPage: FC = () => {
               className="cursor-pointer"
               onClick={() => goToGame(game.id)}
             >
-              <Card className="border-0 shadow-sm overflow-hidden">
+              <Card className="shadow-sm overflow-hidden">
                 <View
                   className="h-1"
                   style={{ background: game.icon_bg || '#4F46E5' }}
@@ -229,7 +189,7 @@ const IndexPage: FC = () => {
                     {/* 游戏信息 */}
                     <View className="flex-1">
                       <View className="flex flex-row items-center gap-2 mb-1">
-                        <Text className="block text-base font-bold text-[#1e1b4b]">{game.name}</Text>
+                        <Text className="block text-base font-bold text-foreground">{game.name}</Text>
                         {index === 0 && (
                           <View
                             className="rounded-full px-2 py-1"
@@ -289,7 +249,7 @@ const IndexPage: FC = () => {
         <View className="flex flex-row items-center justify-between mb-3">
           <View className="flex flex-row items-center gap-2">
             <History size={16} color="#4F46E5" />
-            <Text className="block text-base font-semibold text-[#1e1b4b]">最近对局</Text>
+            <Text className="block text-base font-semibold text-foreground">最近对局</Text>
           </View>
           <View
             className="flex flex-row items-center gap-1 cursor-pointer"
@@ -300,22 +260,23 @@ const IndexPage: FC = () => {
           </View>
         </View>
         {loading ? (
-          <Card className="border-0">
+          <Card className="">
             <CardContent className="flex flex-col items-center p-8">
               <Text className="block text-sm text-gray-400">加载中...</Text>
             </CardContent>
           </Card>
         ) : recentSessions.length === 0 ? (
-          <Card className="border-0">
-            <CardContent className="flex flex-col items-center p-8">
-              <View className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
-                <Timer size={24} color="#9ca3af" />
-              </View>
-              <Text className="block text-sm text-gray-400 mb-3">还没有对局记录</Text>
-              <Button size="sm" className="rounded-full" onClick={() => requireLogin(() => Taro.switchTab({ url: '/pages/games/index' }))}>
-                <Text className="text-white text-xs">开始第一局</Text>
-              </Button>
-            </CardContent>
+          <Card>
+            <Empty
+              icon="⏱️"
+              title="还没有对局记录"
+              description="开始你的第一局桌游吧！"
+              action={
+                <Button size="sm" className="rounded-full" onClick={() => requireLogin(() => Taro.switchTab({ url: '/pages/games/index' }))}>
+                  <Text className="text-white text-xs">开始第一局</Text>
+                </Button>
+              }
+            />
           </Card>
         ) : (
           <View className="flex flex-col gap-3">
@@ -325,7 +286,7 @@ const IndexPage: FC = () => {
                 className="cursor-pointer"
                 onClick={() => goToSession(session.id)}
               >
-                <Card className="border-0 overflow-hidden">
+                <Card className="overflow-hidden">
                   <View 
                     className="h-1" 
                     style={{ 

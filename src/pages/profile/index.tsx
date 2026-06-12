@@ -249,7 +249,7 @@ const ProfilePage: FC = () => {
 
   if (!userInfo) {
     return (
-      <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+      <View className="flex flex-col min-h-screen bg-background">
         <View className="px-5 pt-20 pb-8" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
           <View className="flex items-center justify-center mb-8 w-20 h-20 rounded-3xl" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             <Text className="text-3xl">🎮</Text>
@@ -331,7 +331,7 @@ const ProfilePage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* 用户信息区 - 渐变头部 */}
       <View className="px-5 pt-14 pb-8" style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' }}>
         <View className="flex flex-row items-center gap-4">
@@ -387,7 +387,7 @@ const ProfilePage: FC = () => {
 
       {/* 统计卡片 */}
       <View className="px-4 -mt-4 mb-4">
-        <Card className="border-0 shadow-sm">
+        <Card className="shadow-sm">
           <CardContent className="flex flex-row justify-around p-5">
             <View className="flex flex-col items-center">
               <View
@@ -396,7 +396,7 @@ const ProfilePage: FC = () => {
               >
                 <Text className="text-base">🎲</Text>
               </View>
-              <Text className="block text-lg font-bold text-[#1e1b4b]">{userInfo?.total_games || 0}</Text>
+              <Text className="block text-lg font-bold text-foreground">{userInfo?.total_games || 0}</Text>
               <Text className="block text-xs text-gray-400">对局数</Text>
             </View>
             <View className="flex flex-col items-center">
@@ -406,7 +406,7 @@ const ProfilePage: FC = () => {
               >
                 <Text className="text-base">🏆</Text>
               </View>
-              <Text className="block text-lg font-bold text-[#1e1b4b]">{userInfo?.total_wins || 0}</Text>
+              <Text className="block text-lg font-bold text-foreground">{userInfo?.total_wins || 0}</Text>
               <Text className="block text-xs text-gray-400">胜场</Text>
             </View>
             <View className="flex flex-col items-center">
@@ -416,7 +416,7 @@ const ProfilePage: FC = () => {
               >
                 <Text className="text-base">⏱️</Text>
               </View>
-              <Text className="block text-lg font-bold text-[#1e1b4b]">{userInfo?.total_time ? Math.floor(userInfo.total_time / 3600) : 0}</Text>
+              <Text className="block text-lg font-bold text-foreground">{userInfo?.total_time ? Math.floor(userInfo.total_time / 3600) : 0}</Text>
               <Text className="block text-xs text-gray-400">游戏时长(h)</Text>
             </View>
           </CardContent>
@@ -429,7 +429,7 @@ const ProfilePage: FC = () => {
         {userInfo?.is_admin && ADMIN_MENU_ITEMS.map((item) => (
           <Card 
             key={item.name} 
-            className="border-0 shadow-sm mb-3" 
+            className="shadow-sm mb-3" 
             onClick={() => {
               if (item.name === '桌游管理') {
                 Taro.navigateTo({ url: '/pages/games-admin/index' })
@@ -457,7 +457,7 @@ const ProfilePage: FC = () => {
         {MENU_ITEMS.map((item) => (
           <Card
             key={item.name}
-            className="border-0 shadow-sm mb-3"
+            className="shadow-sm mb-3"
             onClick={() => {
               if (item.soon) {
                 Taro.showToast({ title: '功能开发中', icon: 'none' })
@@ -476,7 +476,7 @@ const ProfilePage: FC = () => {
               </View>
               {item.soon && (
                 <View className="rounded-full px-2 py-1 bg-primary">
-                  <Text className="text-xs text-primary">即将上线</Text>
+                  <Text className="text-xs text-white">即将上线</Text>
                 </View>
               )}
             </CardContent>

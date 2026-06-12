@@ -87,7 +87,7 @@ const CardsPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-[#f5f5f7]">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* 标题 */}
       <View className="px-5 pt-12 pb-4 bg-white">
         <View className="flex flex-row items-center justify-between">
@@ -95,7 +95,7 @@ const CardsPage: FC = () => {
             <View className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
               <Layers size={18} color="#fff" />
             </View>
-            <Text className="block text-xl font-bold text-[#1e1b4b]">抽牌</Text>
+            <Text className="block text-xl font-bold text-foreground">抽牌</Text>
           </View>
           {Taro.getCurrentPages().length > 1 && (
             <View className="flex flex-row items-center gap-1 cursor-pointer" onClick={() => Taro.navigateBack()}>

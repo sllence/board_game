@@ -75,7 +75,7 @@ root-portal {
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #d1d5db;
-  --input: lab(90.952% 0 -0.0000119209);
+  --input: #d1d5db;
   --ring: lab(66.128% -0.0000298023 0.0000119209);
   --sidebar: lab(98.26% 0 0);
   --sidebar-foreground: lab(2.75381% 0 0);
