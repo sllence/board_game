@@ -5,7 +5,7 @@ import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Empty } from '@/components/ui/empty'
-import { Dices, Calculator, ArrowRight, Sparkles, Play, History, Hand, Timer } from 'lucide-react-taro'
+import { Dices, Calculator, ArrowRight, Sparkles, History, Hand, Timer } from 'lucide-react-taro'
 import { WheelIcon } from '@/components/wheel-icon'
 import { requireLogin, getCurrentUser } from '@/utils/auth'
 import { TYPE_META, SCENE_META, DIFFICULTY_META, ICON_KEY_MAP } from '@/constants/game'
@@ -50,7 +50,6 @@ const QUICK_TOOLS = [
 const IndexPage: FC = () => {
   const [hotGames, setHotGames] = useState<BoardGame[]>([])
   const [recentSessions, setRecentSessions] = useState<GameSession[]>([])
-  const [activeSession, setActiveSession] = useState<GameSession | null>(null)
   const [loading, setLoading] = useState(false)
 
   useDidShow(() => {
@@ -72,7 +71,6 @@ const IndexPage: FC = () => {
     const currentUser = getCurrentUser()
     if (!currentUser?.id) {
       setRecentSessions([])
-      setActiveSession(null)
       return
     }
 
@@ -84,10 +82,6 @@ const IndexPage: FC = () => {
       console.log('[IndexPage] fetchRecentSessions response:', res.data)
       const sessions = res.data?.data || []
       setRecentSessions(sessions)
-      
-      // 找到第一个进行中的对局
-      const active = sessions.find((s: GameSession) => s.status === 'playing')
-      setActiveSession(active || null)
     } catch (err) {
       console.error('[IndexPage] fetchRecentSessions error:', err)
     } finally {
@@ -154,41 +148,6 @@ const IndexPage: FC = () => {
           </CardContent>
         </Card>
       </View>
-
-      {/* 继续游戏 - 如果有进行中的对局 */}
-      {activeSession && (
-        <View className="px-4 mb-5">
-          <View
-            className="cursor-pointer"
-            onClick={() => goToSession(activeSession.id)}
-          >
-            <Card className="overflow-hidden">
-              <View className="h-1" style={{ background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)' }} />
-              <CardContent className="p-4">
-                <View className="flex flex-row items-center justify-between">
-                  <View className="flex flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                      <Play size={20} color="#4F46E5" />
-                    </View>
-                    <View>
-                      <Text className="block text-base font-semibold text-foreground">
-                        {activeSession.game?.name || activeSession.session_name}
-                      </Text>
-                      <Text className="block text-xs text-gray-500 mt-1">
-                        进行中 · {formatDate(activeSession.created_at)}
-                      </Text>
-                    </View>
-                  </View>
-                  <View className="flex flex-row items-center gap-1">
-                    <Text className="text-xs text-primary">继续</Text>
-                    <ArrowRight size={12} color="#4F46E5" />
-                  </View>
-                </View>
-              </CardContent>
-            </Card>
-          </View>
-        </View>
-      )}
 
       {/* 热门桌游 - 优化后的卡片 */}
       <View className="px-4 mb-5">
