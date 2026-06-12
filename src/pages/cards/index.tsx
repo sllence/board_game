@@ -142,15 +142,13 @@ const CardsPage: FC = () => {
                   <DialogTitle>添加牌面</DialogTitle>
                 </DialogHeader>
                 <View className="flex flex-row gap-2 mt-2">
-                  <View className="flex-1 bg-gray-50 rounded-xl px-4 py-3">
-                    <Input
-                      placeholder="输入牌面名称..."
-                      value={newName}
-                      onInput={(e) => setNewName(e.detail.value)}
-                      onConfirm={addCustomName}
-                      className="bg-transparent"
-                    />
-                  </View>
+                  <Input
+                    className="flex-1 bg-gray-50"
+                    placeholder="输入牌面名称..."
+                    value={newName}
+                    onInput={(e) => setNewName(e.detail.value)}
+                    onConfirm={addCustomName}
+                  />
                   <Button size="sm" onClick={() => { addCustomName(); setDialogOpen(false) }} className="rounded-xl">
                     <Text className="text-white">添加</Text>
                   </Button>

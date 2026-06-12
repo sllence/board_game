@@ -169,7 +169,7 @@ const WheelEditPage: FC = () => {
         <View className="mb-4">
           <Text className="block text-sm font-medium text-gray-700 mb-2">转盘名称</Text>
           <Input
-            className="bg-white rounded-xl border-gray-200"
+            className="bg-white"
             placeholder="例如：今天谁买单"
             value={title}
             onInput={(e) => setTitle(e.detail.value)}

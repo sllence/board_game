@@ -186,7 +186,7 @@ const GamesPage: FC = () => {
             <Search size={16} color="#9ca3af" />
             <View className="flex-1 ml-2">
               <Input
-                className="w-full bg-transparent text-sm text-gray-800"
+                className="w-full bg-transparent text-sm border-none shadow-none ring-0"
                 placeholder="搜索桌游名称..."
                 placeholderClass="text-gray-400"
                 value={keyword}

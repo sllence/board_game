@@ -96,15 +96,13 @@ const ScorerPage: FC = () => {
       <View className="px-5 mt-4 bg-white mx-4 rounded-2xl p-4">
         <Text className="block text-sm font-medium text-[#374151] mb-3">添加玩家</Text>
         <View className="flex flex-row gap-2">
-          <View className="flex-1 bg-gray-50 rounded-xl px-4 py-3">
-            <Input
-              placeholder="输入玩家名称..."
-              value={newPlayerName}
-              onInput={(e) => setNewPlayerName(e.detail.value)}
-              onConfirm={addPlayer}
-              className="bg-transparent"
-            />
-          </View>
+          <Input
+            className="flex-1 bg-gray-50"
+            placeholder="输入玩家名称..."
+            value={newPlayerName}
+            onInput={(e) => setNewPlayerName(e.detail.value)}
+            onConfirm={addPlayer}
+          />
           <Button size="sm" onClick={addPlayer} disabled={players.length >= 12} className="rounded-xl h-11">
             <View className="flex flex-row items-center gap-1">
               <Plus size={14} color="#fff" />

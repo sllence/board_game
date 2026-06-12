@@ -201,14 +201,13 @@ export default function FeedbackPage() {
         </View>
 
         <Text className="block text-sm font-medium text-on-surface mb-3">反馈内容 *</Text>
-        <View className="bg-muted rounded-xl p-4 mb-6">
-          <Textarea
-            placeholder="请详细描述您的反馈..."
-            value={content}
-            onInput={(e) => setContent((e.target as any).value)}
-            maxlength={500}
-          />
-        </View>
+        <Textarea
+          className="bg-muted mb-6"
+          placeholder="请详细描述您的反馈..."
+          value={content}
+          onInput={(e) => setContent((e.target as any).value)}
+          maxlength={500}
+        />
 
         <Text className="block text-sm font-medium text-on-surface mb-3">上传图片（可选，最多3张）</Text>
         <View className="flex flex-wrap gap-3">

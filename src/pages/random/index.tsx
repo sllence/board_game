@@ -76,15 +76,13 @@ const RandomPage: FC = () => {
       <View className="px-5 mt-4 mb-4 bg-white mx-4 rounded-2xl p-4">
         <Text className="block text-sm font-medium text-[#374151] mb-3">参与者名单</Text>
         <View className="flex flex-row gap-2 mb-3">
-          <View className="flex-1 bg-gray-50 rounded-xl px-4 py-3">
-            <Input
-              placeholder="输入名称..."
-              value={newName}
-              onInput={(e) => setNewName(e.detail.value)}
-              onConfirm={addName}
-              className="bg-transparent"
-            />
-          </View>
+          <Input
+            className="flex-1 bg-gray-50"
+            placeholder="输入名称..."
+            value={newName}
+            onInput={(e) => setNewName(e.detail.value)}
+            onConfirm={addName}
+          />
           <Button size="sm" onClick={addName} className="rounded-xl h-11">
             <View className="flex flex-row items-center gap-1">
               <Plus size={14} color="#fff" />

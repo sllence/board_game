@@ -382,14 +382,12 @@ const GamesAdminPage: FC = () => {
 
         {/* Search Bar */}
         <View className="mt-4 flex flex-row gap-2">
-          <View className="flex-1 bg-gray-100 rounded-xl px-4 py-3">
-            <Input
-              className="w-full bg-transparent text-sm"
-              placeholder="搜索桌游名称..."
-              value={searchText}
-              onInput={(e) => setSearchText(e.detail.value)}
-            />
-          </View>
+          <Input
+            className="flex-1 bg-gray-100"
+            placeholder="搜索桌游名称..."
+            value={searchText}
+            onInput={(e) => setSearchText(e.detail.value)}
+          />
         </View>
 
         {/* Status Filter */}
@@ -533,28 +531,24 @@ const GamesAdminPage: FC = () => {
               {/* Emoji */}
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">备用emoji</Text>
-                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                  <Input
-                    className="w-full bg-transparent"
-                    placeholder="输入emoji，如 🎲"
-                    value={formData.icon_key}
-                    onInput={(e) => setFormData(prev => ({ ...prev, icon_key: e.detail.value }))}
-                    maxlength={2}
-                  />
-                </View>
+                <Input
+                  className="w-full bg-gray-50"
+                  placeholder="输入emoji，如 🎲"
+                  value={formData.icon_key}
+                  onInput={(e) => setFormData(prev => ({ ...prev, icon_key: e.detail.value }))}
+                  maxlength={2}
+                />
               </View>
 
               {/* Name */}
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">桌游名称 *</Text>
-                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                  <Input
-                    className="w-full bg-transparent"
-                    placeholder="请输入桌游名称"
-                    value={formData.name}
-                    onInput={(e) => setFormData(prev => ({ ...prev, name: e.detail.value }))}
-                  />
-                </View>
+                <Input
+                  className="w-full bg-gray-50"
+                  placeholder="请输入桌游名称"
+                  value={formData.name}
+                  onInput={(e) => setFormData(prev => ({ ...prev, name: e.detail.value }))}
+                />
               </View>
 
               {/* Type */}
@@ -613,26 +607,22 @@ const GamesAdminPage: FC = () => {
                 <View className="flex flex-row items-center gap-4">
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最少</Text>
-                    <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                      <Input
-                        className="w-full bg-transparent"
-                        type="number"
-                        value={String(formData.min_players)}
-                        onInput={(e) => setFormData(prev => ({ ...prev, min_players: Number(e.detail.value) }))}
-                      />
-                    </View>
+                    <Input
+                      className="w-full bg-gray-50"
+                      type="number"
+                      value={String(formData.min_players)}
+                      onInput={(e) => setFormData(prev => ({ ...prev, min_players: Number(e.detail.value) }))}
+                    />
                   </View>
                   <Text className="text-gray-400">-</Text>
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最多</Text>
-                    <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                      <Input
-                        className="w-full bg-transparent"
-                        type="number"
-                        value={String(formData.max_players)}
-                        onInput={(e) => setFormData(prev => ({ ...prev, max_players: Number(e.detail.value) }))}
-                      />
-                    </View>
+                    <Input
+                      className="w-full bg-gray-50"
+                      type="number"
+                      value={String(formData.max_players)}
+                      onInput={(e) => setFormData(prev => ({ ...prev, max_players: Number(e.detail.value) }))}
+                    />
                   </View>
                 </View>
               </View>
@@ -643,26 +633,22 @@ const GamesAdminPage: FC = () => {
                 <View className="flex flex-row items-center gap-4">
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最短</Text>
-                    <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                      <Input
-                        className="w-full bg-transparent"
-                        type="number"
-                        value={String(formData.min_duration)}
-                        onInput={(e) => setFormData(prev => ({ ...prev, min_duration: Number(e.detail.value) }))}
-                      />
-                    </View>
+                    <Input
+                      className="w-full bg-gray-50"
+                      type="number"
+                      value={String(formData.min_duration)}
+                      onInput={(e) => setFormData(prev => ({ ...prev, min_duration: Number(e.detail.value) }))}
+                    />
                   </View>
                   <Text className="text-gray-400">-</Text>
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最长</Text>
-                    <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                      <Input
-                        className="w-full bg-transparent"
-                        type="number"
-                        value={String(formData.max_duration)}
-                        onInput={(e) => setFormData(prev => ({ ...prev, max_duration: Number(e.detail.value) }))}
-                      />
-                    </View>
+                    <Input
+                      className="w-full bg-gray-50"
+                      type="number"
+                      value={String(formData.max_duration)}
+                      onInput={(e) => setFormData(prev => ({ ...prev, max_duration: Number(e.detail.value) }))}
+                    />
                   </View>
                 </View>
               </View>

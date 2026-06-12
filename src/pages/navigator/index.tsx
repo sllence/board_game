@@ -566,14 +566,13 @@ const NavigatorPage: FC = () => {
             <Text className="block text-xs text-muted-foreground ml-auto">{players.length}/12</Text>
           </View>
           <View className="flex flex-row gap-2 mb-3">
-            <View className="flex-1 bg-white rounded-xl px-4 py-3 shadow-sm border border-border">
-              <Input
-                placeholder="输入玩家名称..."
-                value={newPlayerName}
-                onInput={(e) => setNewPlayerName(e.detail.value)}
-                onConfirm={addPlayer}
-              />
-            </View>
+            <Input
+              className="flex-1"
+              placeholder="输入玩家名称..."
+              value={newPlayerName}
+              onInput={(e) => setNewPlayerName(e.detail.value)}
+              onConfirm={addPlayer}
+            />
             <Button size="sm" className="rounded-xl h-auto" onClick={addPlayer}>
               <Plus size={16} color="#fff" />
             </Button>
@@ -739,14 +738,13 @@ const NavigatorPage: FC = () => {
             <Text className="block text-sm font-bold text-foreground">AI 规则问答</Text>
           </View>
           <View className="flex flex-row gap-2 mb-2">
-            <View className="flex-1 bg-white rounded-xl px-4 py-3 shadow-sm border border-border">
-              <Input
-                placeholder="有问题？问AI..."
-                value={aiQuestion}
-                onInput={(e) => setAiQuestion(e.detail.value)}
-                onConfirm={askAI}
-              />
-            </View>
+            <Input
+              className="flex-1"
+              placeholder="有问题？问AI..."
+              value={aiQuestion}
+              onInput={(e) => setAiQuestion(e.detail.value)}
+              onConfirm={askAI}
+            />
             <Button size="sm" className="rounded-xl h-auto px-4" onClick={askAI} disabled={aiLoading}>
               <Send size={14} color="#fff" />
             </Button>
