@@ -113,7 +113,7 @@ const NavigatorPage: FC = () => {
     return () => clearInterval(id)
   }, [timerRunning])
 
-  // 自动保存：玩家分数变化时防抖保存（仅监听 players，不监听计时器）
+  // 自动保存：玩家分数变化时防抖保存
   useEffect(() => {
     if (phase !== 'playing' || !sessionId || players.length === 0) return
     const timeoutId = setTimeout(() => {
@@ -172,11 +172,13 @@ const NavigatorPage: FC = () => {
         } else if (sessionData.players) {
           setPlayers(sessionData.players.map((name: string) => ({ name, score: 0 })))
         }
-        if (sessionData.duration_seconds) {
+        if (sessionData.duration_seconds && sessionData.status !== 'playing') {
           setElapsedSeconds(sessionData.duration_seconds)
         }
-        // 如果是进行中的对局，可以继续游戏
+        // 如果是进行中的对局，基于 created_at 计算已过秒数
         if (sessionData.status === 'playing') {
+          const startTime = sessionData.created_at ? new Date(sessionData.created_at).getTime() : Date.now()
+          setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000))
           setPhase('playing')
           setTimerRunning(true)
         } else {
@@ -222,10 +224,12 @@ const NavigatorPage: FC = () => {
       console.log('[NavigatorPage] createSession response:', res.data)
       const id = res.data?.data?.id
       if (id) setSessionId(id)
+      setElapsedSeconds(0)
       setPhase('playing')
       setTimerRunning(true)
     } catch (err) {
       console.error('[NavigatorPage] createSession error:', err)
+      setElapsedSeconds(0)
       setPhase('playing')
       setTimerRunning(true)
     }

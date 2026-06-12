@@ -44,7 +44,7 @@ const TabsList = React.forwardRef<
   <View
     ref={ref}
     className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+      "inline-flex h-10 items-center justify-center rounded-md bg-white border border-gray-100 p-1 text-muted-foreground",
       className
     )}
     {...props}
@@ -74,7 +74,7 @@ const TabsTrigger = React.forwardRef<
       onClick={handleClick}
       className={cn(
         "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium ring-offset-background transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
-        isActive && "bg-background text-foreground shadow-sm",
+        isActive && "bg-white text-foreground shadow-sm",
         disabled && "opacity-50 pointer-events-none",
         className
         )}

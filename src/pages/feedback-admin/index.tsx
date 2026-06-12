@@ -128,7 +128,7 @@ export default function FeedbackAdminPage() {
       </View>
 
       {/* 筛选栏 */}
-      <View className="sticky top-14 z-20 bg-background px-4 py-3 border-b border-border">
+      <View className="sticky top-14 z-20 bg-white px-4 py-3 border-b border-border">
         <Tabs defaultValue="all" onValueChange={setActiveTab}>
           <ScrollView scrollX className="w-full">
             <TabsList className="inline-flex">
