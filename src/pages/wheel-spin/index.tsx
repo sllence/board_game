@@ -353,7 +353,7 @@ const WheelSpinPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-gray-50" style={{ overflowX: 'hidden' }}>
+    <View className="flex flex-col min-h-screen bg-background" style={{ overflowX: 'hidden' }}>
       <View className="px-5 pt-2 pb-2 bg-white border-b border-gray-100">
         <View className="flex flex-row items-center justify-between">
           <View className="flex flex-row items-center gap-2">

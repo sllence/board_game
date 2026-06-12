@@ -158,7 +158,7 @@ const WheelEditPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-gray-50" style={{ overflowX: 'hidden' }}>
+    <View className="flex flex-col min-h-screen bg-background" style={{ overflowX: 'hidden' }}>
       <View className="px-5 pt-12 pb-4 bg-white border-b border-gray-100">
         <Text className="text-lg font-bold text-gray-900">
           {wheelId ? '编辑转盘' : '新建转盘'}
@@ -251,7 +251,7 @@ const WheelEditPage: FC = () => {
                   <View className="flex flex-row items-center gap-1 flex-shrink-0">
                     <Text className="text-xs text-gray-400">权重</Text>
                     <Input
-                      className="w-12 text-center bg-gray-50 rounded-lg"
+                      className="w-12 text-center"
                       type="number"
                       value={String((item as ProbWheelItem).weight || 1)}
                       onInput={(e) => {
@@ -265,7 +265,7 @@ const WheelEditPage: FC = () => {
                   <View className="flex flex-row items-center gap-1 flex-shrink-0">
                     <Text className="text-xs text-gray-400">库存</Text>
                     <Input
-                      className="w-12 text-center bg-gray-50 rounded-lg"
+                      className="w-12 text-center"
                       type="number"
                       value={String((item as InvWheelItem).inventory || 0)}
                       onInput={(e) => {

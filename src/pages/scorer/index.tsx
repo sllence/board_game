@@ -97,7 +97,7 @@ const ScorerPage: FC = () => {
         <Text className="block text-sm font-medium text-[#374151] mb-3">添加玩家</Text>
         <View className="flex flex-row gap-2">
           <Input
-            className="flex-1 bg-gray-50"
+            className="flex-1"
             placeholder="输入玩家名称..."
             value={newPlayerName}
             onInput={(e) => setNewPlayerName(e.detail.value)}

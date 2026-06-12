@@ -292,7 +292,7 @@ const ProfilePage: FC = () => {
                 <input
                   type="text"
                   placeholder="请输入昵称"
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl border-0 outline-none"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-0 outline-none"
                   value={h5Nickname}
                   onChange={(e) => setH5Nickname(e.target.value)}
                   onKeyPress={(e) => {
@@ -539,7 +539,7 @@ const ProfilePage: FC = () => {
                 <TaroInput
                   type="nickname"
                   placeholder="请输入昵称"
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl"
+                  className="w-full px-4 py-3 bg-white rounded-xl"
                   onInput={handleNicknameInput}
                   value={tempNickname || ''}
                 />
@@ -547,7 +547,7 @@ const ProfilePage: FC = () => {
                 <input
                   type="text"
                   placeholder="请输入昵称"
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl border-0 outline-none text-sm"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-0 outline-none text-sm"
                   value={tempNickname || ''}
                   onChange={(e) => setTempNickname((e.target as HTMLInputElement).value)}
                 />
@@ -623,7 +623,7 @@ const ProfilePage: FC = () => {
                 <TaroInput
                   type="nickname"
                   placeholder="请输入昵称"
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl"
+                  className="w-full px-4 py-3 bg-white rounded-xl"
                   onInput={handleNicknameInput}
                   value={tempNickname || ''}
                 />
@@ -631,7 +631,7 @@ const ProfilePage: FC = () => {
                 <input
                   type="text"
                   placeholder="请输入昵称"
-                  className="w-full px-4 py-3 bg-gray-50 rounded-xl border-0 outline-none text-sm"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-0 outline-none text-sm"
                   value={tempNickname || ''}
                   onChange={(e) => setTempNickname((e.target as HTMLInputElement).value)}
                 />

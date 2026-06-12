@@ -143,7 +143,7 @@ const CardsPage: FC = () => {
                 </DialogHeader>
                 <View className="flex flex-row gap-2 mt-2">
                   <Input
-                    className="flex-1 bg-gray-50"
+                    className="flex-1"
                     placeholder="输入牌面名称..."
                     value={newName}
                     onInput={(e) => setNewName(e.detail.value)}

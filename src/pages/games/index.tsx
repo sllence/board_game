@@ -175,14 +175,14 @@ const GamesPage: FC = () => {
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-gray-50">
+    <View className="flex flex-col min-h-screen bg-background">
       {/* 顶部搜索区 */}
       <View className="px-5 pt-12 pb-5 bg-white">
         <Text className="block text-2xl font-bold text-gray-900 mb-1">桌游馆 🎲</Text>
         <Text className="block text-sm text-gray-400 mb-4">发现好玩的桌游，开启精彩对局</Text>
         {/* 搜索栏 */}
         <View className="flex flex-row items-center gap-2">
-          <View className="flex-1 flex flex-row items-center rounded-xl px-3 py-2 bg-gray-100">
+          <View className="flex-1 flex flex-row items-center rounded-xl px-3 py-2 bg-white border border-gray-200">
             <Search size={16} color="#9ca3af" />
             <View className="flex-1 ml-2">
               <Input

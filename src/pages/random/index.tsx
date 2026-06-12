@@ -77,7 +77,7 @@ const RandomPage: FC = () => {
         <Text className="block text-sm font-medium text-[#374151] mb-3">参与者名单</Text>
         <View className="flex flex-row gap-2 mb-3">
           <Input
-            className="flex-1 bg-gray-50"
+            className="flex-1"
             placeholder="输入名称..."
             value={newName}
             onInput={(e) => setNewName(e.detail.value)}
