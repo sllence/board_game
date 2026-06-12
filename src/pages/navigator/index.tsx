@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { markdownToRichText } from '@/lib/markdown'
 import {
   Play, Plus, X, User, Dices, Timer, Layers,
-  Shuffle, Calculator, BookOpen,
+  Shuffle, Calculator, BookOpen, ChevronRight,
   Trophy, RotateCcw, Minus, Send, Sparkles, ChessKing, ArrowLeft
 } from 'lucide-react-taro'
 import type { FC } from 'react'
@@ -75,6 +75,7 @@ const NavigatorPage: FC = () => {
   const [showFinishDialog, setShowFinishDialog] = useState(false)
   const [scoringStep, setScoringStep] = useState(1)
   const [session, setSession] = useState<GameSession | null>(null)
+  const [rulesExpanded, setRulesExpanded] = useState(false)
 
   useEffect(() => {
     if (!checkLogin()) {
@@ -453,16 +454,24 @@ const NavigatorPage: FC = () => {
           {/* 规则速查 */}
           {game?.rules && (
             <View className="mb-5">
-              <View className="flex flex-row items-center gap-2 mb-3">
-                <View className="w-1 h-4 rounded-full bg-blue-500" />
-                <BookOpen size={16} color="#3b82f6" />
-                <Text className="block text-sm font-bold text-foreground">规则速查</Text>
+              <View
+                className="flex flex-row items-center justify-between mb-3"
+                onClick={() => setRulesExpanded(v => !v)}
+              >
+                <View className="flex flex-row items-center gap-2">
+                  <View className="w-1 h-4 rounded-full bg-blue-500" />
+                  <BookOpen size={16} color="#3b82f6" />
+                  <Text className="block text-sm font-bold text-foreground">规则速查</Text>
+                </View>
+                <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
               </View>
-              <Card className="shadow-sm">
-                <CardContent className="p-3">
-                  <RichText nodes={markdownToRichText(game.rules)} />
-                </CardContent>
-              </Card>
+              {rulesExpanded && (
+                <Card className="shadow-sm">
+                  <CardContent className="p-3">
+                    <RichText nodes={markdownToRichText(game.rules)} />
+                  </CardContent>
+                </Card>
+              )}
             </View>
           )}
         </View>
@@ -706,16 +715,24 @@ const NavigatorPage: FC = () => {
         {/* 规则速查 */}
         {game?.rules && (
           <View className="mb-5">
-            <View className="flex flex-row items-center gap-2 mb-3">
-              <View className="w-1 h-4 rounded-full bg-blue-500" />
-              <BookOpen size={16} color="#3b82f6" />
-              <Text className="block text-sm font-bold text-foreground">规则速查</Text>
+            <View
+              className="flex flex-row items-center justify-between mb-3"
+              onClick={() => setRulesExpanded(v => !v)}
+            >
+              <View className="flex flex-row items-center gap-2">
+                <View className="w-1 h-4 rounded-full bg-blue-500" />
+                <BookOpen size={16} color="#3b82f6" />
+                <Text className="block text-sm font-bold text-foreground">规则速查</Text>
+              </View>
+              <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
             </View>
-            <Card className="shadow-sm">
-              <CardContent className="p-3">
-                <RichText nodes={markdownToRichText(game.rules)} />
-              </CardContent>
-            </Card>
+            {rulesExpanded && (
+              <Card className="shadow-sm">
+                <CardContent className="p-3">
+                  <RichText nodes={markdownToRichText(game.rules)} />
+                </CardContent>
+              </Card>
+            )}
           </View>
         )}
 
