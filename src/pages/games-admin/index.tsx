@@ -1,12 +1,9 @@
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable no-restricted-syntax */
-import { View, Text, ScrollView, Image, Textarea as TaroTextarea } from '@tarojs/components'
-/* eslint-enable no-restricted-syntax */
-/* eslint-enable no-restricted-syntax */
+import { View, Text, ScrollView, Image } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import { Network } from '@/network'
@@ -383,7 +380,7 @@ const GamesAdminPage: FC = () => {
         {/* Search Bar */}
         <View className="mt-4 flex flex-row gap-2">
           <Input
-            className="flex-1 bg-gray-100"
+            className="flex-1"
             placeholder="搜索桌游名称..."
             value={searchText}
             onInput={(e) => setSearchText(e.detail.value)}
@@ -398,7 +395,7 @@ const GamesAdminPage: FC = () => {
               className={`rounded-full px-4 py-2 ${
                 statusFilter === opt.value
                   ? 'bg-gray-900'
-                  : 'bg-gray-100'
+                  : 'bg-white border border-gray-200'
               }`}
               onClick={() => setStatusFilter(opt.value)}
             >
@@ -493,7 +490,7 @@ const GamesAdminPage: FC = () => {
                       className={`flex-1 min-w-0 rounded-xl p-3 border-2 cursor-pointer ${
                         formData.status === opt.value
                           ? 'border-indigo-600 bg-indigo-50'
-                          : 'border-gray-200 bg-gray-50'
+                          : 'border-gray-200 bg-white'
                       }`}
                       onClick={() => setFormData(prev => ({ ...prev, status: opt.value }))}
                     >
@@ -532,7 +529,7 @@ const GamesAdminPage: FC = () => {
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">备用emoji</Text>
                 <Input
-                  className="w-full bg-gray-50"
+                  className="w-full"
                   placeholder="输入emoji，如 🎲"
                   value={formData.icon_key}
                   onInput={(e) => setFormData(prev => ({ ...prev, icon_key: e.detail.value }))}
@@ -544,7 +541,7 @@ const GamesAdminPage: FC = () => {
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">桌游名称 *</Text>
                 <Input
-                  className="w-full bg-gray-50"
+                  className="w-full"
                   placeholder="请输入桌游名称"
                   value={formData.name}
                   onInput={(e) => setFormData(prev => ({ ...prev, name: e.detail.value }))}
@@ -561,7 +558,7 @@ const GamesAdminPage: FC = () => {
                       className={`rounded-full px-4 py-2 cursor-pointer ${
                         formData.type.includes(opt.value)
                           ? 'bg-indigo-600'
-                          : 'bg-gray-100'
+                          : 'bg-white border border-gray-200'
                       }`}
                       onClick={() => toggleType(opt.value)}
                     >
@@ -586,7 +583,7 @@ const GamesAdminPage: FC = () => {
                       className={`rounded-full px-4 py-2 cursor-pointer ${
                         formData.scene.includes(opt.value)
                           ? 'bg-violet-600'
-                          : 'bg-gray-100'
+                          : 'bg-white border border-gray-200'
                       }`}
                       onClick={() => toggleScene(opt.value)}
                     >
@@ -608,7 +605,7 @@ const GamesAdminPage: FC = () => {
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最少</Text>
                     <Input
-                      className="w-full bg-gray-50"
+                      className="w-full"
                       type="number"
                       value={String(formData.min_players)}
                       onInput={(e) => setFormData(prev => ({ ...prev, min_players: Number(e.detail.value) }))}
@@ -618,7 +615,7 @@ const GamesAdminPage: FC = () => {
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最多</Text>
                     <Input
-                      className="w-full bg-gray-50"
+                      className="w-full"
                       type="number"
                       value={String(formData.max_players)}
                       onInput={(e) => setFormData(prev => ({ ...prev, max_players: Number(e.detail.value) }))}
@@ -634,7 +631,7 @@ const GamesAdminPage: FC = () => {
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最短</Text>
                     <Input
-                      className="w-full bg-gray-50"
+                      className="w-full"
                       type="number"
                       value={String(formData.min_duration)}
                       onInput={(e) => setFormData(prev => ({ ...prev, min_duration: Number(e.detail.value) }))}
@@ -644,7 +641,7 @@ const GamesAdminPage: FC = () => {
                   <View className="flex-1">
                     <Text className="block text-xs text-gray-500 mb-1">最长</Text>
                     <Input
-                      className="w-full bg-gray-50"
+                      className="w-full"
                       type="number"
                       value={String(formData.max_duration)}
                       onInput={(e) => setFormData(prev => ({ ...prev, max_duration: Number(e.detail.value) }))}
@@ -663,7 +660,7 @@ const GamesAdminPage: FC = () => {
                       className={`rounded-full px-4 py-2 cursor-pointer ${
                         formData.difficulty === opt.value
                           ? 'bg-orange-500'
-                          : 'bg-gray-100'
+                          : 'bg-white border border-gray-200'
                       }`}
                       onClick={() => setFormData(prev => ({ ...prev, difficulty: opt.value }))}
                     >
@@ -681,15 +678,12 @@ const GamesAdminPage: FC = () => {
               {/* Intro */}
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">简介</Text>
-                {/* eslint-disable-next-line no-restricted-syntax */}
-                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
-                  <TaroTextarea
-                    className="w-full bg-transparent h-18"
-                    placeholder="请输入桌游简介"
-                    value={formData.intro}
-                    onInput={(e) => setFormData(prev => ({ ...prev, intro: e.detail.value }))}
-                  />
-                </View>
+                <Textarea
+                  className="w-full"
+                  placeholder="请输入桌游简介"
+                  value={formData.intro}
+                  onInput={(e) => setFormData(prev => ({ ...prev, intro: e.detail.value }))}
+                />
               </View>
 
               {/* Tips */}
@@ -697,9 +691,8 @@ const GamesAdminPage: FC = () => {
                 <Text className="block text-sm font-medium text-gray-700 mb-2">小贴士</Text>
                 {formData.tips.map((tip, idx) => (
                   <View key={idx} className="flex flex-row items-center gap-2 mb-2">
-                    <View className="flex-1 bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                       <Input
-                        className="w-full bg-transparent"
+                        className="flex-1"
                         placeholder={`第 ${idx + 1} 条贴士`}
                         value={tip}
                         onInput={(e) => {
@@ -708,7 +701,6 @@ const GamesAdminPage: FC = () => {
                           setFormData(prev => ({ ...prev, tips: next }))
                         }}
                       />
-                    </View>
                     <View
                       className="px-3 py-3 rounded-xl bg-red-50"
                       onClick={() => setFormData(prev => ({ ...prev, tips: prev.tips.filter((_, i) => i !== idx) }))}
@@ -733,15 +725,13 @@ const GamesAdminPage: FC = () => {
               {/* Sort Order */}
               <View className="mb-5">
                 <Text className="block text-sm font-medium text-gray-700 mb-2">排序</Text>
-                <View className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
                   <Input
-                    className="w-full bg-transparent"
+                    className="w-full"
                     type="number"
                     placeholder="数字越小越靠前"
                     value={String(formData.sort_order)}
                     onInput={(e) => setFormData(prev => ({ ...prev, sort_order: Number(e.detail.value) }))}
                   />
-                </View>
               </View>
               <View style={{ height: 40 }} />
             </ScrollView>

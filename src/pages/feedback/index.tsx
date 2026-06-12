@@ -202,7 +202,7 @@ export default function FeedbackPage() {
 
         <Text className="block text-sm font-medium text-on-surface mb-3">反馈内容 *</Text>
         <Textarea
-          className="bg-muted mb-6"
+          className="mb-6"
           placeholder="请详细描述您的反馈..."
           value={content}
           onInput={(e) => setContent((e.target as any).value)}

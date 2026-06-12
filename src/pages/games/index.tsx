@@ -243,7 +243,7 @@ const GamesPage: FC = () => {
           {/* 重置按钮 */}
           {hasAnyFilter && (
             <Button variant="ghost" size="sm" className="h-auto py-2 px-3" onClick={resetFilters}>
-              <RotateCcw size={12} className="mr-1" />
+              <RotateCcw size={12} color="#6b7280" className="mr-1" />
               <Text className="text-xs">重置</Text>
             </Button>
           )}
@@ -257,7 +257,7 @@ const GamesPage: FC = () => {
           {filterKeys.map(key => {
             if (!filters[key]) return null
             return (
-              <Badge key={key} variant="secondary" className="text-xs" style={{ '--badge-bg': '#eef2ff' as string }}>
+              <Badge key={key} variant="secondary" className="text-xs bg-indigo-50">
                 <Text className="text-indigo-600">{getFilterLabel(key)}</Text>
                 <Text
                   className="ml-2 text-indigo-400 hover:text-indigo-600 cursor-pointer"

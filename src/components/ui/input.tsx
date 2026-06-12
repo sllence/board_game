@@ -21,7 +21,7 @@ const Input = React.forwardRef<React.ElementRef<typeof TaroInput>, InputProps>(
     return (
       <View
         className={cn(
-          "flex h-11 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm shadow-sm ring-offset-background transition-all duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-indigo-200 focus-within:ring-offset-2 focus-within:ring-offset-background",
+          "flex h-11 w-full rounded-xl border border-input bg-card px-4 py-3 text-sm shadow-sm ring-offset-background transition-all duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-indigo-200 focus-within:ring-offset-2 focus-within:ring-offset-background",
           isFocused &&
             "border-primary ring-2 ring-indigo-200 ring-offset-2 ring-offset-background",
           className
