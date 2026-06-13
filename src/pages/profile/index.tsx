@@ -484,12 +484,7 @@ const ProfilePage: FC = () => {
         ))}
       </View>
 
-      {/* 版本信息 */}
       <View className="flex-1" />
-      <View className="flex items-center pb-8 pt-4">
-        <Text className="block text-xs text-gray-300">桌游助手 v1.0.0</Text>
-      </View>
-
       {/* 设置头像昵称弹窗 - 首次登录时弹出 */}
       {showProfileSetup && (
         <View className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
