@@ -43,7 +43,7 @@ const RuleDetailPage: FC = () => {
   const [game, setGame] = useState<BoardGameDetail | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const [loading, setLoading] = useState(true)
-  const [rulesExpanded, setRulesExpanded] = useState(true)
+  const [rulesExpanded, setRulesExpanded] = useState(false)
 
   useEffect(() => {
     const instance = Taro.getCurrentInstance()
@@ -197,9 +197,6 @@ const RuleDetailPage: FC = () => {
                 <RichText nodes={convertToRichText(game.rules)} />
               </CardContent>
             </Card>
-          )}
-          {!rulesExpanded && (
-            <Text className="block text-xs text-gray-400 text-center py-2">点击上方「游戏规则」展开查看完整内容</Text>
           )}
         </View>
       )}
