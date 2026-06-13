@@ -40,7 +40,7 @@ ${tipsContent}
     ]
 
     const response = await llmClient.invoke(messages, {
-      model: 'doubao-seed-2-0-lite-260215',
+      model: 'doubao-seed-2-0-mini-260215',
       temperature: 0.3,
     })
 

@@ -1,4 +1,4 @@
-import { View, Text } from '@tarojs/components'
+import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -309,7 +309,7 @@ const DicePage: FC = () => {
 
       {/* 设置面板 */}
       <Drawer open={showSettings} onOpenChange={setShowSettings}>
-        <DrawerContent className="bg-white">
+        <DrawerContent className="bg-white max-h-[80vh]">
           <DrawerHeader>
             <View className="flex items-center justify-between">
               <DrawerTitle className="text-foreground">投掷设置</DrawerTitle>
@@ -318,6 +318,7 @@ const DicePage: FC = () => {
               </DrawerClose>
             </View>
           </DrawerHeader>
+          <ScrollView className="flex-1" scrollY>
           <View className="p-6">
             {/* 骰子类型选择 */}
             <View className="mb-6">
@@ -467,6 +468,7 @@ const DicePage: FC = () => {
               <Text className="text-white">保存设置</Text>
             </Button>
           </View>
+          </ScrollView>
         </DrawerContent>
       </Drawer>
     </View>
