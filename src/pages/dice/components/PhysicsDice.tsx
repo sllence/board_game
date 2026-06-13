@@ -51,6 +51,9 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
   const resultsReportedRef = useRef(false)
   const lastFrameTimeRef = useRef(Date.now())
 
+  const themeRef = useRef(theme)
+  themeRef.current = theme
+
   const canvasNodeRef = useRef<any>(null)
   const resizeCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const rafRef = useRef<typeof requestAnimationFrame | null>(null)
@@ -222,6 +225,10 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
               renderer.setSize(w, h)
               camera.aspect = w / h
               camera.updateProjectionMatrix()
+              // EffectComposer 渲染目标需要与渲染器保持一致
+              if (postProcessingRef.current) {
+                postProcessingRef.current.composer.setSize(w, h)
+              }
             }
           }
         })
@@ -258,6 +265,14 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
 
   renderLoopRef.current = () => {
     if (!animatingRef.current || !diceSceneRef.current) return
+
+    // 确保每帧清色与场景背景一致
+    const scene = diceSceneRef.current.scene
+    const renderer = diceSceneRef.current.renderer
+    scene.background = new THREE.Color(themeRef.current.sceneBg)
+    renderer.setClearColor(themeRef.current.sceneBg, 1)
+    const groundMat = diceSceneRef.current.ground.material as THREE.MeshBasicMaterial
+    groundMat.color.set(themeRef.current.groundColor)
 
     performanceRef.current?.update()
     const level = performanceRef.current?.getLevel() || 'high'
@@ -343,6 +358,13 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
     const def = getDiceDefinition(diceType)
 
     try {
+      // 创建骰子前确保场景背景和清色正确
+      const ds = diceSceneRef.current
+      ds.scene.background = new THREE.Color(theme.sceneBg)
+      ds.renderer.setClearColor(theme.sceneBg, 1)
+      const gMat = ds.ground.material as THREE.MeshBasicMaterial
+      gMat.color.set(theme.groundColor)
+
       for (let i = 0; i < count; i++) {
         const body = def.createBody()
         applyThrowForce(body)
@@ -367,7 +389,8 @@ export const PhysicsDice = forwardRef<PhysicsDiceHandle, PhysicsDiceProps>(
 
   useLayoutEffect(() => {
     staticRenderRef.current()
-  })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme])
 
   const isWeapp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP
   const isTT = Taro.getEnv() === Taro.ENV_TYPE.TT
