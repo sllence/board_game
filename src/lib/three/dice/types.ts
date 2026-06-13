@@ -38,7 +38,7 @@ export const DICE_COLORS: DiceColor[] = [
 ]
 
 export const DICE_THEMES: DiceTheme[] = [
-  { key: 'white', label: '白色', pageBg: '#E8E8E8', sceneBg: 0xE8E8E8, groundColor: 0xE8E8E8, textColor: '#1A1A1A', subTextColor: '#6B7280' },
+  { key: 'white', label: '白色', pageBg: '#f5f5f7', sceneBg: 0xf5f5f7, groundColor: 0xf5f5f7, textColor: '#1A1A1A', subTextColor: '#6B7280' },
   { key: 'black', label: '黑色', pageBg: '#1A1A2E', sceneBg: 0x1A1A2E, groundColor: 0x1A1A2E, textColor: '#FFFFFF', subTextColor: '#9CA3AF' },
   { key: 'red', label: '红色', pageBg: '#2D1A1A', sceneBg: 0x2D1A1A, groundColor: 0x2D1A1A, textColor: '#FFFFFF', subTextColor: '#9CA3AF' },
   { key: 'blue', label: '蓝色', pageBg: '#1A1A3D', sceneBg: 0x1A1A3D, groundColor: 0x1A1A3D, textColor: '#FFFFFF', subTextColor: '#9CA3AF' },
