@@ -22,6 +22,7 @@ interface BoardGame {
   icon_key: string
   icon_bg: string
   icon_color: string
+  image_url?: string
   intro: string
 }
 
@@ -169,11 +170,6 @@ const GamesPage: FC = () => {
     return TYPE_META[primaryType]?.color || '#4F46E5'
   }
 
-  const getGameBg = (game: BoardGame) => {
-    const primaryType = game.type?.[0] || 'strategy'
-    return TYPE_META[primaryType]?.bg || '#eef2ff'
-  }
-
   return (
     <View className="flex flex-col min-h-screen bg-background">
       {/* 顶部搜索区 */}
@@ -296,37 +292,52 @@ const GamesPage: FC = () => {
           <View className="flex flex-col gap-3">
             {games.map((game) => {
               const gameColor = getGameColor(game)
-              const gameBg = getGameBg(game)
               const difficultyInfo = DIFFICULTY_META[game.difficulty] || DIFFICULTY_META.medium
+              const hasBgImage = !!game.image_url
               return (
                 <Card
                   key={game.id}
-                  className="overflow-hidden"
-                  style={{ borderTopWidth: 4, borderTopColor: gameColor }}
+                  className={`overflow-hidden ${hasBgImage ? 'bg-transparent' : ''}`}
+                  style={{
+                    ...(hasBgImage
+                      ? { backgroundImage: `url(${game.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', minHeight: 140 }
+                      : { borderTopWidth: 4, borderTopColor: gameColor }),
+                  }}
                   onClick={() => goToDetail(game.id)}
                 >
-                  <CardContent className="p-3">
+                  <CardContent
+                    className="p-3"
+                    style={{
+                      backgroundColor: hasBgImage ? 'rgba(0,0,0,0.4)' : 'transparent',
+                      borderRadius: hasBgImage ? '0.75rem' : undefined,
+                    }}
+                  >
                     <View className="flex flex-row items-start">
-                      {/* 左侧图标 */}
-                      <View className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mr-3" style={{ backgroundColor: gameBg }}>
-                        <Text className="text-lg">{TYPE_META[game.type?.[0]]?.emoji || '🎲'}</Text>
-                      </View>
-                      {/* 右侧内容 */}
                       <View className="flex-1 min-w-0">
                         {/* 名字 + 人数时长 */}
                         <View className="flex flex-row items-center justify-between">
                           <View className="flex flex-row items-center gap-2 min-w-0 flex-1">
-                            <Text className="text-base font-bold text-gray-900 flex-shrink-0">{game.name}</Text>
+                            <Text
+                              className={`text-base font-bold flex-shrink-0 ${hasBgImage ? 'text-white' : 'text-gray-900'}`}
+                            >
+                              {game.name}
+                            </Text>
                             <View className="flex flex-row items-center gap-2">
-                              <Text className="text-xs text-gray-400">👥 {game.min_players}-{game.max_players}人</Text>
-                              <Text className="text-xs text-gray-400">⏱ {game.duration}min</Text>
+                              <Text className={`text-xs ${hasBgImage ? 'text-gray-200' : 'text-gray-400'}`}>
+                                👥 {game.min_players}-{game.max_players}人
+                              </Text>
+                              <Text className={`text-xs ${hasBgImage ? 'text-gray-200' : 'text-gray-400'}`}>
+                                ⏱ {game.duration}min
+                              </Text>
                             </View>
                           </View>
                           <Badge variant="outline" style={{ backgroundColor: difficultyInfo.bg, color: difficultyInfo.color }}>
                             <Text className="text-xs">{difficultyInfo.emoji} {difficultyInfo.label}</Text>
                           </Badge>
                         </View>
-                        <Text className="block text-xs text-gray-400 mt-1 line-clamp-1">{game.intro}</Text>
+                        <Text className={`block text-xs mt-1 line-clamp-1 ${hasBgImage ? 'text-gray-200' : 'text-gray-400'}`}>
+                          {game.intro}
+                        </Text>
 
                         {/* 类型 + 场景标签 */}
                         <View className="flex flex-row flex-wrap items-center gap-1 mt-2">
