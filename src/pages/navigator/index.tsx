@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { markdownToRichText } from '@/lib/markdown'
 import {
-  Play, Plus, X, User, Dices, Timer, Layers,
+  Play, Plus, X, User, Dices, Timer,
   Hand, Calculator, BookOpen, ChevronRight,
   Trophy, RotateCcw, Minus, Send, Sparkles, ChessKing, ArrowLeft
 } from 'lucide-react-taro'
@@ -54,11 +54,9 @@ interface GameSession {
 type Phase = 'setup' | 'playing' | 'finished' | 'viewing'
 
 const TOOL_ITEMS = [
+  { key: 'finger', label: '选人', icon: <Hand size={20} color="#ef4444" />, path: '/pages/finger-picker/index' },
   { key: 'dice', label: '骰子', icon: <Dices size={20} color="#6366f1" />, path: '/pages/dice/index' },
   { key: 'timer', label: '计时', icon: <Timer size={20} color="#10b981" />, path: '/pages/timer/index' },
-  { key: 'cards', label: '抽牌', icon: <Layers size={20} color="#f59e0b" />, path: '/pages/cards/index' },
-  { key: 'finger', label: '选人', icon: <Hand size={20} color="#ef4444" />, path: '/pages/finger-picker/index' },
-  { key: 'scorer', label: '计分', icon: <Calculator size={20} color="#8b5cf6" />, path: '/pages/scorer/index' },
 ]
 
 const NavigatorPage: FC = () => {
