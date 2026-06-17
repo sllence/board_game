@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Empty } from '@/components/ui/empty'
 import { Dices, Calculator, ArrowRight, Sparkles, History, Hand, Timer } from 'lucide-react-taro'
 import { WheelIcon } from '@/components/wheel-icon'
 import { requireLogin, getCurrentUser } from '@/utils/auth'
-import { TYPE_META, SCENE_META, DIFFICULTY_META, ICON_KEY_MAP } from '@/constants/game'
+import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
 
 interface BoardGame {
@@ -165,82 +166,60 @@ const IndexPage: FC = () => {
           </View>
         </View>
         <View className="flex flex-col gap-3">
-          {hotGames.slice(0, 4).map((game, index) => (
-            <View
-              key={game.id}
-              className="cursor-pointer"
-              onClick={() => goToGame(game.id)}
-            >
-              <Card className="shadow-sm overflow-hidden">
-                <View
-                  className="h-1"
-                  style={{ background: game.icon_bg || '#4F46E5' }}
-                />
-                <CardContent className="p-4">
-                  <View className="flex flex-row items-start gap-3">
-                    {/* 游戏图标 */}
-                    <View
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: game.icon_bg || '#4F46E5' }}
-                    >
-                      <Text className="text-2xl">{ICON_KEY_MAP[game.icon_key] || '🎲'}</Text>
-                    </View>
-
-                    {/* 游戏信息 */}
-                    <View className="flex-1">
-                      <View className="flex flex-row items-center gap-2 mb-1">
-                        <Text className="block text-base font-bold text-foreground">{game.name}</Text>
-                        {index === 0 && (
-                          <View
-                            className="rounded-full px-2 py-1"
-                            style={{ backgroundColor: '#fef3c7' }}
-                          >
-                            <Text className="text-xs text-amber-600">🔥 热门</Text>
+          {hotGames.slice(0, 3).map((game) => {
+            const primaryType = game.type?.[0] || 'strategy'
+            const gameColor = TYPE_META[primaryType]?.color || '#4F46E5'
+            const difficultyInfo = DIFFICULTY_META[game.difficulty] || DIFFICULTY_META.medium
+            return (
+              <View
+                key={game.id}
+                className="cursor-pointer"
+                onClick={() => goToGame(game.id)}
+              >
+                <Card className="overflow-hidden" style={{ borderTopWidth: 4, borderTopColor: gameColor }}>
+                  <CardContent className="p-3">
+                    <View className="flex flex-row items-start">
+                      <View className="flex-1 min-w-0">
+                        {/* 名字 + 人数时长 */}
+                        <View className="flex flex-row items-center justify-between">
+                          <View className="flex flex-row items-center gap-2 min-w-0 flex-1">
+                            <Text className="text-base font-bold text-gray-900 flex-shrink-0">{game.name}</Text>
+                            <View className="flex flex-row items-center gap-2">
+                              <Text className="text-xs text-gray-400">👥 {game.min_players}-{game.max_players}人</Text>
+                              <Text className="text-xs text-gray-400">⏱ {game.min_duration}-{game.max_duration}分钟</Text>
+                            </View>
                           </View>
-                        )}
-                      </View>
+                          <Badge variant="outline" style={{ backgroundColor: difficultyInfo.bg, color: difficultyInfo.color }}>
+                            <Text className="text-xs">{difficultyInfo.emoji} {difficultyInfo.label}</Text>
+                          </Badge>
+                        </View>
 
-                      {/* 基础信息 */}
-                      <View className="flex flex-row items-center gap-2 mb-2">
-                        <Text className="text-xs text-gray-500">👥 {game.min_players}-{game.max_players}人</Text>
-                        <Text className="text-xs text-gray-300">·</Text>
-                        <Text className="text-xs text-gray-500">⏱️ {game.min_duration}-{game.max_duration}分钟</Text>
-                        <Text className="text-xs text-gray-300">·</Text>
-                        <Text style={{ fontSize: 11, color: DIFFICULTY_META[game.difficulty]?.color || '#6b7280' }}>
-                          {DIFFICULTY_META[game.difficulty]?.label || game.difficulty}
-                        </Text>
-                      </View>
-
-                      {/* 类型 + 场景标签 */}
-                      <View className="flex flex-row flex-wrap items-center gap-1">
-                        {game.type?.map((t) => {
-                          const meta = TYPE_META[t]
-                          return meta ? (
-                            <View key={t} className="rounded" style={{ backgroundColor: meta.bg, paddingLeft: 4, paddingRight: 4, paddingTop: 0, paddingBottom: 1 }}>
-                              <Text style={{ fontSize: 10, color: meta.color, lineHeight: 1 }}>{meta.emoji} {meta.label}</Text>
-                            </View>
-                          ) : null
-                        })}
-                        {game.scene?.map((s) => {
-                          const meta = SCENE_META[s]
-                          return meta ? (
-                            <View key={s} className="rounded" style={{ backgroundColor: meta.bg, paddingLeft: 4, paddingRight: 4, paddingTop: 0, paddingBottom: 1 }}>
-                              <Text style={{ fontSize: 10, color: meta.color, lineHeight: 1 }}>{meta.emoji} {meta.label}</Text>
-                            </View>
-                          ) : null
-                        })}
+                        {/* 类型 + 场景标签 */}
+                        <View className="flex flex-row flex-wrap items-center gap-1 mt-2">
+                          {game.type?.map((t) => {
+                            const meta = TYPE_META[t]
+                            return meta ? (
+                              <Badge key={t} variant="outline" style={{ backgroundColor: meta.bg, color: meta.color }}>
+                                <Text className="text-xs">{meta.emoji} {meta.label}</Text>
+                              </Badge>
+                            ) : null
+                          })}
+                          {game.scene?.map((s) => {
+                            const meta = SCENE_META[s]
+                            return meta ? (
+                              <Badge key={s} variant="outline" style={{ backgroundColor: meta.bg, color: meta.color }}>
+                                <Text className="text-xs">{meta.emoji} {meta.label}</Text>
+                              </Badge>
+                            ) : null
+                          })}
+                        </View>
                       </View>
                     </View>
-
-                    {/* 箭头 */}
-                    <View className="flex items-center justify-center pt-2">
-                      <ArrowRight size={16} color="#d1d5db" />
-                    </View>
-                  </View>
-                </CardContent>
-              </Card>
-            </View>
-          ))}
+                  </CardContent>
+                </Card>
+              </View>
+            )
+          })}
         </View>
       </View>
 
