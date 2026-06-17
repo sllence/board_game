@@ -44,7 +44,7 @@ export class GamesService {
     let query = client
       .from('board_games')
       .select(
-        'id, name, type, scene, min_players, max_players, min_duration, max_duration, difficulty, icon_key, icon_bg, icon_color, image_url, status'
+        'id, name, type, scene, min_players, max_players, min_duration, max_duration, difficulty, icon_key, icon_bg, icon_color, image_url, intro, status'
       )
       .order('sort_order', { ascending: true })
       .limit(6)

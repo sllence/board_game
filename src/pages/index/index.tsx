@@ -26,6 +26,7 @@ interface BoardGame {
   icon_color: string
   image_url?: string
   scene?: string[]
+  intro?: string
   status: string
 }
 
@@ -193,6 +194,11 @@ const IndexPage: FC = () => {
                             <Text className="text-xs">{difficultyInfo.emoji} {difficultyInfo.label}</Text>
                           </Badge>
                         </View>
+
+                        {/* 简介 */}
+                        {game.intro && (
+                          <Text className="block text-xs text-gray-400 mt-1 line-clamp-1">{game.intro}</Text>
+                        )}
 
                         {/* 类型 + 场景标签 */}
                         <View className="flex flex-row flex-wrap items-center gap-1 mt-2">
