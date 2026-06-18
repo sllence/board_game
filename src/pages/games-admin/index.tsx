@@ -29,6 +29,16 @@ interface BoardGame {
   status?: string
 }
 
+interface GameRule {
+  id: number | null
+  game_id: number
+  title: string
+  rule_type: 'markdown' | 'images'
+  content: string
+  image_urls: string[]
+  sort_order: number
+}
+
 interface GameFormData {
   name: string
   icon_key: string
@@ -105,6 +115,10 @@ const GamesAdminPage: FC = () => {
     status: 'online'
   })
   const [saving, setSaving] = useState(false)
+  const [rules, setRules] = useState<GameRule[]>([])
+  const [editingRule, setEditingRule] = useState<GameRule | null>(null)
+  const [showRuleEditor, setShowRuleEditor] = useState(false)
+  const [ruleUploading, setRuleUploading] = useState(false)
 
   useEffect(() => {
     if (!checkLogin()) {
@@ -220,6 +234,8 @@ const GamesAdminPage: FC = () => {
         status: fullGame.status || 'online'
       })
       setShowModal(true)
+      // 加载该桌游已有的规则
+      loadRules(fullGame.id)
     } catch (err) {
       console.error('[handleEditGame] failed:', err)
       Taro.showToast({ title: '加载桌游详情失败', icon: 'none' })
@@ -228,8 +244,191 @@ const GamesAdminPage: FC = () => {
     }
   }
 
+  const loadRules = async (gameId: number) => {
+    try {
+      const res = await Network.request({ url: '/api/game-rules', method: 'GET', data: { game_id: gameId } })
+      setRules(res.data?.data || [])
+    } catch (err) {
+      console.error('[loadRules] failed:', err)
+      setRules([])
+    }
+  }
+
+  const handleAddRule = () => {
+    setEditingRule({
+      id: null,
+      game_id: editingGame?.id || 0,
+      title: '',
+      rule_type: 'markdown',
+      content: '',
+      image_urls: [],
+      sort_order: rules.length,
+    })
+    setShowRuleEditor(true)
+  }
+
+  const handleEditRule = (rule: GameRule) => {
+    setEditingRule({ ...rule })
+    setShowRuleEditor(true)
+  }
+
+  const handleSaveRule = async () => {
+    if (!editingRule) return
+    if (!editingRule.title.trim()) {
+      Taro.showToast({ title: '请输入规则标题', icon: 'none' })
+      return
+    }
+
+    try {
+      if (editingRule.id) {
+        // Update existing rule
+        const res = await Network.request({
+          url: `/api/game-rules/${editingRule.id}`,
+          method: 'PUT',
+          data: {
+            title: editingRule.title,
+            rule_type: editingRule.rule_type,
+            content: editingRule.content,
+            image_urls: editingRule.image_urls,
+            sort_order: editingRule.sort_order,
+          }
+        })
+        setRules(prev => prev.map(r => r.id === editingRule.id ? res.data?.data : r))
+        Taro.showToast({ title: '规则已更新', icon: 'success' })
+      } else {
+        // Create new rule
+        const res = await Network.request({
+          url: '/api/game-rules',
+          method: 'POST',
+          data: {
+            game_id: editingRule.game_id || editingGame?.id,
+            title: editingRule.title,
+            rule_type: editingRule.rule_type,
+            content: editingRule.content,
+            image_urls: editingRule.image_urls,
+            sort_order: editingRule.sort_order,
+          }
+        })
+        setRules(prev => [...prev, res.data?.data])
+        Taro.showToast({ title: '规则已添加', icon: 'success' })
+      }
+      setShowRuleEditor(false)
+      setEditingRule(null)
+    } catch (err) {
+      console.error('[saveRule] failed:', err)
+      Taro.showToast({ title: '保存规则失败', icon: 'none' })
+    }
+  }
+
+  const handleDeleteRule = (rule: GameRule) => {
+    Taro.showModal({
+      title: '确认删除',
+      content: `确定要删除规则「${rule.title}」吗？`,
+      confirmText: '删除',
+      confirmColor: '#ef4444',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            if (rule.id) {
+              await Network.request({ url: `/api/game-rules/${rule.id}`, method: 'DELETE' })
+            }
+            setRules(prev => prev.filter(r => r.id !== rule.id))
+            Taro.showToast({ title: '删除成功', icon: 'success' })
+          } catch (err) {
+            console.error('[deleteRule] failed:', err)
+            Taro.showToast({ title: '删除失败', icon: 'none' })
+          }
+        }
+      }
+    })
+  }
+
+  const handleUploadRuleImage = async () => {
+    try {
+      Taro.chooseImage({ count: 9, sizeType: ['compressed'], sourceType: ['album'] })
+        .then(async (res) => {
+          setRuleUploading(true)
+          const urls: string[] = []
+          for (const filePath of res.tempFilePaths) {
+            const uploadRes = await Network.uploadFile({
+              url: '/api/upload',
+              filePath,
+              name: 'file'
+            })
+            const data = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
+            const url = data.data?.url || data.url || ''
+            if (url) urls.push(url)
+          }
+          setEditingRule(prev => prev ? { ...prev, image_urls: [...prev.image_urls, ...urls] } : null)
+          Taro.showToast({ title: '上传成功', icon: 'success' })
+        })
+    } catch (err) {
+      console.error('[uploadRuleImage] failed:', err)
+      Taro.showToast({ title: '上传失败', icon: 'none' })
+    } finally {
+      setRuleUploading(false)
+    }
+  }
+
+  const handleUploadRulePdf = async () => {
+    if (!editingRule) return
+    try {
+      let filePath = ''
+      try {
+        const chooseRes = await Taro.chooseMessageFile({ count: 1, type: 'file', extension: ['pdf'] })
+        filePath = chooseRes.tempFiles[0]?.path || ''
+      } catch {
+        // H5 降级：使用 chooseImage
+        const imgRes = await Taro.chooseImage({ count: 1, sizeType: ['original'] })
+        filePath = imgRes.tempFilePaths[0]
+      }
+      if (!filePath) return
+
+      setRuleUploading(true)
+      Taro.showLoading({ title: '正在转换PDF...' })
+
+      const uploadRes = await Network.uploadFile({
+        url: '/api/game-rules/upload-pdf',
+        filePath,
+        name: 'file'
+      })
+      const data = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
+      const imageUrls: string[] = data.data?.imageUrls || []
+
+      if (imageUrls.length === 0) {
+        Taro.showToast({ title: 'PDF转换失败', icon: 'none' })
+        return
+      }
+
+      setEditingRule(prev => prev ? {
+        ...prev,
+        rule_type: 'images',
+        image_urls: [...prev.image_urls, ...imageUrls],
+        title: prev.title || '规则书',
+      } : null)
+      Taro.hideLoading()
+      Taro.showToast({ title: `已转换 ${imageUrls.length} 页图片`, icon: 'success' })
+    } catch (err) {
+      console.error('[uploadPdf] failed:', err)
+      Taro.hideLoading()
+      Taro.showToast({ title: 'PDF上传失败', icon: 'none' })
+    } finally {
+      setRuleUploading(false)
+    }
+  }
+
+  const handleMoveRule = (index: number, direction: 'up' | 'down') => {
+    const newRules = [...rules]
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= newRules.length) return
+    ;[newRules[index], newRules[targetIndex]] = [newRules[targetIndex], newRules[index]]
+    newRules.forEach((r, i) => { r.sort_order = i })
+    setRules(newRules)
+  }
+
   const handleAddGame = () => {
     setEditingGame(null)
+    setRules([])
     setFormData({
       name: '',
       icon_key: '🎲',
@@ -714,13 +913,150 @@ const GamesAdminPage: FC = () => {
                 </Button>
               </View>
 
-              {/* Rules */}
-              <MarkdownEditor
-                value={formData.rules}
-                onChange={(value) => setFormData(prev => ({ ...prev, rules: value }))}
-                placeholder="请输入游戏规则，支持 Markdown 语法..."
-                minHeight={300}
-              />
+              {/* Rules Management */}
+              <View className="mb-5">
+                <View className="flex flex-row items-center justify-between mb-3">
+                  <Text className="block text-sm font-medium text-gray-700">规则管理</Text>
+                  <Button size="sm" onClick={handleAddRule}>
+                    <Text className="text-xs text-white">+ 添加规则</Text>
+                  </Button>
+                </View>
+
+                {rules.length === 0 ? (
+                  <View className="bg-gray-50 rounded-2xl p-6 flex items-center justify-center">
+                    <Text className="text-gray-400 text-sm">暂无规则，点击上方按钮添加</Text>
+                  </View>
+                ) : (
+                  <View className="flex flex-col gap-2">
+                    {rules.map((rule, idx) => (
+                      <View key={rule.id || `new-${idx}`} className="bg-white border border-gray-100 rounded-xl p-3">
+                        <View className="flex flex-row items-center justify-between">
+                          <View className="flex flex-row items-center gap-2 flex-1 min-w-0">
+                            <View className={`rounded-md px-2 py-1 ${rule.rule_type === 'markdown' ? 'bg-blue-50' : 'bg-amber-50'}`}>
+                              <Text className={`text-xs font-medium ${rule.rule_type === 'markdown' ? 'text-blue-600' : 'text-amber-600'}`}>
+                                {rule.rule_type === 'markdown' ? 'MD' : rule.image_urls.length > 0 ? '图片' : '图片'}
+                              </Text>
+                            </View>
+                            <Text className="text-sm font-medium text-gray-900 truncate">{rule.title}</Text>
+                            {rule.rule_type === 'images' && rule.image_urls.length > 0 && (
+                              <Text className="text-xs text-gray-400">{rule.image_urls.length}张</Text>
+                            )}
+                          </View>
+                          <View className="flex flex-row items-center gap-1 flex-shrink-0">
+                            <View className="px-2 py-1 rounded-lg bg-gray-50" onClick={() => handleMoveRule(idx, 'up')}>
+                              <Text className="text-xs text-gray-500">↑</Text>
+                            </View>
+                            <View className="px-2 py-1 rounded-lg bg-gray-50" onClick={() => handleMoveRule(idx, 'down')}>
+                              <Text className="text-xs text-gray-500">↓</Text>
+                            </View>
+                            <View className="px-2 py-1 rounded-lg bg-blue-50" onClick={() => handleEditRule(rule)}>
+                              <Text className="text-xs text-blue-500">编辑</Text>
+                            </View>
+                            <View className="px-2 py-1 rounded-lg bg-red-50" onClick={() => handleDeleteRule(rule)}>
+                              <Text className="text-xs text-red-500">删除</Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Rule Editor Modal */}
+              {showRuleEditor && editingRule && (
+                <View className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50" style={{ width: '100vw', height: '100vh' }}>
+                  <View className="w-full bg-white h-full flex flex-col" style={{ maxWidth: '100vw' }}>
+                    <View className="px-5 pt-14 pb-4 border-b border-gray-100 flex flex-row items-center justify-between">
+                      <Button size="sm" variant="ghost" onClick={() => { setShowRuleEditor(false); setEditingRule(null) }}>
+                        <Text className="text-gray-500">取消</Text>
+                      </Button>
+                      <Text className="font-semibold text-gray-900">{editingRule.id ? '编辑规则' : '添加规则'}</Text>
+                      <Button size="sm" onClick={handleSaveRule}>
+                        <Text className="text-sm">保存</Text>
+                      </Button>
+                    </View>
+
+                    <ScrollView className="flex-1 px-5 py-4" scrollY>
+                      {/* Rule Title */}
+                      <View className="mb-5">
+                        <Text className="block text-sm font-medium text-gray-700 mb-2">规则标题</Text>
+                        <Input
+                          className="w-full"
+                          placeholder="例如：游戏准备、计分规则等"
+                          value={editingRule.title}
+                          onInput={(e) => setEditingRule(prev => prev ? { ...prev, title: e.detail.value } : null)}
+                        />
+                      </View>
+
+                      {/* Rule Type */}
+                      <View className="mb-5">
+                        <Text className="block text-sm font-medium text-gray-700 mb-2">规则类型</Text>
+                        <View className="flex flex-row gap-2">
+                          <View
+                            className={`flex-1 rounded-xl p-3 border-2 cursor-pointer ${editingRule.rule_type === 'markdown' ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 bg-white'}`}
+                            onClick={() => setEditingRule(prev => prev ? { ...prev, rule_type: 'markdown', content: '', image_urls: [] } : null)}
+                          >
+                            <Text className={`block font-semibold text-sm ${editingRule.rule_type === 'markdown' ? 'text-indigo-700' : 'text-gray-700'}`}>Markdown</Text>
+                            <Text className="block text-xs text-gray-500 mt-1">文字+富文本</Text>
+                          </View>
+                          <View
+                            className={`flex-1 rounded-xl p-3 border-2 cursor-pointer ${editingRule.rule_type === 'images' ? 'border-amber-600 bg-amber-50' : 'border-gray-200 bg-white'}`}
+                            onClick={() => setEditingRule(prev => prev ? { ...prev, rule_type: 'images', content: '' } : null)}
+                          >
+                            <Text className={`block font-semibold text-sm ${editingRule.rule_type === 'images' ? 'text-amber-700' : 'text-gray-700'}`}>图片 / PDF</Text>
+                            <Text className="block text-xs text-gray-500 mt-1">直接上传或PDF转图</Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Editor: Markdown */}
+                      {editingRule.rule_type === 'markdown' && (
+                        <View className="mb-5">
+                          <Text className="block text-sm font-medium text-gray-700 mb-2">规则内容（Markdown）</Text>
+                          <View className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                            <MarkdownEditor
+                              value={editingRule.content}
+                              onChange={(value) => setEditingRule(prev => prev ? { ...prev, content: value } : null)}
+                              placeholder="请输入规则内容，支持 Markdown 语法..."
+                              minHeight={200}
+                            />
+                          </View>
+                        </View>
+                      )}
+
+                      {/* Editor: Images */}
+                      {editingRule.rule_type === 'images' && (
+                        <View className="mb-5">
+                          <Text className="block text-sm font-medium text-gray-700 mb-2">规则图片</Text>
+                          <View className="flex flex-row flex-wrap gap-2 mb-3">
+                            {editingRule.image_urls.map((url, idx) => (
+                              <View key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200">
+                                <Image src={url} style={{ width: '100%', height: '100%' }} mode="aspectFill" />
+                                <View
+                                  className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center"
+                                  onClick={() => setEditingRule(prev => prev ? { ...prev, image_urls: prev.image_urls.filter((_, i) => i !== idx) } : null)}
+                                >
+                                  <Text className="text-white text-xs">×</Text>
+                                </View>
+                              </View>
+                            ))}
+                          </View>
+                          <View className="flex flex-row gap-2">
+                            <Button size="sm" variant="outline" onClick={handleUploadRuleImage} disabled={ruleUploading}>
+                              <Text className="text-sm text-gray-700">{ruleUploading ? '上传中...' : '上传图片'}</Text>
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={handleUploadRulePdf} disabled={ruleUploading}>
+                              <Text className="text-sm text-gray-700">上传PDF自动转图</Text>
+                            </Button>
+                          </View>
+                          <Text className="block text-xs text-gray-400 mt-2">提示：PDF上传后自动拆分为多张图片展示</Text>
+                        </View>
+                      )}
+                    </ScrollView>
+                  </View>
+                </View>
+              )}
 
               {/* Sort Order */}
               <View className="mb-5">

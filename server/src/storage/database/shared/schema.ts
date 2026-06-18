@@ -108,6 +108,22 @@ export const favorites = pgTable("favorites", {
   index("favorites_game_id_idx").on(table.gameId),
 ]);
 
+// 桌游规则表（多格式规则：Markdown / 图片）
+export const gameRules = pgTable("game_rules", {
+  id: serial().primaryKey(),
+  gameId: integer("game_id").notNull().references(() => boardGames.id, { onDelete: 'cascade' }),
+  title: varchar("title", { length: 128 }).notNull(),
+  ruleType: varchar("rule_type", { length: 16 }).notNull().default('markdown'),
+  content: text("content"),
+  imageUrls: jsonb("image_urls").default([]),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+}, (table) => [
+  index("idx_game_rules_game_id").on(table.gameId),
+  index("idx_game_rules_sort_order").on(table.sortOrder),
+]);
+
 // 用户反馈表
 export const feedbacks = pgTable("feedbacks", {
   id: serial().primaryKey(),

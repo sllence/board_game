@@ -1,11 +1,11 @@
-import { View, Text, RichText, Image } from '@tarojs/components'
+import { View, Text, RichText, Image, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { markdownToRichText } from '@/lib/markdown'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, Clock, Star, BookOpen, Lightbulb, Play, Heart, Volume2, ChevronRight } from 'lucide-react-taro'
+import { Users, Clock, Star, BookOpen, Lightbulb, Play, Heart, Volume2, ChevronRight, ChevronDown } from 'lucide-react-taro'
 import { requireLogin } from '@/utils/auth'
 import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
@@ -39,11 +39,29 @@ interface Guide {
   cover_bg: string
 }
 
+interface GameRule {
+  id: number
+  game_id: number
+  title: string
+  rule_type: 'markdown' | 'images'
+  content: string
+  image_urls: string[]
+  sort_order: number
+}
+
 const RuleDetailPage: FC = () => {
   const [game, setGame] = useState<BoardGameDetail | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
+  const [rules, setRules] = useState<GameRule[]>([])
   const [loading, setLoading] = useState(true)
   const [rulesExpanded, setRulesExpanded] = useState(false)
+  const [expandedRuleIds, setExpandedRuleIds] = useState<number[]>([])
+
+  const toggleRule = (ruleId: number) => {
+    setExpandedRuleIds(prev =>
+      prev.includes(ruleId) ? prev.filter(id => id !== ruleId) : [...prev, ruleId]
+    )
+  }
 
   useEffect(() => {
     const instance = Taro.getCurrentInstance()
@@ -51,6 +69,7 @@ const RuleDetailPage: FC = () => {
     if (!id) return
     fetchDetail(Number(id))
     fetchGuides(Number(id))
+    fetchRules(Number(id))
   }, [])
 
   const fetchDetail = async (id: number) => {
@@ -73,6 +92,16 @@ const RuleDetailPage: FC = () => {
       setGuides(res.data?.data || [])
     } catch (err) {
       console.error('[RuleDetailPage] fetchGuides error:', err)
+    }
+  }
+
+  const fetchRules = async (gameId: number) => {
+    try {
+      const res = await Network.request({ url: `/api/game-rules?game_id=${gameId}` })
+      console.log('[RuleDetailPage] fetchRules response:', res.data)
+      setRules(res.data?.data || [])
+    } catch (err) {
+      console.error('[RuleDetailPage] fetchRules error:', err)
     }
   }
 
@@ -176,28 +205,95 @@ const RuleDetailPage: FC = () => {
         </Card>
       </View>
 
-      {/* 游戏规则 - 新的统一字段 */}
-      {game.rules && (
+      {/* 游戏规则 - 多规则折叠展示 */}
+      {(rules.length > 0 || game.rules) && (
         <View className="px-4 mt-5">
-          <View
-            className="flex flex-row items-center justify-between mb-3"
-            onClick={() => setRulesExpanded(v => !v)}
-          >
-            <View className="flex flex-row items-center gap-2">
-              <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                <BookOpen size={14} color="#fff" />
-              </View>
-              <Text className="block text-base font-semibold text-foreground">游戏规则</Text>
+          <View className="flex flex-row items-center gap-2 mb-3">
+            <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+              <BookOpen size={14} color="#fff" />
             </View>
-            <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
+            <Text className="block text-base font-semibold text-foreground">游戏规则</Text>
+            {rules.length > 0 && (
+              <Text className="block text-xs text-gray-400 ml-1">{rules.length}条</Text>
+            )}
           </View>
-          {rulesExpanded && (
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <RichText nodes={convertToRichText(game.rules)} />
-              </CardContent>
-            </Card>
-          )}
+
+          {rules.length > 0 ? (
+            <View className="flex flex-col gap-2">
+              {rules.map((rule) => {
+                const isExpanded = expandedRuleIds.includes(rule.id)
+                return (
+                  <Card key={rule.id} className="shadow-sm">
+                    <View
+                      className="flex flex-row items-center justify-between px-4 py-3 cursor-pointer"
+                      onClick={() => toggleRule(rule.id)}
+                    >
+                      <View className="flex flex-row items-center gap-2 flex-1 min-w-0">
+                        <Text className="block text-sm font-medium text-foreground truncate">{rule.title}</Text>
+                        <View className={`rounded px-2 py-1 flex-shrink-0 ${rule.rule_type === 'images' ? 'bg-green-50' : 'bg-blue-50'}`}>
+                          <Text className={`text-[10px] ${rule.rule_type === 'images' ? 'text-green-600' : 'text-blue-600'}`}>
+                            {rule.rule_type === 'markdown' ? '文本' : '图册'}
+                          </Text>
+                        </View>
+                      </View>
+                      <ChevronDown
+                        size={16}
+                        color="#9ca3af"
+                        style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0, marginLeft: 8 }}
+                      />
+                    </View>
+                    {isExpanded && (
+                      <CardContent className="px-4 pb-4 pt-0">
+                        {rule.rule_type === 'markdown' && rule.content && (
+                          <View className="border-t border-gray-100 pt-3">
+                            <RichText nodes={convertToRichText(rule.content)} />
+                          </View>
+                        )}
+                        {rule.rule_type === 'images' && rule.image_urls && rule.image_urls.length > 0 && (
+                          <View className="border-t border-gray-100 pt-3">
+                            <ScrollView scrollX className="flex flex-row gap-3">
+                              {rule.image_urls.map((url, idx) => (
+                                <Image
+                                  key={idx}
+                                  src={url}
+                                  className="w-72 h-96 rounded-lg"
+                                  mode="aspectFit"
+                                  onClick={() => {
+                                    Taro.previewImage({ urls: rule.image_urls, current: url })
+                                  }}
+                                />
+                              ))}
+                            </ScrollView>
+                            <Text className="block text-xs text-gray-400 mt-2 text-center">
+                              {rule.image_urls.length}张图片（点击可预览大图）
+                            </Text>
+                          </View>
+                        )}
+                      </CardContent>
+                    )}
+                  </Card>
+                )
+              })}
+            </View>
+          ) : game.rules ? (
+            /* 兼容旧数据：单条 Markdown 规则回退展示 */
+            <View>
+              <View
+                className="flex flex-row items-center justify-between mb-3"
+                onClick={() => setRulesExpanded(v => !v)}
+              >
+                <Text className="block text-sm font-medium text-foreground">完整规则</Text>
+                <ChevronRight size={16} color="#9ca3af" style={{ transform: rulesExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
+              </View>
+              {rulesExpanded && (
+                <Card className="shadow-sm">
+                  <CardContent className="p-4">
+                    <RichText nodes={convertToRichText(game.rules)} />
+                  </CardContent>
+                </Card>
+              )}
+            </View>
+          ) : null}
         </View>
       )}
 
