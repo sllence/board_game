@@ -76,4 +76,14 @@ export class GameRulesController {
   ) {
     return this.gameRulesService.uploadPdfAndConvert(file)
   }
+
+  /**
+   * 查询 PDF 转换进度（公开接口）
+   */
+  @Get('convert-status/:taskId')
+  @Public()
+  @HttpCode(200)
+  async getConvertStatus(@Param('taskId') taskId: string) {
+    return this.gameRulesService.getConvertStatus(taskId)
+  }
 }

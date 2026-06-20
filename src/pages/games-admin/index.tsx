@@ -378,43 +378,89 @@ const GamesAdminPage: FC = () => {
         const chooseRes = await Taro.chooseMessageFile({ count: 1, type: 'file', extension: ['pdf'] })
         filePath = chooseRes.tempFiles[0]?.path || ''
       } catch {
-        // H5 降级：使用 chooseImage
+        // H5 降级
         const imgRes = await Taro.chooseImage({ count: 1, sizeType: ['original'] })
         filePath = imgRes.tempFilePaths[0]
       }
       if (!filePath) return
 
       setRuleUploading(true)
-      Taro.showLoading({ title: '正在转换PDF...' })
+      Taro.showLoading({ title: '正在上传PDF...' })
 
       const uploadRes = await Network.uploadFile({
         url: '/api/game-rules/upload-pdf',
         filePath,
         name: 'file'
       })
-      const data = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
-      const imageUrls: string[] = data.data?.imageUrls || []
 
-      if (imageUrls.length === 0) {
-        Taro.showToast({ title: 'PDF转换失败', icon: 'none' })
-        return
+      // 兼容处理：响应可能不是 JSON（如代理超时返回纯文本）
+      let parsed: any
+      try {
+        parsed = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
+      } catch {
+        const rawText = typeof uploadRes.data === 'string' ? uploadRes.data : String(uploadRes.data)
+        console.error('[uploadPdf] 响应不是有效JSON:', rawText.slice(0, 200))
+        throw new Error('服务响应异常，可能是PDF文件过大或处理超时，请尝试较小的PDF或改用图片上传')
       }
 
-      setEditingRule(prev => prev ? {
-        ...prev,
-        rule_type: 'images',
-        image_urls: [...prev.image_urls, ...imageUrls],
-        title: prev.title || '规则书',
-      } : null)
-      Taro.hideLoading()
-      Taro.showToast({ title: `已转换 ${imageUrls.length} 页图片`, icon: 'success' })
+      const { taskId, status, imageUrls: immediateUrls } = parsed.data || {}
+
+      if (status === 'processing' && taskId) {
+        // PDF 在后台转换中，轮询等待结果
+        Taro.showLoading({ title: '正在转换PDF...' })
+        const imageUrls = await pollConvertStatus(taskId, 30000)
+        if (imageUrls.length === 0) {
+          Taro.showToast({ title: 'PDF转换失败或超时', icon: 'none' })
+          return
+        }
+        setEditingRule(prev => prev ? {
+          ...prev,
+          rule_type: 'images',
+          image_urls: [...prev.image_urls, ...imageUrls],
+          title: prev.title || '规则书',
+        } : null)
+        Taro.hideLoading()
+        Taro.showToast({ title: `已转换 ${imageUrls.length} 页图片`, icon: 'success' })
+      } else if (immediateUrls?.length) {
+        // 同步完成
+        setEditingRule(prev => prev ? {
+          ...prev,
+          rule_type: 'images',
+          image_urls: [...prev.image_urls, ...immediateUrls],
+          title: prev.title || '规则书',
+        } : null)
+        Taro.hideLoading()
+        Taro.showToast({ title: `已转换 ${immediateUrls.length} 页图片`, icon: 'success' })
+      } else {
+        Taro.showToast({ title: 'PDF转换失败', icon: 'none' })
+      }
     } catch (err) {
       console.error('[uploadPdf] failed:', err)
       Taro.hideLoading()
-      Taro.showToast({ title: 'PDF上传失败', icon: 'none' })
+      Taro.showToast({ title: err.message?.includes('超时') ? 'PDF处理超时，请尝试较小PDF' : 'PDF上传失败', icon: 'none' })
     } finally {
       setRuleUploading(false)
     }
+  }
+
+  /** 轮询 PDF 转换状态 */
+  const pollConvertStatus = async (taskId: string, timeoutMs: number): Promise<string[]> => {
+    const start = Date.now()
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const res = await Network.request({ url: `/api/game-rules/convert-status/${taskId}` })
+        const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
+        const { status, imageUrls } = parsed.data || {}
+        if (status === 'done' && imageUrls?.length) {
+          return imageUrls
+        }
+      } catch (err) {
+        console.log('[pollConvertStatus] 查询失败，继续轮询:', err)
+      }
+      // 等 2 秒再查
+      await new Promise(r => setTimeout(r, 2000))
+    }
+    return []
   }
 
   const handleMoveRule = (index: number, direction: 'up' | 'down') => {

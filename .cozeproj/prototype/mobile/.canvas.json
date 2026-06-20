@@ -3,17 +3,9 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/mobile/feedback.html"
+        "path": ".cozeproj/prototype/mobile/timer.html"
       },
-      "title": "问题反馈",
-      "size": "mobile"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/mobile/feedback-admin.html"
-      },
-      "title": "反馈管理",
+      "title": "计时器",
       "size": "mobile"
     }
   ]

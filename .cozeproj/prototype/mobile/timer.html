@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #4F46E5;
+      --color-primary-container:    #E0E7FF;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F5F5F7;
+      --color-surface-container-lowest:   #FFFFFF;
+      --color-surface:                    #FAFAFA;
+      --color-surface-container:          #EEEEF0;
+      --color-surface-container-high:     #E8E8EA;
+      --color-surface-container-highest:  #E0E0E3;
+      /* === 文字 === */
+      --color-on-surface:           #1E1B4B;
+      --color-on-surface-variant:   #6B7280;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D1D5DB;
+      --color-outline-variant:  #E5E7EB;
+      /* === 圆角 === */
+      --radius-sm:   0.5rem;
+      --radius-md:   0.75rem;
+      --radius-lg:   1rem;
+      --radius-xl:   1.25rem;
+      --radius-2xl:  1.5rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 4px 12px rgba(0,0,0,0.1);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: system-ui, sans-serif;
+    }
+  </style>
+
+  <style>
+    body {
+      min-height: max(812px, 100dvh);
+      font-family: system-ui, sans-serif;
+    }
+    /* Timer progress ring transition */
+    .progress-ring {
+      transition: stroke-dashoffset 0.3s ease;
+    }
+    /* Conic gradient progress background for the circle */
+    .conic-progress {
+      background: conic-gradient(from 0deg, transparent 0%, transparent 100%);
+    }
+    @keyframes pulse-alert {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+    .pulse-alert {
+      animation: pulse-alert 0.8s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件 -->
+  <!-- 二级页：Header + 返回按钮，无 TabBar -->
+  <header class="bg-background sticky top-0 z-40 h-14 flex items-center justify-between px-4">
+    <button id="btn-back" class="w-10 h-10 flex items-center justify-center text-on-surface-variant rounded-full hover:bg-surface-container active:bg-surface-container-high transition-colors">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="text-base font-semibold text-on-surface">计时器</h1>
+    <div class="w-10 h-10"></div>
+  </header>
+  <!-- @nav:end 导航组件 -->
+
+  <main class="overflow-y-auto pb-6">
+    <!-- @main-content:start -->
+
+    <!-- 模式切换：倒计时 / 正计时 -->
+    <div class="px-4 pt-2 pb-4">
+      <div class="flex bg-surface-container p-1 rounded-full shadow-sm">
+        <button id="tab-countdown" class="flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all bg-primary text-on-primary shadow-sm" aria-current="page">
+          <i data-lucide="timer" class="w-4 h-4 inline-block mr-1.5"></i>倒计时
+        </button>
+        <button id="tab-stopwatch" class="flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all text-on-surface-variant hover:text-on-surface">
+          <i data-lucide="clock" class="w-4 h-4 inline-block mr-1.5"></i>正计时
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ 倒计时模式 ============ -->
+    <div id="countdown-mode">
+
+      <!-- 快速预设选择 -->
+      <div class="px-4 pb-4">
+        <p class="text-xs text-on-surface-variant font-medium mb-2.5 px-0.5">快速预设</p>
+        <div class="flex flex-wrap gap-2">
+          <button class="preset-btn preset-active inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary text-on-primary transition-all" data-minutes="1">1分钟</button>
+          <button class="preset-btn inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all" data-minutes="3">3分钟</button>
+          <button class="preset-btn inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all" data-minutes="5">5分钟</button>
+          <button class="preset-btn inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all" data-minutes="10">10分钟</button>
+          <button class="preset-btn inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all" data-minutes="15">15分钟</button>
+          <button class="preset-btn inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all" data-minutes="30">30分钟</button>
+        </div>
+      </div>
+
+      <!-- 圆形计时器 -->
+      <div class="flex justify-center py-2">
+        <div class="relative w-52 h-52">
+          <!-- SVG 进度环 -->
+          <svg class="w-full h-full" viewBox="0 0 208 208">
+            <!-- 底色环 -->
+            <circle cx="104" cy="104" r="90" fill="none" stroke="#E8E8EA" stroke-width="6" />
+            <!-- 进度环 - 从底部起始 -->
+            <circle id="countdown-ring" class="progress-ring" cx="104" cy="104" r="90" fill="none"
+                    stroke="url(#time-gradient)" stroke-width="6" stroke-linecap="round"
+                    stroke-dasharray="565.49" stroke-dashoffset="0"
+                    transform="rotate(90, 104, 104)" />
+            <defs>
+              <linearGradient id="time-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.6" />
+                <stop offset="100%" stop-color="#EC4899" stop-opacity="0.3" />
+              </linearGradient>
+              <linearGradient id="time-gradient-full" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.8" />
+                <stop offset="100%" stop-color="#EC4899" stop-opacity="0.5" />
+              </linearGradient>
+              <linearGradient id="time-gradient-alert" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#EF4444" stop-opacity="0.8" />
+                <stop offset="100%" stop-color="#F87171" stop-opacity="0.5" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <!-- 内圈渐变装饰 -->
+          <div class="absolute inset-[18px] rounded-full bg-gradient-to-br from-purple-500/5 to-pink-500/5"></div>
+          <!-- 中央时间文字 -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span id="countdown-time" class="text-4xl font-bold tabular-nums tracking-tight text-on-surface">05:00</span>
+            <span id="countdown-label" class="text-xs text-on-surface-variant mt-1 font-medium">剩余时间</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 时间到提示（默认隐藏） -->
+      <div id="time-up-alert" class="mx-4 mt-3 mb-1 hidden">
+        <div class="bg-error/10 border border-error/20 rounded-2xl px-4 py-3 flex items-center justify-center gap-2 pulse-alert">
+          <i data-lucide="bell" class="w-5 h-5 text-error"></i>
+          <span class="text-base font-bold text-error">时间到！</span>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="flex items-center justify-center gap-4 px-4 mt-5">
+        <button id="btn-countdown-reset" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-[0.97] transition-all border border-outline-variant/20 min-w-[44px]">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          重置
+        </button>
+        <button id="btn-countdown-start" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-semibold text-on-primary shadow-sm active:scale-[0.97] transition-all"
+                style="background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);">
+          <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+          开始
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ============ 正计时（秒表）模式 ============ -->
+    <div id="stopwatch-mode" class="hidden">
+
+      <!-- 圆形计时器 -->
+      <div class="flex justify-center py-6">
+        <div class="relative w-52 h-52">
+          <!-- SVG 进度环 -->
+          <svg class="w-full h-full" viewBox="0 0 208 208">
+            <!-- 底色环 -->
+            <circle cx="104" cy="104" r="90" fill="none" stroke="#E8E8EA" stroke-width="6" />
+            <!-- 进度环 - 从底部起始 -->
+            <circle id="stopwatch-ring" class="progress-ring" cx="104" cy="104" r="90" fill="none"
+                    stroke="url(#time-gradient)" stroke-width="6" stroke-linecap="round"
+                    stroke-dasharray="565.49" stroke-dashoffset="565.49"
+                    transform="rotate(90, 104, 104)" />
+          </svg>
+          <!-- 内圈渐变装饰 -->
+          <div class="absolute inset-[18px] rounded-full bg-gradient-to-br from-purple-500/5 to-pink-500/5"></div>
+          <!-- 中央时间文字 -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span id="stopwatch-time" class="text-4xl font-bold tabular-nums tracking-tight text-on-surface">00:00</span>
+            <span id="stopwatch-label" class="text-xs text-on-surface-variant mt-1 font-medium">已用时</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="flex items-center justify-center gap-3 px-4 mt-2">
+        <button id="btn-stopwatch-reset" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-[0.97] transition-all border border-outline-variant/20 min-w-[44px]">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          重置
+        </button>
+        <button id="btn-stopwatch-lap" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold text-on-surface shadow-sm active:scale-[0.97] transition-all hidden"
+                style="background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%); color: white;">
+          <i data-lucide="flag" class="w-4 h-4"></i>
+          标记
+        </button>
+        <button id="btn-stopwatch-start" class="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl text-sm font-semibold text-on-primary shadow-sm active:scale-[0.97] transition-all"
+                style="background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);">
+          <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+          开始
+        </button>
+      </div>
+
+      <!-- 标记列表 -->
+      <div id="lap-section" class="mt-6 px-4">
+        <!-- 列表标题 -->
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+            <i data-lucide="list" class="w-4 h-4 text-on-surface-variant"></i>
+            标记记录
+          </h2>
+          <span id="lap-count-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">0 条</span>
+        </div>
+
+        <!-- 空态 -->
+        <div id="lap-empty" class="bg-surface-container-lowest rounded-2xl p-6 text-center shadow-card">
+          <div class="w-14 h-14 mx-auto rounded-full bg-primary-container flex items-center justify-center mb-3">
+            <i data-lucide="flag" class="w-6 h-6 text-primary/60"></i>
+          </div>
+          <p class="text-sm text-on-surface-variant leading-relaxed">暂无标记记录</p>
+          <p class="text-xs text-on-surface-variant/60 mt-1">开始正计时后点击"标记"按钮记录</p>
+        </div>
+
+        <!-- 标记列表容器（动态添加） -->
+        <div id="lap-list" class="space-y-2 hidden">
+          <!-- 标记项将在运行时通过 JS 动态添加 -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- @main-content:end -->
+  </main>
+
+  <script>
+    // ============================================================
+    // 导航辅助函数
+    // ============================================================
+    function navPush(route) {
+        console.log('[原型演示] PUSH 到: ' + route);
+        window.location.href = route;
+    }
+    function navReplace(route) {
+        console.log('[原型演示] REPLACE 为: ' + route);
+        window.location.replace(route);
+    }
+    function navReset(route) {
+        console.log('[原型演示] RESET 到: ' + route);
+        window.location.href = route;
+    }
+    function navBack() {
+        console.log('[原型演示] BACK 返回上一页');
+        if(window.history.length > 1) window.history.back();
+    }
+
+    $(function() {
+
+      // ============================================================
+      // 返回按钮
+      // ============================================================
+      $('#btn-back').on('click', function() {
+        navBack();
+      });
+
+      // ============================================================
+      // 全局计时变量
+      // ============================================================
+      var timerInterval = null;           // setInterval 句柄
+      var isRunning = false;              // 计时器是否在运行
+
+      // ---- 倒计时变量 ----
+      var cdTotalSeconds = 300;           // 总秒数（当前预设300秒=5分钟）
+      var cdRemaining = 300;              // 剩余秒数
+      var cdPresetSeconds = 300;          // 当前预设值
+
+      // ---- 正计时变量 ----
+      var swElapsed = 0;                  // 已用秒数
+      var swLastLapTime = 0;              // 上一个标记的时刻
+      var lapCounter = 0;                 // 标记序号
+      var lapRecords = [];                // 标记记录数组
+
+      // 进度环常量
+      var CIRCUMFERENCE = 565.49;
+
+      // ============================================================
+      // 辅助函数：格式化时间 MM:SS
+      // ============================================================
+      function formatTime(seconds) {
+        var m = Math.floor(seconds / 60);
+        var s = Math.floor(seconds % 60);
+        return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      }
+
+      // ============================================================
+      // 模式切换
+      // ============================================================
+      $('#tab-countdown').on('click', function() {
+        if (isRunning) {
+          clearInterval(timerInterval);
+          isRunning = false;
+        }
+        // 切换 tab 样式
+        $('#tab-countdown').addClass('bg-primary text-on-primary shadow-sm').removeClass('text-on-surface-variant');
+        $('#tab-countdown').attr('aria-current', 'page');
+        $('#tab-stopwatch').removeClass('bg-primary text-on-primary shadow-sm').addClass('text-on-surface-variant');
+        $('#tab-stopwatch').removeAttr('aria-current');
+
+        // 显示倒计时模式
+        $('#countdown-mode').removeClass('hidden');
+        $('#stopwatch-mode').addClass('hidden');
+      });
+
+      $('#tab-stopwatch').on('click', function() {
+        if (isRunning) {
+          clearInterval(timerInterval);
+          isRunning = false;
+        }
+        // 切换 tab 样式
+        $('#tab-stopwatch').addClass('bg-primary text-on-primary shadow-sm').removeClass('text-on-surface-variant');
+        $('#tab-stopwatch').attr('aria-current', 'page');
+        $('#tab-countdown').removeClass('bg-primary text-on-primary shadow-sm').addClass('text-on-surface-variant');
+        $('#tab-countdown').removeAttr('aria-current');
+
+        // 显示正计时模式
+        $('#countdown-mode').addClass('hidden');
+        $('#stopwatch-mode').removeClass('hidden');
+      });
+
+      // ============================================================
+      // 倒计时 - 预设选择
+      // ============================================================
+      $('.preset-btn').on('click', function() {
+        if (isRunning) {
+          clearInterval(timerInterval);
+          isRunning = false;
+          $('#btn-countdown-start').html('<i data-lucide="play" class="w-5 h-5 fill-current"></i> 开始');
+          lucide.createIcons();
+        }
+        // 更新预设按钮状态
+        $('.preset-btn').removeClass('preset-active bg-primary text-on-primary').addClass('bg-surface-container text-on-surface-variant');
+        $(this).addClass('preset-active bg-primary text-on-primary').removeClass('bg-surface-container text-on-surface-variant');
+
+        // 更新倒计时
+        var mins = parseInt($(this).data('minutes'), 10);
+        cdPresetSeconds = mins * 60;
+        cdTotalSeconds = cdPresetSeconds;
+        cdRemaining = cdPresetSeconds;
+        $('#countdown-time').text(formatTime(cdRemaining));
+
+        // 重置进度环
+        $('#countdown-ring').css('stroke-dashoffset', 0);
+        // 隐藏时间到提示
+        $('#time-up-alert').addClass('hidden');
+        // 恢复标签
+        $('#countdown-label').text('剩余时间');
+        // 恢复渐变
+        $('#countdown-ring').attr('stroke', 'url(#time-gradient)');
+      });
+
+      // ============================================================
+      // 倒计时 - 开始/暂停
+      // ============================================================
+      $('#btn-countdown-start').on('click', function() {
+        if (cdRemaining <= 0) {
+          // 如果已归零，重置再开始
+          cdRemaining = cdPresetSeconds;
+          cdTotalSeconds = cdPresetSeconds;
+          $('#countdown-time').text(formatTime(cdRemaining));
+          $('#time-up-alert').addClass('hidden');
+          $('#countdown-label').text('剩余时间');
+          $('#countdown-ring').attr('stroke', 'url(#time-gradient)');
+        }
+
+        if (isRunning) {
+          // 暂停
+          clearInterval(timerInterval);
+          isRunning = false;
+          $('#btn-countdown-start').html('<i data-lucide="play" class="w-5 h-5 fill-current"></i> 继续');
+          lucide.createIcons();
+        } else {
+          // 开始
+          isRunning = true;
+          $('#btn-countdown-start').html('<i data-lucide="pause" class="w-5 h-5 fill-current"></i> 暂停');
+          lucide.createIcons();
+
+          timerInterval = setInterval(function() {
+            cdRemaining--;
+            if (cdRemaining < 0) {
+              cdRemaining = 0;
+              clearInterval(timerInterval);
+              isRunning = false;
+              $('#btn-countdown-start').html('<i data-lucide="play" class="w-5 h-5 fill-current"></i> 开始');
+              lucide.createIcons();
+              // 时间到！
+              $('#time-up-alert').removeClass('hidden');
+              $('#countdown-label').text('已结束');
+              $('#countdown-ring').attr('stroke', 'url(#time-gradient-alert)');
+              return;
+            }
+
+            // 更新显示
+            $('#countdown-time').text(formatTime(cdRemaining));
+
+            // 更新进度环（从底部向上消失）
+            var progress = cdRemaining / cdTotalSeconds;
+            var offset = CIRCUMFERENCE * (1 - progress);
+            $('#countdown-ring').css('stroke-dashoffset', offset);
+
+            // 最后10秒闪烁预警
+            if (cdRemaining <= 10 && cdRemaining > 0) {
+              $('#countdown-time').css('color', '#EF4444');
+            } else {
+              $('#countdown-time').css('color', '');
+            }
+          }, 1000);
+        }
+      });
+
+      // ============================================================
+      // 倒计时 - 重置
+      // ============================================================
+      $('#btn-countdown-reset').on('click', function() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        cdRemaining = cdPresetSeconds;
+        cdTotalSeconds = cdPresetSeconds;
+        $('#countdown-time').text(formatTime(cdRemaining));
+        $('#countdown-time').css('color', '');
+        $('#countdown-ring').css('stroke-dashoffset', 0);
+        $('#btn-countdown-start').html('<i data-lucide="play" class="w-5 h-5 fill-current"></i> 开始');
+        $('#time-up-alert').addClass('hidden');
+        $('#countdown-label').text('剩余时间');
+        $('#countdown-ring').attr('stroke', 'url(#time-gradient)');
+        lucide.createIcons();
+      });
+
+      // ============================================================
+      // 正计时 - 开始/暂停
+      // ============================================================
+      $('#btn-stopwatch-start').on('click', function() {
+        if (isRunning) {
+          // 暂停
+          clearInterval(timerInterval);
+          isRunning = false;
+          $('#btn-stopwatch-start').html('<i data-lucide="play" class="w-5 h-5 fill-current"></i> 继续');
+          $('#btn-stopwatch-lap').addClass('hidden');
+          lucide.createIcons();
+        } else {
+          // 开始
+          isRunning = true;
+          $('#btn-stopwatch-start').html('<i data-lucide="pause" class="w-5 h-5 fill-current"></i> 暂停');
+          $('#btn-stopwatch-lap').removeClass('hidden');
+          lucide.createIcons();
+
+          timerInterval = setInterval(function() {
+            swElapsed++;
+            $('#stopwatch-time').text(formatTime(swElapsed));
+
+            // 更新进度环（每60秒一圈）
+            var cycle = swElapsed % 60;
+            var progress = cycle / 60;
+            var offset = CIRCUMFERENCE * (1 - progress);
+            $('#stopwatch-ring').css('stroke-dashoffset', offset);
+          }, 1000);
+        }
+      });
+
+      // ============================================================
+      // 正计时 - 标记计时 (Lap)
+      // ============================================================
+      $('#btn-stopwatch-lap').on('click', function() {
+        if (!isRunning) return;
+
+        lapCounter++;
+        var totalSec = swElapsed;
+        var splitSec = lapCounter === 1 ? swElapsed : (swElapsed - swLastLapTime);
+        swLastLapTime = swElapsed;
+
+        var record = {
+          id: lapCounter,
+          total: totalSec,
+          split: splitSec
+        };
+        lapRecords.unshift(record); // 最新在顶部
+
+        // 隐藏空态，显示列表
+        $('#lap-empty').addClass('hidden');
+        $('#lap-list').removeClass('hidden');
+
+        // 更新计数徽章
+        $('#lap-count-badge').text(lapCounter + ' 条');
+
+        // 构建标记项 DOM
+        var splitStr = '+' + formatTime(Math.abs(splitSec));
+        var totalStr = formatTime(totalSec);
+        var lapItemHtml = '' +
+          '<div class="lap-item bg-surface-container-lowest rounded-2xl p-4 shadow-card flex items-center justify-between" data-lap-id="' + lapCounter + '">' +
+            '<div class="flex items-center gap-3">' +
+              '<div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">' +
+                '<span class="text-xs font-bold text-primary">#' + lapCounter + '</span>' +
+              '</div>' +
+              '<div>' +
+                '<p class="text-xs text-on-surface-variant font-medium">分段用时</p>' +
+                '<p class="text-sm font-semibold text-on-surface tabular-nums tracking-tight">' + splitStr + '</p>' +
+              '</div>' +
+            '</div>' +
+            '<div class="text-right">' +
+              '<p class="text-xs text-on-surface-variant font-medium">总用时</p>' +
+              '<p class="text-sm font-semibold text-on-surface tabular-nums tracking-tight">' + totalStr + '</p>' +
+            '</div>' +
+          '</div>';
+
+        // 插入到列表顶部
+        $('#lap-list').prepend(lapItemHtml);
+      });
+
+      // ============================================================
+      // 正计时 - 重置
+      // ============================================================
+      $('#btn-stopwatch-reset').on('click', function() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        swElapsed = 0;
+        swLastLapTime = 0;
+        lapCounter = 0;
+        lapRecords = [];
+
+        $('#stopwatch-time').text('00:00');
+        $('#stopwatch-ring').css('stroke-dashoffset', CIRCUMFERENCE);
+        $('#btn-stopwatch-start').html('<i data-lucide="play" class="w-5 h-5 fill-current"></i> 开始');
+        $('#btn-stopwatch-lap').addClass('hidden');
+
+        // 清空标记列表
+        $('#lap-list').empty().addClass('hidden');
+        $('#lap-empty').removeClass('hidden');
+        $('#lap-count-badge').text('0 条');
+
+        lucide.createIcons();
+      });
+
+      // ============================================================
+      // 初始化 Lucide 图标
+      // ============================================================
+      lucide.createIcons();
+
+      // 初始化时同步按钮图标
+      setTimeout(function() {
+        lucide.createIcons();
+      }, 100);
+    });
+  </script>
+</body>
+
+</html>
