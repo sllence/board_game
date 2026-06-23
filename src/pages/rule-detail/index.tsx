@@ -77,7 +77,7 @@ const ImageCarousel: FC<{
 
   return (
     <View className="border-t border-gray-100 pt-3">
-      <View className="relative overflow-hidden rounded">
+      <View className="relative overflow-hidden rounded-xl">
         <ScrollView
           scrollX
           showScrollbar={false}
