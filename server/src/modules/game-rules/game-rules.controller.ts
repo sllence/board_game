@@ -78,6 +78,37 @@ export class GameRulesController {
   }
 
   /**
+   * 保存规则 + 上传 PDF（保存后异步转换）
+   * 先创建规则（image_urls=[]），后端异步转换 PDF 后自动更新 image_urls
+   */
+  @Post('with-pdf')
+  @Roles('admin')
+  @HttpCode(200)
+  @UseInterceptors(FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits: { fileSize: 20 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype !== 'application/pdf') {
+        cb(new Error('仅支持 PDF 文件'), false)
+      } else {
+        cb(null, true)
+      }
+    },
+  }))
+  async createWithPdf(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: any,
+  ) {
+    return this.gameRulesService.createWithPdf({
+      game_id: Number(body.game_id),
+      title: body.title,
+      rule_type: 'images',
+      content: body.content || '',
+      sort_order: body.sort_order ? Number(body.sort_order) : 0,
+    }, file)
+  }
+
+  /**
    * 查询 PDF 转换进度（公开接口）
    */
   @Get('convert-status/:taskId')

@@ -3,7 +3,10 @@ import { getSupabaseClient } from '@/storage/database/supabase-client'
 import { StorageService } from '@/modules/storage/storage.service'
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import { execSync } from 'child_process'
+import { promisify } from 'util'
+import { exec } from 'child_process'
+
+const asyncExec = promisify(exec)
 import { randomUUID } from 'crypto'
 
 @Injectable()
@@ -50,6 +53,7 @@ export class GameRulesService {
         content: body.rule_type === 'markdown' ? body.content || '' : null,
         image_urls: body.rule_type === 'images' ? (body.image_urls || []) : [],
         sort_order: body.sort_order ?? 0,
+        status: 'active',
       }])
       .select()
       .single()
@@ -151,6 +155,162 @@ export class GameRulesService {
   }
 
   /**
+   * 创建规则 + 关联 PDF（保存规则后异步转换）
+   * 先存规则（image_urls=[]），后台异步转换 PDF，转换完成后更新规则
+   */
+  async createWithPdf(
+    body: {
+      game_id: number
+      title: string
+      rule_type: string
+      content?: string
+      sort_order?: number
+    },
+    file: Express.Multer.File,
+  ) {
+    // 1. 先创建规则，image_urls 留空，状态标记为转换中
+    const rule = await this.create({
+      ...body,
+      rule_type: 'images',
+      image_urls: [],
+    })
+
+    const ruleId = rule.data.id
+
+    // 标记为转换中
+    const supabaseClient = await getSupabaseClient()
+    await supabaseClient
+      .from('game_rules')
+      .update({ status: 'converting' })
+      .eq('id', ruleId)
+
+    // 2. 写入临时 PDF 文件
+    let fileContent: Buffer
+    if (file.buffer) {
+      fileContent = file.buffer
+    } else if (file.path) {
+      fileContent = await fs.readFile(file.path)
+    } else {
+      throw new BadRequestException('无法获取文件内容')
+    }
+
+    const tmpDir = '/tmp/pdf-convert'
+    await fs.mkdir(tmpDir, { recursive: true })
+    const taskId = randomUUID()
+    const pdfPath = path.join(tmpDir, `${taskId}.pdf`)
+    await fs.writeFile(pdfPath, fileContent)
+
+    // 3. 异步转换，完成后更新规则的 image_urls
+    this.processPdfConversionAndUpdateRule(taskId, pdfPath, tmpDir, ruleId).catch(err => {
+      console.error('[GameRulesService] 后台转换失败:', err)
+    })
+
+    // 4. 返回已创建的规则（不含图片，图片后续更新）
+    return {
+      data: {
+        ...rule.data,
+        status: 'converting',
+        message: '规则已保存，PDF 正在后台转换中',
+      },
+    }
+  }
+
+  /**
+   * 异步后台转换 PDF，完成后更新数据库
+   */
+  private async processPdfConversionAndUpdateRule(
+    taskId: string,
+    pdfPath: string,
+    tmpDir: string,
+    ruleId: number,
+  ): Promise<string[]> {
+    try {
+      // 转换 PDF 为图片
+      const imageUrls = await this.runPdfConversion(taskId, pdfPath, tmpDir)
+
+      // 更新数据库中的 image_urls
+      if (imageUrls.length > 0) {
+        const client = getSupabaseClient()
+        const { error } = await client
+          .from('game_rules')
+          .update({ image_urls: imageUrls, status: 'active' })
+          .eq('id', ruleId)
+
+        if (error) {
+          console.error('[GameRulesService] 更新规则图片失败:', error.message)
+        } else {
+          console.log(`[GameRulesService] 规则 ${ruleId} 图片更新完成，共 ${imageUrls.length} 张`)
+        }
+      }
+
+      return imageUrls
+    } catch (err) {
+      console.error('[GameRulesService] 异步转换失败:', err)
+      // 标记为转换失败
+      try {
+        const client = getSupabaseClient()
+        await client.from('game_rules').update({ status: 'failed' }).eq('id', ruleId)
+      } catch (updateErr) {
+        console.error('[GameRulesService] 更新失败状态出错:', updateErr)
+      }
+      return []
+    } finally {
+      await fs.unlink(pdfPath).catch(() => {})
+    }
+  }
+
+  /**
+   * 提取 PDF 转换 + 上传 S3 的公共逻辑
+   */
+  private async runPdfConversion(taskId: string, pdfPath: string, tmpDir: string): Promise<string[]> {
+    // 1. 使用 pdftoppm 拆分为 PNG（异步，不阻塞事件循环）
+    const outputPrefix = path.join(tmpDir, taskId)
+    console.log(`[PDF转换] 开始 pdftoppm: ${pdfPath}`)
+    const convertStart = Date.now()
+    const { stderr } = await asyncExec(
+      `/usr/bin/pdftoppm -png -r 150 "${pdfPath}" "${outputPrefix}"`,
+      { timeout: 600000 } // 10 分钟
+    )
+    if (stderr) console.warn(`[PDF转换] pdftoppm stderr:`, stderr)
+    console.log(`[PDF转换] pdftoppm 完成, 耗时 ${Date.now() - convertStart}ms`)
+
+    // 2. 读取生成的图片文件
+    const { readdir } = await import('fs/promises')
+    const files = await readdir(tmpDir)
+    const pngFiles = files
+      .filter(f => f.startsWith(taskId) && f.endsWith('.png') && f.includes('-'))
+      .sort()
+
+    if (pngFiles.length === 0) {
+      console.warn('[GameRulesService] PDF转换未生成图片')
+      return []
+    }
+
+    console.log('[GameRulesService] PDF转换完成，生成图片数:', pngFiles.length)
+
+    // 3. 上传到对象存储（并行）
+    const uploadTasks = pngFiles.map(async (pngFile) => {
+      try {
+        const pngPath = path.join(tmpDir, pngFile)
+        const pngContent = await fs.readFile(pngPath)
+        const url = await this.storageService.uploadAvatar({
+          buffer: pngContent,
+          originalname: `rules/${taskId}_${pngFile}`,
+          mimetype: 'image/png',
+        })
+        await fs.unlink(pngPath).catch(() => {})
+        return url
+      } catch (err) {
+        console.error(`[GameRulesService] 上传图片失败 ${pngFile}:`, err)
+        return null
+      }
+    })
+
+    const results = await Promise.all(uploadTasks)
+    return results.filter(Boolean) as string[]
+  }
+
+  /**
    * 查询 PDF 转换结果
    */
   async getConvertStatus(taskId: string) {
@@ -179,9 +339,12 @@ export class GameRulesService {
     try {
       // 1. 使用 pdftoppm 拆分为 PNG（DPI 150 平衡速度与画质）
       const outputPrefix = path.join(tmpDir, taskId)
-      execSync(`pdftoppm -png -r 150 "${pdfPath}" "${outputPrefix}"`, {
-        timeout: 120000,
+      console.log(`[GameRulesService] 开始转换PDF: ${pdfPath}`)
+      const startTime = Date.now()
+      await asyncExec(`/usr/bin/pdftoppm -png -r 150 "${pdfPath}" "${outputPrefix}"`, {
+        timeout: 600000,
       })
+      console.log(`[GameRulesService] pdftoppm 完成, 耗时: ${Date.now() - startTime}ms`)
 
       // 2. 读取生成的图片文件
       const { readdir } = await import('fs/promises')
@@ -198,7 +361,8 @@ export class GameRulesService {
 
       console.log('[GameRulesService] PDF转换完成，生成图片数:', pngFiles.length)
 
-      // 3. 上传到对象存储（使用 StorageService，并行上传）
+      console.log('[GameRulesService] 开始并行上传到S3，图片数:', pngFiles.length)
+      const uploadStartTime = Date.now()
       const uploadTasks = pngFiles.map(async (pngFile) => {
         try {
           const pngPath = path.join(tmpDir, pngFile)

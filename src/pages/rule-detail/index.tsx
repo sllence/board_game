@@ -1,6 +1,6 @@
 import { View, Text, RichText, Image, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { markdownToRichText } from '@/lib/markdown'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
@@ -47,6 +47,78 @@ interface GameRule {
   content: string
   image_urls: string[]
   sort_order: number
+  status?: string
+}
+
+/** 图片轮播组件：左右滑动 + 页标指示器 */
+const ImageCarousel: FC<{
+  images: string[]
+  onPreview: (url: string) => void
+}> = ({ images, onPreview }) => {
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageWidth, setPageWidth] = useState(375)
+
+  useEffect(() => {
+    Taro.createSelectorQuery()
+      .select('.image-carousel-scroll')
+      .boundingClientRect((rect) => {
+        if (rect && !Array.isArray(rect)) setPageWidth(rect.width)
+      })
+      .exec()
+  }, [])
+
+  const handleScroll = (e: any) => {
+    const left = e.detail?.scrollLeft ?? 0
+    const page = Math.round(left / pageWidth)
+    if (page !== currentPage && page >= 0 && page < images.length) {
+      setCurrentPage(page)
+    }
+  }
+
+  return (
+    <View className="border-t border-gray-100 pt-3">
+      <View className="relative overflow-hidden rounded-xl">
+        <ScrollView
+          scrollX
+          showScrollbar={false}
+          onScroll={handleScroll}
+          className="w-full image-carousel-scroll"
+          style={{ height: '384px' }}
+        >
+          <View className="flex flex-row gap-0" style={{ height: '384px' }}>
+            {images.map((url, idx) => (
+              <View
+                key={idx}
+                className="flex items-center justify-center"
+                style={{ flex: '0 0 100%', height: '384px' }}
+                onClick={() => onPreview(url)}
+              >
+                <Image
+                  src={url}
+                  className="w-full h-full"
+                  style={{ objectFit: 'contain' }}
+                  mode="aspectFit"
+                />
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* 页标指示器 */}
+      <View className="flex flex-row items-center justify-center mt-3 gap-2">
+        {images.map((_, idx) => (
+          <View
+            key={idx}
+            className={`rounded-full transition-all duration-200 ${idx === currentPage ? 'w-5 h-1 bg-primary' : 'w-1 h-1 bg-gray-300'}`}
+          />
+        ))}
+      </View>
+      <Text className="block text-xs text-gray-400 mt-2 text-center">
+        {currentPage + 1}/{images.length}（点击可预览大图）
+      </Text>
+    </View>
+  )
 }
 
 const RuleDetailPage: FC = () => {
@@ -56,6 +128,7 @@ const RuleDetailPage: FC = () => {
   const [loading, setLoading] = useState(true)
   const [rulesExpanded, setRulesExpanded] = useState(false)
   const [expandedRuleIds, setExpandedRuleIds] = useState<number[]>([])
+  const activeRules = useMemo(() => rules.filter(r => r.status !== 'converting' && r.status !== 'failed'), [rules])
 
   const toggleRule = (ruleId: number) => {
     setExpandedRuleIds(prev =>
@@ -206,21 +279,21 @@ const RuleDetailPage: FC = () => {
       </View>
 
       {/* 游戏规则 - 多规则折叠展示 */}
-      {(rules.length > 0 || game.rules) && (
+      {(activeRules.length > 0 || game.rules) && (
         <View className="px-4 mt-5">
           <View className="flex flex-row items-center gap-2 mb-3">
             <View className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
               <BookOpen size={14} color="#fff" />
             </View>
             <Text className="block text-base font-semibold text-foreground">游戏规则</Text>
-            {rules.length > 0 && (
-              <Text className="block text-xs text-gray-400 ml-1">{rules.length}条</Text>
+            {activeRules.length > 0 && (
+              <Text className="block text-xs text-gray-400 ml-1">{activeRules.length}条</Text>
             )}
           </View>
 
-          {rules.length > 0 ? (
+          {activeRules.length > 0 ? (
             <View className="flex flex-col gap-2">
-              {rules.map((rule) => {
+              {activeRules.map((rule) => {
                 const isExpanded = expandedRuleIds.includes(rule.id)
                 return (
                   <Card key={rule.id} className="shadow-sm">
@@ -250,24 +323,10 @@ const RuleDetailPage: FC = () => {
                           </View>
                         )}
                         {rule.rule_type === 'images' && rule.image_urls && rule.image_urls.length > 0 && (
-                          <View className="border-t border-gray-100 pt-3">
-                            <ScrollView scrollX className="flex flex-row gap-3">
-                              {rule.image_urls.map((url, idx) => (
-                                <Image
-                                  key={idx}
-                                  src={url}
-                                  className="w-72 h-96 rounded-lg"
-                                  mode="aspectFit"
-                                  onClick={() => {
-                                    Taro.previewImage({ urls: rule.image_urls, current: url })
-                                  }}
-                                />
-                              ))}
-                            </ScrollView>
-                            <Text className="block text-xs text-gray-400 mt-2 text-center">
-                              {rule.image_urls.length}张图片（点击可预览大图）
-                            </Text>
-                          </View>
+                          <ImageCarousel
+                            images={rule.image_urls}
+                            onPreview={(url) => Taro.previewImage({ urls: rule.image_urls, current: url })}
+                          />
                         )}
                       </CardContent>
                     )}

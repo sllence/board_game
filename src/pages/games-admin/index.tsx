@@ -37,6 +37,7 @@ interface GameRule {
   content: string
   image_urls: string[]
   sort_order: number
+  status?: string
 }
 
 interface GameFormData {
@@ -119,6 +120,7 @@ const GamesAdminPage: FC = () => {
   const [editingRule, setEditingRule] = useState<GameRule | null>(null)
   const [showRuleEditor, setShowRuleEditor] = useState(false)
   const [ruleUploading, setRuleUploading] = useState(false)
+  const [selectedPdfPath, setSelectedPdfPath] = useState<string | null>(null)
 
   useEffect(() => {
     if (!checkLogin()) {
@@ -280,7 +282,32 @@ const GamesAdminPage: FC = () => {
     }
 
     try {
-      if (editingRule.id) {
+      if (selectedPdfPath) {
+        // 有 PDF 文件：通过 uploadFile 同时提交规则数据和 PDF，后端异步转换
+        const uploadRes = await Network.uploadFile({
+          url: '/api/game-rules/with-pdf',
+          filePath: selectedPdfPath,
+          name: 'file',
+          formData: {
+            game_id: String(editingRule.game_id || editingGame?.id || ''),
+            title: editingRule.title,
+            rule_type: editingRule.rule_type || 'images',
+            content: editingRule.content || '',
+            sort_order: String(editingRule.sort_order || 0),
+          }
+        })
+        let parsed: any
+        try {
+          parsed = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
+        } catch {
+          throw new Error('服务响应异常')
+        }
+        if (parsed?.data) {
+          setRules(prev => [...prev, parsed.data])
+        }
+        setSelectedPdfPath(null)
+        Taro.showToast({ title: '规则已保存，PDF正在后台转换...', icon: 'success' })
+      } else if (editingRule.id) {
         // Update existing rule
         const res = await Network.request({
           url: `/api/game-rules/${editingRule.id}`,
@@ -296,7 +323,7 @@ const GamesAdminPage: FC = () => {
         setRules(prev => prev.map(r => r.id === editingRule.id ? res.data?.data : r))
         Taro.showToast({ title: '规则已更新', icon: 'success' })
       } else {
-        // Create new rule
+        // Create new rule (JSON, no PDF)
         const res = await Network.request({
           url: '/api/game-rules',
           method: 'POST',
@@ -368,99 +395,6 @@ const GamesAdminPage: FC = () => {
     } finally {
       setRuleUploading(false)
     }
-  }
-
-  const handleUploadRulePdf = async () => {
-    if (!editingRule) return
-    try {
-      let filePath = ''
-      try {
-        const chooseRes = await Taro.chooseMessageFile({ count: 1, type: 'file', extension: ['pdf'] })
-        filePath = chooseRes.tempFiles[0]?.path || ''
-      } catch {
-        // H5 降级
-        const imgRes = await Taro.chooseImage({ count: 1, sizeType: ['original'] })
-        filePath = imgRes.tempFilePaths[0]
-      }
-      if (!filePath) return
-
-      setRuleUploading(true)
-      Taro.showLoading({ title: '正在上传PDF...' })
-
-      const uploadRes = await Network.uploadFile({
-        url: '/api/game-rules/upload-pdf',
-        filePath,
-        name: 'file'
-      })
-
-      // 兼容处理：响应可能不是 JSON（如代理超时返回纯文本）
-      let parsed: any
-      try {
-        parsed = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
-      } catch {
-        const rawText = typeof uploadRes.data === 'string' ? uploadRes.data : String(uploadRes.data)
-        console.error('[uploadPdf] 响应不是有效JSON:', rawText.slice(0, 200))
-        throw new Error('服务响应异常，可能是PDF文件过大或处理超时，请尝试较小的PDF或改用图片上传')
-      }
-
-      const { taskId, status, imageUrls: immediateUrls } = parsed.data || {}
-
-      if (status === 'processing' && taskId) {
-        // PDF 在后台转换中，轮询等待结果
-        Taro.showLoading({ title: '正在转换PDF...' })
-        const imageUrls = await pollConvertStatus(taskId, 30000)
-        if (imageUrls.length === 0) {
-          Taro.showToast({ title: 'PDF转换失败或超时', icon: 'none' })
-          return
-        }
-        setEditingRule(prev => prev ? {
-          ...prev,
-          rule_type: 'images',
-          image_urls: [...prev.image_urls, ...imageUrls],
-          title: prev.title || '规则书',
-        } : null)
-        Taro.hideLoading()
-        Taro.showToast({ title: `已转换 ${imageUrls.length} 页图片`, icon: 'success' })
-      } else if (immediateUrls?.length) {
-        // 同步完成
-        setEditingRule(prev => prev ? {
-          ...prev,
-          rule_type: 'images',
-          image_urls: [...prev.image_urls, ...immediateUrls],
-          title: prev.title || '规则书',
-        } : null)
-        Taro.hideLoading()
-        Taro.showToast({ title: `已转换 ${immediateUrls.length} 页图片`, icon: 'success' })
-      } else {
-        Taro.showToast({ title: 'PDF转换失败', icon: 'none' })
-      }
-    } catch (err) {
-      console.error('[uploadPdf] failed:', err)
-      Taro.hideLoading()
-      Taro.showToast({ title: err.message?.includes('超时') ? 'PDF处理超时，请尝试较小PDF' : 'PDF上传失败', icon: 'none' })
-    } finally {
-      setRuleUploading(false)
-    }
-  }
-
-  /** 轮询 PDF 转换状态 */
-  const pollConvertStatus = async (taskId: string, timeoutMs: number): Promise<string[]> => {
-    const start = Date.now()
-    while (Date.now() - start < timeoutMs) {
-      try {
-        const res = await Network.request({ url: `/api/game-rules/convert-status/${taskId}` })
-        const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
-        const { status, imageUrls } = parsed.data || {}
-        if (status === 'done' && imageUrls?.length) {
-          return imageUrls
-        }
-      } catch (err) {
-        console.log('[pollConvertStatus] 查询失败，继续轮询:', err)
-      }
-      // 等 2 秒再查
-      await new Promise(r => setTimeout(r, 2000))
-    }
-    return []
   }
 
   const handleMoveRule = (index: number, direction: 'up' | 'down') => {
@@ -980,10 +914,20 @@ const GamesAdminPage: FC = () => {
                           <View className="flex flex-row items-center gap-2 flex-1 min-w-0">
                             <View className={`rounded-md px-2 py-1 ${rule.rule_type === 'markdown' ? 'bg-blue-50' : 'bg-amber-50'}`}>
                               <Text className={`text-xs font-medium ${rule.rule_type === 'markdown' ? 'text-blue-600' : 'text-amber-600'}`}>
-                                {rule.rule_type === 'markdown' ? 'MD' : rule.image_urls.length > 0 ? '图片' : '图片'}
+                                {rule.rule_type === 'markdown' ? 'MD' : '图片'}
                               </Text>
                             </View>
                             <Text className="text-sm font-medium text-gray-900 truncate">{rule.title}</Text>
+                            {rule.status === 'converting' && (
+                              <View className="rounded-md px-2 py-1 bg-amber-50 border border-amber-200">
+                                <Text className="text-xs font-medium text-amber-600">转换中</Text>
+                              </View>
+                            )}
+                            {rule.status === 'failed' && (
+                              <View className="rounded-md px-2 py-1 bg-red-50 border border-red-200">
+                                <Text className="text-xs font-medium text-red-600">转换失败</Text>
+                              </View>
+                            )}
                             {rule.rule_type === 'images' && rule.image_urls.length > 0 && (
                               <Text className="text-xs text-gray-400">{rule.image_urls.length}张</Text>
                             )}
@@ -1092,8 +1036,19 @@ const GamesAdminPage: FC = () => {
                             <Button size="sm" variant="outline" onClick={handleUploadRuleImage} disabled={ruleUploading}>
                               <Text className="text-sm text-gray-700">{ruleUploading ? '上传中...' : '上传图片'}</Text>
                             </Button>
-                            <Button size="sm" variant="outline" onClick={handleUploadRulePdf} disabled={ruleUploading}>
-                              <Text className="text-sm text-gray-700">上传PDF自动转图</Text>
+                            <Button
+                              size="sm" variant="outline"
+                              disabled={ruleUploading}
+                              onClick={async () => {
+                                try {
+                                  const res = await Taro.chooseMessageFile({ count: 1, type: 'file', extension: ['pdf'] })
+                                    .catch(() => Taro.chooseImage({ count: 1 }).then(r => ({ tempFiles: [{ path: r.tempFilePaths[0], name: '图片' }] })))
+                                  const path = res.tempFiles[0]?.path
+                                  if (path) setSelectedPdfPath(path)
+                                } catch {}
+                              }}
+                            >
+                              <Text className="text-sm text-gray-700">{selectedPdfPath ? '已选择PDF ✓' : '选择PDF自动转图'}</Text>
                             </Button>
                           </View>
                           <Text className="block text-xs text-gray-400 mt-2">提示：PDF上传后自动拆分为多张图片展示</Text>

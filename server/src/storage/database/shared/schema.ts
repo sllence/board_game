@@ -117,6 +117,7 @@ export const gameRules = pgTable("game_rules", {
   content: text("content"),
   imageUrls: jsonb("image_urls").default([]),
   sortOrder: integer("sort_order").default(0),
+  status: varchar("status", { length: 16 }).default('active'),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 }, (table) => [
