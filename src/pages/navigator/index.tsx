@@ -1,4 +1,4 @@
-import { View, Text, RichText } from '@tarojs/components'
+import { View, Text, RichText, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
@@ -12,7 +12,8 @@ import { markdownToRichText } from '@/lib/markdown'
 import {
   Play, Plus, X, User, Dices, Timer,
   Hand, Calculator, BookOpen, ChevronRight,
-  Trophy, RotateCcw, Minus, Send, Sparkles, ChessKing, ArrowLeft
+  Trophy, RotateCcw, Minus, Send, Sparkles, ChessKing, ArrowLeft,
+  Camera, Trash2, Image as ImageIcon
 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -51,6 +52,16 @@ interface GameSession {
   user_id: number | null
 }
 
+interface Photo {
+  id: number
+  session_id: number
+  user_id: number
+  file_key: string
+  url: string
+  caption: string | null
+  created_at: string
+}
+
 type Phase = 'setup' | 'playing' | 'finished' | 'viewing'
 
 const TOOL_ITEMS = [
@@ -74,6 +85,11 @@ const NavigatorPage: FC = () => {
   const [scoringStep, setScoringStep] = useState(1)
   const [session, setSession] = useState<GameSession | null>(null)
   const [rulesExpanded, setRulesExpanded] = useState(false)
+  const [photos, setPhotos] = useState<Photo[]>([])
+  const [showPhotoActions, setShowPhotoActions] = useState(false)
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const isMiniApp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT
 
   useEffect(() => {
     if (!checkLogin()) {
@@ -184,6 +200,8 @@ const NavigatorPage: FC = () => {
           // 已结束或已取消的对局，只读查看
           setPhase('viewing')
         }
+        // 加载该对局的照片
+        fetchPhotos(sessionData.id)
       } else {
         Taro.showToast({ title: '获取对局信息失败', icon: 'none' })
       }
@@ -191,6 +209,90 @@ const NavigatorPage: FC = () => {
       console.error('[NavigatorPage] fetchSession error:', err)
       Taro.showToast({ title: '网络请求失败', icon: 'none' })
     }
+  }
+
+  const fetchPhotos = async (sid: number) => {
+    try {
+      const res = await Network.request({ url: `/api/sessions/${sid}/photos` })
+      console.log('[NavigatorPage] fetchPhotos response:', res.data)
+      const list = res.data?.data
+      if (Array.isArray(list)) {
+        setPhotos(list)
+      }
+    } catch (err) {
+      console.error('[NavigatorPage] fetchPhotos error:', err)
+    }
+  }
+
+  const handleTakePhoto = () => {
+    setShowPhotoActions(false)
+    if (!sessionId) return
+    Taro.chooseImage({
+      count: 1,
+      sourceType: ['camera'],
+      success: (res) => uploadPhoto(res.tempFilePaths[0]),
+      fail: (err) => console.error('[NavigatorPage] 拍照失败:', err),
+    })
+  }
+
+  const handlePickFromAlbum = () => {
+    setShowPhotoActions(false)
+    if (!sessionId) return
+    Taro.chooseImage({
+      count: 1,
+      sourceType: ['album'],
+      success: (res) => uploadPhoto(res.tempFilePaths[0]),
+      fail: (err) => console.error('[NavigatorPage] 选图失败:', err),
+    })
+  }
+
+  const uploadPhoto = async (filePath: string) => {
+    if (!sessionId) return
+    setUploading(true)
+    try {
+      const uploadRes = await Network.uploadFile({
+        url: `/api/sessions/${sessionId}/photos/upload`,
+        filePath: filePath,
+        name: 'file',
+      })
+      console.log('[NavigatorPage] upload response:', uploadRes.data)
+      const parsed = JSON.parse(uploadRes.data)
+      const photoData = parsed?.data
+      if (photoData) {
+        setPhotos((prev) => [photoData, ...prev])
+        Taro.showToast({ title: '照片已保存', icon: 'success' })
+      } else {
+        Taro.showToast({ title: '上传失败', icon: 'none' })
+      }
+    } catch (err) {
+      console.error('[NavigatorPage] uploadPhoto error:', err)
+      Taro.showToast({ title: '上传失败，请重试', icon: 'none' })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const deletePhoto = async (photoId: number) => {
+    Taro.showModal({
+      title: '删除照片',
+      content: '确定要删除这张照片吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await Network.request({
+              url: `/api/sessions/${sessionId}/photos/${photoId}`,
+              method: 'DELETE',
+            })
+            setPhotos((prev) => prev.filter((p) => p.id !== photoId))
+            setPreviewPhoto(null)
+            Taro.showToast({ title: '已删除', icon: 'success' })
+          } catch (err) {
+            console.error('[NavigatorPage] deletePhoto error:', err)
+            Taro.showToast({ title: '删除失败', icon: 'none' })
+          }
+        }
+      },
+    })
   }
 
   const addPlayer = () => {
@@ -222,7 +324,10 @@ const NavigatorPage: FC = () => {
       })
       console.log('[NavigatorPage] createSession response:', res.data)
       const id = res.data?.data?.id
-      if (id) setSessionId(id)
+      if (id) {
+        setSessionId(id)
+        fetchPhotos(id)
+      }
       setElapsedSeconds(0)
       setPhase('playing')
       setTimerRunning(true)
@@ -470,6 +575,29 @@ const NavigatorPage: FC = () => {
                   </CardContent>
                 </Card>
               )}
+            </View>
+          )}
+
+          {/* 精彩瞬间 - 照片墙 */}
+          {photos.length > 0 && (
+            <View className="mb-5">
+              <View className="flex flex-row items-center gap-2 mb-3">
+                <View className="w-1 h-4 rounded-full bg-rose-500" />
+                <ImageIcon size={16} color="#f43f5e" />
+                <Text className="block text-sm font-bold text-foreground">精彩瞬间</Text>
+                <Text className="block text-xs text-muted-foreground ml-auto">{photos.length}张</Text>
+              </View>
+              <View className="flex flex-row flex-wrap gap-1.5">
+                {photos.map((photo) => (
+                  <View
+                    key={photo.id}
+                    className="w-[31%] aspect-square rounded-xl overflow-hidden bg-muted cursor-pointer"
+                    onClick={() => setPreviewPhoto(photo.url)}
+                  >
+                    <Image className="w-full h-full" src={photo.url} mode="aspectFill" />
+                  </View>
+                ))}
+              </View>
             </View>
           )}
         </View>
@@ -767,6 +895,51 @@ const NavigatorPage: FC = () => {
             </View>
           )}
         </View>
+
+        {/* 精彩瞬间 - 照片墙 */}
+        <View className="mb-5">
+          <View className="flex flex-row items-center justify-between mb-3">
+            <View className="flex flex-row items-center gap-2">
+              <View className="w-1 h-4 rounded-full bg-rose-500" />
+              <ImageIcon size={16} color="#f43f5e" />
+              <Text className="block text-sm font-bold text-foreground">精彩瞬间</Text>
+            </View>
+            {photos.length > 0 && (
+              <Text className="block text-xs text-muted-foreground">{photos.length}张</Text>
+            )}
+          </View>
+          {photos.length > 0 ? (
+            <View className="flex flex-row flex-wrap gap-1.5">
+              {photos.map((photo) => (
+                <View
+                  key={photo.id}
+                  className="w-[31%] aspect-square rounded-xl overflow-hidden bg-muted cursor-pointer"
+                  onClick={() => setPreviewPhoto(photo.url)}
+                >
+                  <Image
+                    className="w-full h-full"
+                    src={photo.url}
+                    mode="aspectFill"
+                  />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View className="rounded-2xl border-2 border-dashed border-muted p-6 flex flex-col items-center">
+              <Camera size={28} color="#d1d5db" />
+              <Text className="block text-sm text-muted-foreground mt-2">记录桌游的精彩瞬间</Text>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3 rounded-xl"
+                onClick={() => setShowPhotoActions(true)}
+                disabled={uploading}
+              >
+                <Text>{uploading ? '上传中...' : '添加照片'}</Text>
+              </Button>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* 底部操作栏 */}
@@ -790,6 +963,14 @@ const NavigatorPage: FC = () => {
             <RotateCcw size={14} color="#6b7280" />
             <Text>退出</Text>
           </View>
+        </Button>
+        <Button
+          variant="outline"
+          className="rounded-xl h-11 w-11 p-0 flex-shrink-0"
+          onClick={() => setShowPhotoActions(true)}
+          disabled={uploading}
+        >
+          <Camera size={18} color={uploading ? '#d1d5db' : '#8b5cf6'} />
         </Button>
         <Button className="flex-1 rounded-xl h-11" onClick={() => setShowFinishDialog(true)}>
           <View className="flex flex-row items-center gap-1">
@@ -838,7 +1019,66 @@ const NavigatorPage: FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* 已结束提示 */}
+      {/* 照片操作弹出层 */}
+      <Dialog open={showPhotoActions} onOpenChange={setShowPhotoActions}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>添加照片</DialogTitle>
+          </DialogHeader>
+          <View className="flex flex-col gap-3 mt-2">
+            {!isMiniApp && (
+              <View className="rounded-xl bg-amber-50 border border-amber-200 p-3 mb-1">
+                <Text className="block text-xs text-amber-700">
+                  拍照功能在 H5 端有限制，建议使用相册选择
+                </Text>
+              </View>
+            )}
+            <Button className="rounded-xl h-12" onClick={handleTakePhoto}>
+              <View className="flex flex-row items-center gap-2">
+                <Camera size={18} color="#fff" />
+                <Text className="text-white font-medium">拍照</Text>
+              </View>
+            </Button>
+            <Button variant="outline" className="rounded-xl h-12" onClick={handlePickFromAlbum}>
+              <View className="flex flex-row items-center gap-2">
+                <ImageIcon size={18} color="#6b7280" />
+                <Text className="font-medium">从相册选择</Text>
+              </View>
+            </Button>
+            {uploading && (
+              <View className="flex items-center py-2">
+                <Text className="block text-sm text-muted-foreground">正在上传照片...</Text>
+              </View>
+            )}
+          </View>
+        </DialogContent>
+      </Dialog>
+
+      {/* 照片预览 */}
+      <Dialog open={!!previewPhoto} onOpenChange={(open) => { if (!open) setPreviewPhoto(null) }}>
+        <DialogContent className="max-w-[90vw]">
+          <View className="relative flex items-center justify-center">
+            <Image
+              className="w-full rounded-xl"
+              src={previewPhoto || ''}
+              mode="widthFix"
+              style={{ maxHeight: '70vh' }}
+            />
+            <View className="absolute bottom-3 right-3">
+              <View
+                className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
+                style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                onClick={() => {
+                  const photo = photos.find((p) => p.url === previewPhoto)
+                  if (photo) deletePhoto(photo.id)
+                }}
+              >
+                <Trash2 size={18} color="#fff" />
+              </View>
+            </View>
+          </View>
+        </DialogContent>
+      </Dialog>
       {phase === 'finished' && (
         <View className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <Card className="w-72 shadow-xl">
