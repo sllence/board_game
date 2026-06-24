@@ -22,6 +22,7 @@ export default defineAppConfig({
     'pages/finger-picker/index',
     'pages/feedback/index',
     'pages/feedback-admin/index',
+    'pages/poster/index',
   ],
   window: {
     backgroundTextStyle: 'light',

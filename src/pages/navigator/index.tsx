@@ -636,6 +636,18 @@ const NavigatorPage: FC = () => {
               <Text>返回</Text>
             </View>
           </Button>
+          <Button
+            className="flex-1 rounded-xl h-11"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+            onClick={() => {
+              Taro.navigateTo({ url: `/pages/poster/index?sessionId=${session?.id}` })
+            }}
+          >
+            <View className="flex flex-row items-center gap-1">
+              <ImageIcon size={14} color="#fff" />
+              <Text className="text-white">生成海报</Text>
+            </View>
+          </Button>
         </View>
 
         <View className="h-16" />
@@ -1107,6 +1119,16 @@ const NavigatorPage: FC = () => {
               <View className="flex flex-row gap-3 mt-5 w-full">
                 <Button variant="outline" className="flex-1 rounded-xl" onClick={() => Taro.navigateBack()}>
                   <Text>返回</Text>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl"
+                  onClick={() => {
+                    Taro.navigateTo({ url: `/pages/poster/index?sessionId=${sessionId}` })
+                  }}
+                >
+                  <ImageIcon size={16} color="#6366f1" />
+                  <Text className="ml-1">海报</Text>
                 </Button>
                 <Button
                   className="flex-1 rounded-xl"
