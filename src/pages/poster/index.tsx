@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView } from '@tarojs/components'
+import { View, Text, Image, ScrollView, Button as NativeBtn } from '@tarojs/components' // eslint-disable-line no-restricted-syntax
 import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
@@ -117,13 +117,6 @@ const PosterPage: FC = () => {
       ? session.players.map((name) => ({ name, score: 0 }))
       : []
 
-  const handleShare = () => {
-    Taro.showShareMenu({
-      withShareTicket: true,
-    })
-    Taro.showToast({ title: '点击右上角「...」分享海报', icon: 'none', duration: 2000 })
-  }
-
   if (loading) {
     return (
       <View className="flex items-center justify-center h-screen bg-gradient-to-b from-indigo-50 to-purple-50">
@@ -156,15 +149,6 @@ const PosterPage: FC = () => {
   return (
     <View className="h-screen bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50">
       <ScrollView className="h-full" scrollY>
-      {/* 顶部标题栏 */}
-      <View className="flex flex-row items-center justify-between px-4 py-3" style={{ backgroundColor: 'rgba(255,255,255,0.8)' }}>
-        <Text className="block text-sm text-gray-500">对局海报</Text>
-        <Button variant="ghost" size="sm" onClick={handleShare}>
-          <Share2 size={16} color="#6366f1" />
-          <Text className="ml-1 text-indigo-500 text-sm">分享</Text>
-        </Button>
-      </View>
-
       {/* 海报主体 */}
       <View className="px-4 pt-4 pb-12">
         <Card className="shadow-xl overflow-hidden rounded-2xl border-0">
@@ -306,16 +290,24 @@ const PosterPage: FC = () => {
 
         {/* 操作按钮 */}
         <View className="flex flex-col gap-3 mt-6">
+          {/* 分享按钮 - 使用原生Button openType="share" */}
+          <View className="relative w-full rounded-xl" style={{ height: '44px' }}>
+            {/* eslint-disable-next-line no-restricted-syntax */}
+            <NativeBtn openType="share" className="absolute inset-0 w-full h-full opacity-0 z-10" />
+            <View
+              className="absolute inset-0 w-full h-full flex flex-row items-center justify-center gap-2 rounded-xl pointer-events-none"
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+            >
+              <Share2 size={18} color="#fff" />
+              <Text className="text-white font-medium text-sm">分享给好友</Text>
+            </View>
+          </View>
           <Button
-            className="w-full rounded-xl"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-            onClick={handleShare}
+            className="w-full rounded-xl border border-gray-200"
+            style={{ backgroundColor: '#ffffff', color: '#374151' }}
+            onClick={() => Taro.navigateBack()}
           >
-            <Share2 size={18} color="#fff" />
-            <Text className="text-white font-medium ml-2">分享给好友</Text>
-          </Button>
-          <Button variant="outline" className="w-full rounded-xl" onClick={() => Taro.navigateBack()}>
-            <Text>返回对局详情</Text>
+            <Text className="text-gray-700 font-medium">返回对局详情</Text>
           </Button>
         </View>
       </View>
