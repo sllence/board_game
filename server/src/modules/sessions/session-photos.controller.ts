@@ -21,7 +21,7 @@ export class SessionPhotosController {
     @UploadedFile() file: Express.Multer.File,
     @Body('caption') caption?: string,
   ) {
-    const userId = req.user?.id || 1
+    const userId = req.user?.userId || req.user?.id
     const photo = await this.photosService.upload(parseInt(sessionId), userId, file, caption)
     return { code: 200, data: photo }
   }
