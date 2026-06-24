@@ -4,13 +4,15 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Empty } from '@/components/ui/empty'
-import { Clock, History, Trophy, Bookmark } from 'lucide-react-taro'
+import { Clock, History, Trophy, Bookmark, Users } from 'lucide-react-taro'
 import { checkLogin, getCurrentUser } from '@/utils/auth'
+import { TYPE_META } from '@/constants/game'
 import type { FC } from 'react'
 
 interface GameSession {
   id: number
   game_id: number
+  user_id?: number
   session_name: string
   players: string[]
   winner: string
@@ -18,7 +20,8 @@ interface GameSession {
   status: string
   scoring_snapshot: { name: string; score: number }[]
   created_at: string
-  game?: { id: number; name: string } | null
+  game?: { id: number; name: string; type?: string; icon_bg?: string } | null
+  user?: { nickname?: string } | null
   is_favorited?: boolean
 }
 
@@ -27,10 +30,12 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
   finished: { label: '已结束', color: '#059669', bg: '#ecfdf5' },
 }
 
-const STATUS_FILTERS = [
-  { key: '', label: '全部' },
-  { key: 'playing', label: '进行中' },
-  { key: 'finished', label: '已结束' },
+type FilterMode = 'all' | 'created' | 'favorites'
+
+const FILTER_TABS: { key: FilterMode; label: string }[] = [
+  { key: 'all', label: '全部' },
+  { key: 'created', label: '我创建的' },
+  { key: 'favorites', label: '我收藏的' },
 ]
 
 const PAGE_SIZE = 10
@@ -39,7 +44,7 @@ const HistoryPage: FC = () => {
   const [sessions, setSessions] = useState<GameSession[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [statusFilter, setStatusFilter] = useState('')
+  const [filterMode, setFilterMode] = useState<FilterMode>('all')
   const [hasMore, setHasMore] = useState(false)
   const [page, setPage] = useState(1)
 
@@ -61,29 +66,37 @@ const HistoryPage: FC = () => {
       })
       return
     }
-    resetAndFetch(statusFilter)
+    resetAndFetch(filterMode)
   })
 
-  const resetAndFetch = async (status: string) => {
+  const resetAndFetch = async (mode: FilterMode) => {
     setLoading(true)
     setPage(1)
     setSessions([])
-    await fetchSessions(status, 1, true)
+    await fetchSessions(mode, 1, true)
   }
 
-  const fetchSessions = async (status: string, pageNum: number, reset = false) => {
+  const fetchSessions = async (mode: FilterMode, pageNum: number, reset = false) => {
     const currentUser = getCurrentUser()
-    if (!currentUser?.id) {
-      setSessions([])
-      setLoading(false)
-      return
-    }
 
     try {
-      const params = new URLSearchParams({ user_id: String(currentUser.id) })
-      if (status) params.set('status', status)
-      // 后端 findAll 返回最多 50 条，前端做分页切片
-      const res = await Network.request({ url: `/api/sessions?${params}` })
+      let url = '/api/sessions'
+      const params = new URLSearchParams()
+
+      if (mode === 'created') {
+        if (!currentUser?.id) {
+          setSessions([])
+          setLoading(false)
+          return
+        }
+        params.set('user_id', String(currentUser.id))
+      } else if (mode === 'favorites') {
+        url = '/api/sessions/favorites'
+      }
+      // all: 不传 user_id，后端返回全部
+
+      if (params.toString()) url += `?${params}`
+      const res = await Network.request({ url })
       const all: GameSession[] = res.data?.data || []
       const slice = all.slice(0, pageNum * PAGE_SIZE)
       setSessions(slice)
@@ -98,14 +111,14 @@ const HistoryPage: FC = () => {
     }
   }
 
-  const handleFilterChange = (status: string) => {
-    setStatusFilter(status)
-    resetAndFetch(status)
+  const handleFilterChange = (mode: FilterMode) => {
+    setFilterMode(mode)
+    resetAndFetch(mode)
   }
 
   const loadMore = () => {
     setLoadingMore(true)
-    fetchSessions(statusFilter, page + 1)
+    fetchSessions(filterMode, page + 1)
   }
 
   const toggleFavorite = async (session: GameSession, e?: any) => {
@@ -162,18 +175,18 @@ const HistoryPage: FC = () => {
         <Text className="block text-xl font-bold text-white mb-4">对局历史</Text>
         {/* 筛选 tabs */}
         <View className="flex flex-row gap-2">
-          {STATUS_FILTERS.map((f) => (
+          {FILTER_TABS.map((f) => (
             <View
               key={f.key}
               className="rounded-full px-4 py-2 cursor-pointer"
               style={{
-                backgroundColor: statusFilter === f.key ? '#fff' : 'rgba(255,255,255,0.2)',
+                backgroundColor: filterMode === f.key ? '#fff' : 'rgba(255,255,255,0.2)',
               }}
               onClick={() => handleFilterChange(f.key)}
             >
               <Text
                 className="text-xs font-medium"
-                style={{ color: statusFilter === f.key ? '#4F46E5' : '#fff' }}
+                style={{ color: filterMode === f.key ? '#4F46E5' : '#fff' }}
               >
                 {f.label}
               </Text>
@@ -205,9 +218,12 @@ const HistoryPage: FC = () => {
               return (
                 <Card
                   key={session.id}
-                  className="shadow-sm"
+                  className="shadow-sm overflow-hidden"
                   onClick={() => Taro.navigateTo({ url: `/pages/navigator/index?sessionId=${session.id}` })}
                 >
+                  {/* 颜色横条 - 顶部 */}
+                  <View style={{ height: 4, backgroundColor: session.game?.type ? TYPE_META[session.game.type]?.color || '#4F46E5' : '#4F46E5' }} />
+
                   <CardContent className="p-4">
                     {/* 头部 */}
                     <View className="flex flex-row items-center justify-between mb-3">
@@ -227,6 +243,14 @@ const HistoryPage: FC = () => {
                         </View>
                       </View>
                     </View>
+
+                    {/* 创建人 */}
+                    {session.user?.nickname && (
+                      <View className="flex flex-row items-center gap-1 mb-2">
+                        <Users size={12} color="#9ca3af" />
+                        <Text className="text-xs text-gray-400">{session.user.nickname}</Text>
+                      </View>
+                    )}
 
                     {/* 信息行 */}
                     <View className="flex flex-row items-center gap-3 mb-3">

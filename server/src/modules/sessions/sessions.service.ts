@@ -39,7 +39,7 @@ export class SessionsService {
     const client = getSupabaseClient()
     let query = client
       .from('game_sessions')
-      .select('id, game_id, session_name, players, winner, rounds, duration, status, started_at, finished_at, created_at, game:board_games(id, name)')
+      .select('id, game_id, user_id, session_name, players, winner, rounds, duration, status, started_at, finished_at, created_at, game:board_games(id, name, type, icon_bg)')
       .order('created_at', { ascending: false })
       .limit(50)
 
@@ -49,6 +49,19 @@ export class SessionsService {
 
     const { data, error } = await query
     if (error) throw new Error(`查询对局列表失败: ${error.message}`)
+
+    // 批量查询用户昵称
+    let userNicknameMap = new Map<number, string>()
+    const userIds = [...new Set((data || []).map((s: any) => s.user_id).filter(Boolean))]
+    if (userIds.length > 0) {
+      const { data: users } = await client
+        .from('users')
+        .select('id, nickname')
+        .in('id', userIds)
+      if (users) {
+        for (const u of users) userNicknameMap.set(u.id, u.nickname || `用户${u.id}`)
+      }
+    }
 
     // 如果有 user_id，批量查询收藏状态
     let favSet = new Set<number>()
@@ -64,6 +77,7 @@ export class SessionsService {
     const result = (data || []).map((item: any) => ({
       ...item,
       is_favorited: favSet.has(item.id),
+      user: { nickname: userNicknameMap.get(item.user_id) || null },
     }))
 
     return { data: result }
@@ -144,9 +158,22 @@ export class SessionsService {
     const gameIds = favData.map((f: any) => f.game_id)
     const { data: sessions, error: sessionError } = await client
       .from('game_sessions')
-      .select('id, game_id, session_name, players, winner, duration, status, created_at, game:board_games(id, name)')
+      .select('id, game_id, user_id, session_name, players, winner, duration, status, created_at, game:board_games(id, name, type, icon_bg)')
       .in('id', gameIds)
     if (sessionError) throw new Error(`查询收藏对局失败: ${sessionError.message}`)
+
+    // 批量查询用户昵称
+    let favUserNicknameMap = new Map<number, string>()
+    const favUserIds = [...new Set((sessions || []).map((s: any) => s.user_id).filter(Boolean))]
+    if (favUserIds.length > 0) {
+      const { data: users } = await client
+        .from('users')
+        .select('id, nickname')
+        .in('id', favUserIds)
+      if (users) {
+        for (const u of users) favUserNicknameMap.set(u.id, u.nickname || `用户${u.id}`)
+      }
+    }
 
     // 合并数据，按收藏时间排序
     const favMap = new Map(favData.map((f: any) => [f.game_id, f]))
@@ -155,6 +182,7 @@ export class SessionsService {
       favorite_id: favMap.get(s.id)?.id,
       favorited_at: favMap.get(s.id)?.created_at,
       is_favorited: true,
+      user: { nickname: favUserNicknameMap.get(s.user_id) || null },
     }))
     // 按 favorited_at 排序
     result.sort((a: any, b: any) => new Date(b.favorited_at).getTime() - new Date(a.favorited_at).getTime())
