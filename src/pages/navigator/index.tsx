@@ -256,7 +256,7 @@ const NavigatorPage: FC = () => {
         name: 'file',
       })
       console.log('[NavigatorPage] upload response:', uploadRes.data)
-      const parsed = JSON.parse(uploadRes.data)
+      const parsed = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
       const photoData = parsed?.data
       if (photoData) {
         setPhotos((prev) => [photoData, ...prev])

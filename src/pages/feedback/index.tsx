@@ -59,9 +59,10 @@ export default function FeedbackPage() {
               name: 'file',
             })
             if (uploadRes.data) {
-              const data = JSON.parse(uploadRes.data)
-              if (data.success && data.data?.url) {
-                uploadedUrls.push(data.data.url)
+              const data = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
+              const url = data?.data?.url
+              if (url) {
+                uploadedUrls.push(url)
               }
             }
           } catch (err) {
