@@ -230,7 +230,7 @@ const NavigatorPage: FC = () => {
     Taro.chooseImage({
       count: 1,
       sourceType: ['camera'],
-      success: (res) => uploadPhoto(res.tempFilePaths[0]),
+      success: (res) => uploadPhotos(res.tempFilePaths),
       fail: (err) => console.error('[NavigatorPage] 拍照失败:', err),
     })
   }
@@ -239,36 +239,48 @@ const NavigatorPage: FC = () => {
     setShowPhotoActions(false)
     if (!sessionId) return
     Taro.chooseImage({
-      count: 1,
+      count: 9,
       sourceType: ['album'],
-      success: (res) => uploadPhoto(res.tempFilePaths[0]),
+      success: (res) => uploadPhotos(res.tempFilePaths),
       fail: (err) => console.error('[NavigatorPage] 选图失败:', err),
     })
   }
 
-  const uploadPhoto = async (filePath: string) => {
-    if (!sessionId) return
+  const uploadPhotos = async (filePaths: string[]) => {
+    if (!sessionId || filePaths.length === 0) return
     setUploading(true)
-    try {
-      const uploadRes = await Network.uploadFile({
-        url: `/api/sessions/${sessionId}/photos/upload`,
-        filePath: filePath,
-        name: 'file',
-      })
-      console.log('[NavigatorPage] upload response:', uploadRes.data)
-      const parsed = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
-      const photoData = parsed?.data
-      if (photoData) {
-        setPhotos((prev) => [photoData, ...prev])
-        Taro.showToast({ title: '照片已保存', icon: 'success' })
-      } else {
-        Taro.showToast({ title: '上传失败', icon: 'none' })
+    let successCount = 0
+    let failCount = 0
+    for (let i = 0; i < filePaths.length; i++) {
+      try {
+        Taro.showLoading({ title: `正在上传 ${i + 1}/${filePaths.length}`, mask: true })
+        const uploadRes = await Network.uploadFile({
+          url: `/api/sessions/${sessionId}/photos/upload`,
+          filePath: filePaths[i],
+          name: 'file',
+        })
+        console.log('[NavigatorPage] upload response:', uploadRes.data)
+        const parsed = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
+        const photoData = parsed?.data
+        if (photoData) {
+          setPhotos((prev) => [photoData, ...prev])
+          successCount++
+        } else {
+          failCount++
+        }
+      } catch (err) {
+        console.error('[NavigatorPage] uploadPhoto error for file', i, err)
+        failCount++
+      } finally {
+        Taro.hideLoading()
       }
-    } catch (err) {
-      console.error('[NavigatorPage] uploadPhoto error:', err)
+    }
+    setUploading(false)
+    if (successCount > 0) {
+      const msg = failCount > 0 ? `成功${successCount}张，${failCount}张失败` : `成功上传${successCount}张照片`
+      Taro.showToast({ title: msg, icon: failCount > 0 ? 'none' : 'success' })
+    } else {
       Taro.showToast({ title: '上传失败，请重试', icon: 'none' })
-    } finally {
-      setUploading(false)
     }
   }
 
@@ -1042,7 +1054,7 @@ const NavigatorPage: FC = () => {
             <Button variant="outline" className="rounded-xl h-12" onClick={handlePickFromAlbum}>
               <View className="flex flex-row items-center gap-2">
                 <ImageIcon size={18} color="#6b7280" />
-                <Text className="font-medium">从相册选择</Text>
+                <Text className="font-medium">从相册选择（最多9张）</Text>
               </View>
             </Button>
             {uploading && (
