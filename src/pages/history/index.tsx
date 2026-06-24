@@ -45,6 +45,7 @@ const HistoryPage: FC = () => {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
+  const [statusFilter, setStatusFilter] = useState('')
   const [hasMore, setHasMore] = useState(false)
   const [page, setPage] = useState(1)
 
@@ -69,14 +70,14 @@ const HistoryPage: FC = () => {
     resetAndFetch(filterMode)
   })
 
-  const resetAndFetch = async (mode: FilterMode) => {
+  const resetAndFetch = async (mode: FilterMode, status?: string) => {
     setLoading(true)
     setPage(1)
     setSessions([])
-    await fetchSessions(mode, 1, true)
+    await fetchSessions(mode, 1, status, true)
   }
 
-  const fetchSessions = async (mode: FilterMode, pageNum: number, reset = false) => {
+  const fetchSessions = async (mode: FilterMode, pageNum: number, statusFilterValue = statusFilter, reset = false) => {
     const currentUser = getCurrentUser()
 
     try {
@@ -94,6 +95,8 @@ const HistoryPage: FC = () => {
         url = '/api/sessions/favorites'
       }
       // all: 不传 user_id，后端返回全部
+
+      if (statusFilterValue) params.set('status', statusFilterValue)
 
       if (params.toString()) url += `?${params}`
       const res = await Network.request({ url })
@@ -113,12 +116,17 @@ const HistoryPage: FC = () => {
 
   const handleFilterChange = (mode: FilterMode) => {
     setFilterMode(mode)
-    resetAndFetch(mode)
+    resetAndFetch(mode, statusFilter)
+  }
+
+  const handleStatusChange = (status: string) => {
+    setStatusFilter(status)
+    resetAndFetch(filterMode, status)
   }
 
   const loadMore = () => {
     setLoadingMore(true)
-    fetchSessions(filterMode, page + 1)
+    fetchSessions(filterMode, page + 1, statusFilter)
   }
 
   const toggleFavorite = async (session: GameSession, e?: any) => {
@@ -190,6 +198,27 @@ const HistoryPage: FC = () => {
               >
                 {f.label}
               </Text>
+            </View>
+          ))}
+        </View>
+        {/* 状态筛选 */}
+        <View className="flex flex-row gap-2 mt-3">
+          {[
+            { key: '', label: '全部状态' },
+            { key: 'playing', label: '进行中' },
+            { key: 'finished', label: '已结束' },
+          ].map((f) => (
+            <View
+              key={f.key}
+              className="rounded-full px-3 py-1 cursor-pointer"
+              style={{
+                backgroundColor: statusFilter === f.key ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+                borderWidth: 1,
+                borderColor: statusFilter === f.key ? 'rgba(255,255,255,0.5)' : 'transparent',
+              }}
+              onClick={() => handleStatusChange(f.key)}
+            >
+              <Text className="text-xs text-white">{f.label}</Text>
             </View>
           ))}
         </View>
