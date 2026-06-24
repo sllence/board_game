@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Empty } from '@/components/ui/empty'
-import { Clock, History, Trophy, Bookmark, Users } from 'lucide-react-taro'
+import { Clock, History, Trophy, Bookmark, Users, ChevronDown } from 'lucide-react-taro'
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import { TYPE_META } from '@/constants/game'
 import type { FC } from 'react'
@@ -46,6 +46,7 @@ const HistoryPage: FC = () => {
   const [loadingMore, setLoadingMore] = useState(false)
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
   const [statusFilter, setStatusFilter] = useState('')
+  const [activeDropdown, setActiveDropdown] = useState<'owner' | 'status' | null>(null)
   const [hasMore, setHasMore] = useState(false)
   const [page, setPage] = useState(1)
 
@@ -114,16 +115,6 @@ const HistoryPage: FC = () => {
     }
   }
 
-  const handleFilterChange = (mode: FilterMode) => {
-    setFilterMode(mode)
-    resetAndFetch(mode, statusFilter)
-  }
-
-  const handleStatusChange = (status: string) => {
-    setStatusFilter(status)
-    resetAndFetch(filterMode, status)
-  }
-
   const loadMore = () => {
     setLoadingMore(true)
     fetchSessions(filterMode, page + 1, statusFilter)
@@ -181,47 +172,120 @@ const HistoryPage: FC = () => {
           <Text className="text-sm font-medium text-yellow-300">对局</Text>
         </View>
         <Text className="block text-xl font-bold text-white mb-4">对局历史</Text>
-        {/* 筛选 tabs */}
-        <View className="flex flex-row gap-2">
-          {FILTER_TABS.map((f) => (
+        {/* 筛选下拉框 */}
+        <View className="flex flex-row gap-3">
+          {/* 所有权筛选 */}
+          <View className="relative flex-1">
             <View
-              key={f.key}
-              className="rounded-full px-4 py-2 cursor-pointer"
+              className="flex flex-row items-center justify-between rounded-full px-4 py-2 cursor-pointer"
               style={{
-                backgroundColor: filterMode === f.key ? '#fff' : 'rgba(255,255,255,0.2)',
+                backgroundColor: filterMode !== 'all' ? '#fff' : 'rgba(255,255,255,0.2)',
               }}
-              onClick={() => handleFilterChange(f.key)}
+              onClick={() => setActiveDropdown(activeDropdown === 'owner' ? null : 'owner')}
             >
               <Text
                 className="text-xs font-medium"
-                style={{ color: filterMode === f.key ? '#4F46E5' : '#fff' }}
+                style={{ color: filterMode !== 'all' ? '#4F46E5' : '#fff' }}
               >
-                {f.label}
+                {FILTER_TABS.find((f) => f.key === filterMode)?.label || '全部'}
               </Text>
+              <ChevronDown size={12} color={filterMode !== 'all' ? '#4F46E5' : '#fff'} className="ml-1" />
             </View>
-          ))}
-        </View>
-        {/* 状态筛选 */}
-        <View className="flex flex-row gap-2 mt-3">
-          {[
-            { key: '', label: '全部状态' },
-            { key: 'playing', label: '进行中' },
-            { key: 'finished', label: '已结束' },
-          ].map((f) => (
+            {activeDropdown === 'owner' && (
+              <View
+                className="absolute left-0 right-0 top-full mt-2 rounded-xl shadow-lg z-50 overflow-hidden"
+                style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderStyle: 'solid' }}
+              >
+                {FILTER_TABS.map((f) => (
+                  <View
+                    key={f.key}
+                    className="py-2 px-4"
+                    style={{ backgroundColor: filterMode === f.key ? '#eef2ff' : '#fff' }}
+                    onClick={() => {
+                      setFilterMode(f.key)
+                      setActiveDropdown(null)
+                      resetAndFetch(f.key, statusFilter)
+                    }}
+                  >
+                    <Text
+                      className="text-sm"
+                      style={{ color: filterMode === f.key ? '#4F46E5' : '#374151' }}
+                    >
+                      {f.label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* 状态筛选 */}
+          <View className="relative flex-1">
             <View
-              key={f.key}
-              className="rounded-full px-3 py-1 cursor-pointer"
+              className="flex flex-row items-center justify-between rounded-full px-4 py-2 cursor-pointer"
               style={{
-                backgroundColor: statusFilter === f.key ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
-                borderWidth: 1,
-                borderColor: statusFilter === f.key ? 'rgba(255,255,255,0.5)' : 'transparent',
+                backgroundColor: statusFilter ? '#fff' : 'rgba(255,255,255,0.2)',
               }}
-              onClick={() => handleStatusChange(f.key)}
+              onClick={() => setActiveDropdown(activeDropdown === 'status' ? null : 'status')}
             >
-              <Text className="text-xs text-white">{f.label}</Text>
+              <Text
+                className="text-xs font-medium"
+                style={{ color: statusFilter ? '#4F46E5' : '#fff' }}
+              >
+                {statusFilter ? STATUS_MAP[statusFilter]?.label || '已结束' : '全部状态'}
+              </Text>
+              <ChevronDown size={12} color={statusFilter ? '#4F46E5' : '#fff'} className="ml-1" />
             </View>
-          ))}
+            {activeDropdown === 'status' && (
+              <View
+                className="absolute left-0 right-0 top-full mt-2 rounded-xl shadow-lg z-50 overflow-hidden"
+                style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#e5e7eb', borderStyle: 'solid' }}
+              >
+                <View
+                  className="py-2 px-4"
+                  style={{ backgroundColor: statusFilter === '' ? '#eef2ff' : '#fff' }}
+                  onClick={() => {
+                    setStatusFilter('')
+                    setActiveDropdown(null)
+                    resetAndFetch(filterMode, '')
+                  }}
+                >
+                  <Text className="text-sm" style={{ color: statusFilter === '' ? '#4F46E5' : '#374151' }}>
+                    全部状态
+                  </Text>
+                </View>
+                {Object.entries(STATUS_MAP).map(([key, info]) => (
+                  <View
+                    key={key}
+                    className="py-2 px-4"
+                    style={{ backgroundColor: statusFilter === key ? '#eef2ff' : '#fff' }}
+                    onClick={() => {
+                      setStatusFilter(key)
+                      setActiveDropdown(null)
+                      resetAndFetch(filterMode, key)
+                    }}
+                  >
+                    <View className="flex flex-row items-center gap-2">
+                      <View className="w-2 h-2 rounded-full" style={{ backgroundColor: info.color }} />
+                      <Text className="text-sm" style={{ color: statusFilter === key ? '#4F46E5' : '#374151' }}>
+                        {info.label}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
         </View>
+
+        {/* 点击空白关闭下拉 */}
+        {activeDropdown && (
+          <View
+            className="fixed inset-0 z-40"
+            style={{ backgroundColor: 'transparent' }}
+            onClick={() => setActiveDropdown(null)}
+          />
+        )}
       </View>
 
       {/* 列表 */}
