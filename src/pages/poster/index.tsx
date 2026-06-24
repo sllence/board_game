@@ -5,7 +5,7 @@ import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  Trophy, Clock, Share2, Medal, Star, Crown, Camera, User
+  Trophy, Clock, Share2, Medal, Crown, Camera, User
 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -39,7 +39,7 @@ interface SessionData {
   players: string[]
   winner: string | null
   scoring_snapshot: PlayerData[] | null
-  duration_seconds: number | null
+  duration: number | null
   created_at: string
 }
 
@@ -150,11 +150,12 @@ const PosterPage: FC = () => {
 
   const winner = sortedPlayers.length > 0 ? sortedPlayers[0] : null
   const gameName = session.game?.name || session.session_name || '桌游对局'
-  const duration = session.duration_seconds ? formatDuration(session.duration_seconds) : '--'
+  const duration = session.duration ? formatDuration(session.duration) : '--'
   const hasPhotos = photos.length > 0
 
   return (
-    <ScrollView className="h-screen bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50">
+    <View className="h-screen bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50">
+      <ScrollView className="h-full" scrollY>
       {/* 顶部标题栏 */}
       <View className="flex flex-row items-center justify-between px-4 py-3" style={{ backgroundColor: 'rgba(255,255,255,0.8)' }}>
         <Text className="block text-sm text-gray-500">对局海报</Text>
@@ -165,7 +166,7 @@ const PosterPage: FC = () => {
       </View>
 
       {/* 海报主体 */}
-      <View className="px-4 pt-4 pb-8">
+      <View className="px-4 pt-4 pb-12">
         <Card className="shadow-xl overflow-hidden rounded-2xl border-0">
           {/* 头部横幅 */}
           <View
@@ -263,7 +264,6 @@ const PosterPage: FC = () => {
                       {player.score}
                     </Text>
                     <Text className="block text-xs text-gray-400">分</Text>
-                    {index === 0 && <Star size={14} color="#eab308" />}
                   </View>
                 </View>
               ))}
@@ -275,7 +275,16 @@ const PosterPage: FC = () => {
                 <Text className="block text-base font-bold text-gray-800 mb-3">📸 精彩瞬间</Text>
                 <View className="grid grid-cols-3 gap-2 mb-4">
                   {photos.slice(0, 9).map((photo) => (
-                    <View key={photo.id} className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                    <View
+                      key={photo.id}
+                      className="aspect-square rounded-lg overflow-hidden bg-gray-100"
+                      onClick={() => {
+                        Taro.previewImage({
+                          current: photo.url,
+                          urls: photos.map((p) => p.url),
+                        })
+                      }}
+                    >
                       <Image
                         src={photo.url}
                         className="w-full h-full"
@@ -311,6 +320,7 @@ const PosterPage: FC = () => {
         </View>
       </View>
     </ScrollView>
+    </View>
   )
 }
 
