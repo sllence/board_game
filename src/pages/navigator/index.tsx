@@ -47,7 +47,7 @@ interface GameSession {
   players: string[]
   winner: string | null
   scoring_snapshot: Player[] | null
-  duration_seconds: number | null
+  duration: number | null
   created_at: string
   user_id: number | null
 }
@@ -187,8 +187,8 @@ const NavigatorPage: FC = () => {
         } else if (sessionData.players) {
           setPlayers(sessionData.players.map((name: string) => ({ name, score: 0 })))
         }
-        if (sessionData.duration_seconds && sessionData.status !== 'playing') {
-          setElapsedSeconds(sessionData.duration_seconds)
+        if (sessionData.duration && sessionData.status !== 'playing') {
+          setElapsedSeconds(sessionData.duration)
         }
         // 如果是进行中的对局，基于 created_at 计算已过秒数
         if (sessionData.status === 'playing') {
@@ -509,7 +509,7 @@ const NavigatorPage: FC = () => {
                     <View className="flex flex-row items-center justify-between">
                       <Text className="block text-sm text-muted-foreground">时长</Text>
                       <Text className="block text-sm font-semibold text-foreground">
-                        {session.duration_seconds ? formatTime(session.duration_seconds) : '-'}
+                        {session.duration ? formatTime(session.duration) : '-'}
                       </Text>
                     </View>
                     {session.winner && (

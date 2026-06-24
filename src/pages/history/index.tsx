@@ -14,7 +14,7 @@ interface GameSession {
   session_name: string
   players: string[]
   winner: string
-  duration_seconds: number
+  duration: number
   status: string
   scoring_snapshot: { name: string; score: number }[]
   created_at: string
@@ -232,7 +232,7 @@ const HistoryPage: FC = () => {
                     <View className="flex flex-row items-center gap-3 mb-3">
                       <View className="flex flex-row items-center gap-1">
                         <Clock size={12} color="#9ca3af" />
-                        <Text className="text-xs text-gray-400">{formatDuration(session.duration_seconds)}</Text>
+                        <Text className="text-xs text-gray-400">{formatDuration(session.duration)}</Text>
                       </View>
                       <Text className="text-xs text-gray-300">·</Text>
                       <Text className="text-xs text-gray-400">{formatDate(session.created_at)}</Text>
