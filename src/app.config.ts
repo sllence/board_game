@@ -27,7 +27,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#ffffff',
-    navigationBarTitleText: '桌游助手',
+    navigationBarTitleText: '数智局伴',
     navigationBarTextStyle: 'black'
   },
   tabBar: {

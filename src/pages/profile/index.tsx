@@ -254,7 +254,7 @@ const ProfilePage: FC = () => {
           <View className="flex items-center justify-center mb-8 w-20 h-20 rounded-3xl" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             <Text className="text-3xl">🎮</Text>
           </View>
-          <Text className="block text-2xl font-bold text-white text-center mb-2">欢迎来到桌游助手</Text>
+          <Text className="block text-2xl font-bold text-white text-center mb-2">欢迎来到数智局伴</Text>
           <Text className="block text-white text-center opacity-80 mb-8">登录后解锁更多功能</Text>
           <View className="flex flex-col gap-3">
             {isMiniApp ? (

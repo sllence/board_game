@@ -111,6 +111,12 @@ const PosterPage: FC = () => {
     return remainMins > 0 ? `${hours}小时${remainMins}分` : `${hours}小时`
   }
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return ''
+    const d = new Date(dateStr)
+    return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`
+  }
+
   const sortedPlayers: PlayerData[] = session?.scoring_snapshot
     ? [...session.scoring_snapshot].sort((a, b) => b.score - a.score)
     : session?.players
@@ -282,8 +288,8 @@ const PosterPage: FC = () => {
 
             {/* 底部信息 */}
             <View className="flex flex-col items-center pt-4 border-t border-gray-100">
-              <Text className="block text-xs text-gray-400">{session.created_at ? new Date(session.created_at).toLocaleDateString('zh-CN') : ''}</Text>
-              <Text className="block text-xs text-gray-300 mt-1">桌游助手 · 精彩对局记录</Text>
+              <Text className="block text-xs text-gray-400">{formatDate(session.created_at)}</Text>
+              <Text className="block text-xs text-gray-300 mt-1">数智局伴 · 精彩对局记录</Text>
             </View>
           </CardContent>
         </Card>
