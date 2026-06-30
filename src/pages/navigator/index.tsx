@@ -22,7 +22,9 @@ interface BoardGame {
   name: string
   min_players: number
   max_players: number
-  duration: number
+  duration?: number
+  min_duration?: number
+  max_duration?: number
   icon_bg: string
   icon_color: string
   hero_bg: string
@@ -720,7 +722,7 @@ const NavigatorPage: FC = () => {
                     </View>
                     <View className="flex flex-row items-center gap-1">
                       <Timer size={12} color="rgba(255,255,255,0.8)" />
-                      <Text className="text-xs text-white text-opacity-80">{game.duration}分钟</Text>
+                      <Text className="text-xs text-white text-opacity-80">{game.duration ? `${game.duration}分钟` : game.min_duration && game.max_duration ? `${game.min_duration}-${game.max_duration}分钟` : '30-60分钟'}</Text>
                     </View>
                   </View>
                 </View>

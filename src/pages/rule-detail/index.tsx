@@ -5,7 +5,7 @@ import { markdownToRichText } from '@/lib/markdown'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, Clock, Star, BookOpen, Lightbulb, Play, Heart, Volume2, ChevronRight, ChevronDown } from 'lucide-react-taro'
+import { Users, Clock, Star, BookOpen, Lightbulb, Play, ChevronRight, ChevronDown } from 'lucide-react-taro'
 import { requireLogin } from '@/utils/auth'
 import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
@@ -429,16 +429,7 @@ const RuleDetailPage: FC = () => {
           zIndex: 100,
         }}
       >
-        <View className="flex flex-row items-center gap-4">
-          <View className="flex flex-col items-center cursor-pointer" onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}>
-            <Heart size={20} color="#d1d5db" />
-            <Text className="text-xs text-gray-300 mt-1">收藏</Text>
-          </View>
-          <View className="flex flex-col items-center cursor-pointer" onClick={() => Taro.showToast({ title: '功能开发中', icon: 'none' })}>
-            <Volume2 size={20} color="#d1d5db" />
-            <Text className="text-xs text-gray-300 mt-1">朗读</Text>
-          </View>
-        </View>
+        {/* 收藏和朗读功能暂时隐藏 */}
         <View className="flex-1">
           <Button className="w-full rounded-xl" onClick={startSession} style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}>
             <View className="flex flex-row items-center justify-center gap-2">
