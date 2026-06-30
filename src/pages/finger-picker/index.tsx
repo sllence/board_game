@@ -9,15 +9,15 @@ import type { FC } from 'react'
 
 const COLORS = [
   '#ef4444', // 红
-  '#3b82f6', // 蓝（高对比度）
+  '#3b82f6', // 蓝
   '#22c55e', // 绿
   '#f97316', // 橙
   '#a855f7', // 紫
   '#ec4899', // 粉
   '#06b6d4', // 青
-  '#eab308', // 黄
-  '#fbbf24', // 琥珀
-  '#64748b', // 灰
+  '#facc15', // 亮黄
+  '#f97316', // 橙（加深替代琥珀）
+  '#8b5cf6', // 紫罗兰（替换灰）
 ]
 
 type AppState = 'idle' | 'waiting' | 'countdown' | 'animating' | 'result'
@@ -248,20 +248,20 @@ const FingerPickerPage: FC = () => {
       // Single soft glow circle (no gradient, just semi-transparent fill)
       ctx.beginPath()
       ctx.arc(x, y, glowR * 1.5, 0, Math.PI * 2)
-      ctx.fillStyle = color + '18'
+      ctx.fillStyle = color + '35'
       ctx.fill()
 
       // Main ring
       ctx.beginPath()
       ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
       ctx.strokeStyle = color
-      ctx.lineWidth = 2.2
+      ctx.lineWidth = 4
       ctx.stroke()
 
       // Simple core fill
       ctx.beginPath()
       ctx.arc(x, y, glowR * 0.45, 0, Math.PI * 2)
-      ctx.fillStyle = color + '44'
+      ctx.fillStyle = color + '70'
       ctx.fill()
     } else if (state === 'winner') {
       const breath = 1.3 + 0.1 * Math.sin(now / 300)
@@ -270,7 +270,7 @@ const FingerPickerPage: FC = () => {
       // Full glow for winners (additive)
       ctx.globalCompositeOperation = 'lighter'
       const grad1 = ctx.createRadialGradient(x, y, glowR * 0.2, x, y, glowR * 2)
-      grad1.addColorStop(0, color + '30')
+      grad1.addColorStop(0, color + '55')
       grad1.addColorStop(1, color + '00')
       ctx.beginPath()
       ctx.arc(x, y, glowR * 2, 0, Math.PI * 2)
@@ -285,8 +285,8 @@ const FingerPickerPage: FC = () => {
       ctx.setLineDash([6, 14])
       ctx.beginPath()
       ctx.arc(0, 0, glowR * 1.15, 0, Math.PI * 2)
-      ctx.strokeStyle = color + '66'
-      ctx.lineWidth = 1.2
+      ctx.strokeStyle = color + '88'
+      ctx.lineWidth = 2.5
       ctx.stroke()
       ctx.setLineDash([])
       ctx.restore()
@@ -295,13 +295,13 @@ const FingerPickerPage: FC = () => {
       ctx.beginPath()
       ctx.arc(x, y, glowR * 0.85, 0, Math.PI * 2)
       ctx.strokeStyle = color
-      ctx.lineWidth = 3.5
+      ctx.lineWidth = 5
       ctx.stroke()
 
       // Bright core gradient
       const grad3 = ctx.createRadialGradient(x, y, 0, x, y, glowR * 0.5)
-      grad3.addColorStop(0, '#ffffff88')
-      grad3.addColorStop(0.4, color + '99')
+      grad3.addColorStop(0, '#ffffffcc')
+      grad3.addColorStop(0.4, color + 'cc')
       grad3.addColorStop(1, color + '00')
       ctx.beginPath()
       ctx.arc(x, y, glowR * 0.5, 0, Math.PI * 2)
@@ -670,14 +670,14 @@ const FingerPickerPage: FC = () => {
           const t = (nowMs - sw.startTime) / sw.duration
           if (t >= 1) return false
           const r = sw.maxR * t
-          const alpha = 0.55 * (1 - t)
+          const alpha = 0.75 * (1 - t)
           ctx.save()
           ctx.globalCompositeOperation = 'lighter'
           ctx.globalAlpha = alpha
           ctx.beginPath()
           ctx.arc(sw.x, sw.y, r, 0, Math.PI * 2)
           ctx.strokeStyle = sw.color
-          ctx.lineWidth = 2.5 * (1 - t) + 0.5
+          ctx.lineWidth = 4 * (1 - t) + 1
           ctx.stroke()
           ctx.restore()
           return true
@@ -690,7 +690,7 @@ const FingerPickerPage: FC = () => {
           if (wave.alpha <= 0) return
           ctx.save()
           ctx.globalCompositeOperation = 'lighter'
-          ctx.globalAlpha = wave.alpha * 0.45
+          ctx.globalAlpha = wave.alpha * 0.65
           ctx.beginPath()
           ctx.arc(W / 2, H / 2, wave.r, 0, Math.PI * 2)
           ctx.strokeStyle = wave.color
