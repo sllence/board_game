@@ -1,10 +1,9 @@
 import { useShareAppMessage } from '@tarojs/taro'
 
-export function useShare(moduleName?: string) {
+export function useShare(title?: string) {
   useShareAppMessage(() => {
     return {
-      title: moduleName ? `数智局伴-${moduleName}` : '数智局伴',
-      path: '/pages/index/index',
+      title: title || '数智局伴',
     }
   })
 }

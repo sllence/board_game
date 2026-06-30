@@ -69,7 +69,7 @@ const PosterPage: FC = () => {
   // 配置分享
   useShareAppMessage(() => {
     return {
-      title: `数智局伴-${session?.game?.name || '桌游'} 对局精彩回顾`,
+      title: `${session?.game?.name || '桌游'} 对局精彩回顾`,
       path: `/pages/poster/index?sessionId=${session?.id}`,
     }
   })
