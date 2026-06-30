@@ -1,34 +1,34 @@
-# 手指选人页面视觉增强计划
+# 手指选人分享转发功能修复计划
 
 ## 概述
 
-针对 finger-picker（手指选人）页面的触控点特效颜色过浅、被选中后背景不够明显的问题，调整 Canvas 绘制的颜色透明度、线条粗细、辉光强度等视觉参数，使触摸点更容易看清，选中状态更加醒目。
+排查并修复"数智局伴"微信小程序中手指选人页面分享转发按钮灰色不可用的问题。
+
+## 问题根因
+
+**`useShareAppMessage` hook 在 Taro 4.x Vite 编译模式下未正确注册到微信小程序页面生命周期。**
+
+排查证据：
+1. 编译产物 `dist/pages/finger-picker/index.json` 中**缺少 `enableShareAppMessage: true`** 配置项
+2. 编译产物 `dist/pages/finger-picker/index.js` 中 Taro 运行时调用 `t.taroExports.useShareAppMessage(...)`，但 `createPageConfig` 未将其正确转换为 `onShareAppMessage` 生命周期
+3. 对比微信其他页面（dice、index 等）的编译 JSON，同样缺失 `enableShareAppMessage`，但用户反馈仅 finger-picker 异常
 
 ## 技术方案
 
 | 维度 | 选择 | 理由 |
 |------|------|------|
-| 修改范围 | 仅修改 `src/pages/finger-picker/index.tsx` 中的 Canvas 绘制参数 | 所有绘制逻辑集中在 `drawTouchPoint` 函数和渲染循环中 |
-| 颜色加深 | 提高 color 透明度后缀（如 `'18'`→`'40'`，`'44'`→`'70'`） | 透明度太低是看不清的主因 |
-| 线条加粗 | 增大 `lineWidth` 值（如 `2.2`→`4`，`3.5`→`5`） | 加粗后更醒目 |
-| 选中背景 | winner 状态增加更明显的背景填充渐变 | 区分选中/未选中 |
+| 修复方式 | 页面配置 + 分享按钮双重保障 | 1. 加 `enableShareAppMessage` 激活右上角菜单分享；2. 加 `open-type="share"` 按钮提供直接入口 |
+| 兼容范围 | 微信小程序 + 抖音小程序 | 确保跨平台分享可用 |
 
-## 是否有原型设计
+## 修复步骤
 
-否
+1. **修改 `index.config.ts`** — 添加 `enableShareAppMessage: true` 配置，让微信小程序明确开启页面的转发功能
+2. **在页面添加分享按钮** — 在右上角设置按钮旁边添加一个 `open-type="share"` 的分享按钮，用户可直接点击分享
+3. **编译验证** — 重新编译并检查 JSON 配置是否正确包含分享相关字段
 
 ## 实施步骤
 
-1. **加深 Active 状态触摸点视觉** — 提高辉光圈透明度（`'18'`→`'40'`）、核心填充透明度（`'44'`→`'70'`）、加粗主环线宽（`2.2`→`4`）  
-   涉及文件：`src/pages/finger-picker/index.tsx`（`drawTouchPoint` 函数）
-
-2. **增强 Winner 选中状态视觉** — 加深全辉光渐变起点透明度（`'30'`→`'55'`）、加粗虚线环线宽（`1.2`→`2.5`）、加粗主环线宽（`3.5`→`5`）、增强核心渐变不透明度（`'99'`→`'cc'`）  
-   涉及文件：`src/pages/finger-picker/index.tsx`（`drawTouchPoint` 函数）
-
-3. **增强冲击波与波纹特效可见度** — 提高 shockwave 环透明度（`0.55`→`0.75`）、加粗线宽（`2.5`→`4`）、提高 ripple 波透明度（`0.45`→`0.65`）  
-   涉及文件：`src/pages/finger-picker/index.tsx`（渲染循环中的 shockwave/ripple 绘制）
-
-4. **调整颜色数组以提升对比度** — 将过浅的颜色（`#eab308` 黄、`#fbbf24` 琥珀、`#64748b` 灰）替换为更鲜艳的变体  
-   涉及文件：`src/pages/finger-picker/index.tsx`（`COLORS` 常量）
-
-5. **执行 `pnpm validate` 校验** — 确保修改无类型/语法错误
+1. 修改页面配置 `src/pages/finger-picker/index.config.ts`，添加 `enableShareAppMessage: true`
+2. 修改页面代码 `src/pages/finger-picker/index.tsx`，在右上角添加分享按钮
+3. 执行 `pnpm validate` 类型检查
+4. 执行 `pnpm build:weapp` 编译验证
