@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Users, Clock, Star, BookOpen, Lightbulb, Play, ChevronRight, ChevronDown } from 'lucide-react-taro'
 import { requireLogin } from '@/utils/auth'
+import { useShare } from '@/hooks/useShare'
 import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
 
@@ -122,6 +123,7 @@ const ImageCarousel: FC<{
 }
 
 const RuleDetailPage: FC = () => {
+  useShare()
   const [game, setGame] = useState<BoardGameDetail | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const [rules, setRules] = useState<GameRule[]>([])

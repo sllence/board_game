@@ -1,3 +1,3 @@
 export default typeof definePageConfig === 'function'
-  ? definePageConfig({ navigationBarTitleText: '骰子' })
-  : { navigationBarTitleText: '骰子' }
+  ? definePageConfig({ navigationBarTitleText: '骰子', enableShareAppMessage: true })
+  : { navigationBarTitleText: '骰子', enableShareAppMessage: true }

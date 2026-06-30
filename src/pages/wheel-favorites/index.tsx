@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { useShare } from '@/hooks/useShare'
 import { Bookmark, Trash2, Trophy, Timer } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -65,6 +66,7 @@ const formatDate = (dateStr: string): string => {
 }
 
 const FavoritesPage: FC = () => {
+  useShare()
   const [activeTab, setActiveTab] = useState('sessions')
   const [sessions, setSessions] = useState<Session[]>([])
   const [wheels, setWheels] = useState<Wheel[]>([])

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { useShare } from '@/hooks/useShare'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Layers, Plus, X, Shuffle, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
@@ -36,6 +37,7 @@ const STANDARD_DECK: CardItem[] = SUITS.flatMap((suit) =>
 type DeckMode = 'standard' | 'custom'
 
 const CardsPage: FC = () => {
+  useShare()
   const [mode, setMode] = useState<DeckMode>('standard')
   const [deck, setDeck] = useState<CardItem[]>([...STANDARD_DECK])
   const [drawn, setDrawn] = useState<CardItem[]>([])

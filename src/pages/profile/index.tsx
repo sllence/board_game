@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useShare } from '@/hooks/useShare'
 import { apiPost } from '@/utils/request'
 import { uploadAvatar, saveProfile } from '@/utils/profile'
 import type { FC } from 'react'
@@ -18,6 +19,7 @@ interface UserInfo {
 }
 
 const ProfilePage: FC = () => {
+  useShare()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null)

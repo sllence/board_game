@@ -2,6 +2,7 @@ import { View, Text, Canvas } from '@tarojs/components'
 import Taro, { useReady } from '@tarojs/taro'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Settings } from 'lucide-react-taro'
+import { useShare } from '@/hooks/useShare'
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from '@/components/ui/sheet'
@@ -62,6 +63,7 @@ const COUNTDOWN_DURATION = 1500
 const AMBIENT_COUNT = 25
 
 const FingerPickerPage: FC = () => {
+  useShare()
   const [, setAppStateDisplay] = useState<AppState>('idle')
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [settingsOpen, setSettingsOpen] = useState(false)

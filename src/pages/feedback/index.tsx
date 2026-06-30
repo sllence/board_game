@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { useShare } from '@/hooks/useShare'
 import { ArrowLeft, MessageSquare, Trophy, Wrench, Lightbulb, Upload, X, Check } from 'lucide-react-taro'
 import { Network } from '@/network'
 
@@ -28,6 +29,7 @@ const typeMap: Record<string, string> = {
 }
 
 export default function FeedbackPage() {
+  useShare()
   const [selectedType, setSelectedType] = useState<string>('bug')
   const [content, setContent] = useState('')
   const [uploadedImages, setUploadedImages] = useState<string[]>([])

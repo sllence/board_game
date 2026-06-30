@@ -2,6 +2,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
+import { useShare } from '@/hooks/useShare'
 import { Clock, Target } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -12,6 +13,7 @@ interface HistoryItem {
 }
 
 const WheelHistoryPage: FC = () => {
+  useShare()
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [title, setTitle] = useState('')
   const [loading, setLoading] = useState(false)

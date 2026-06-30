@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useShare } from '@/hooks/useShare'
 import { ArrowLeft, MessageSquare, Trophy, Wrench, Lightbulb } from 'lucide-react-taro'
 import { Network } from '@/network'
 
@@ -35,6 +36,7 @@ const feedbackTabs = [
 ]
 
 export default function FeedbackAdminPage() {
+  useShare()
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')

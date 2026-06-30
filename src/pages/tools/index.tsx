@@ -2,6 +2,7 @@ import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { Dices, Timer, Layers, Shuffle, Calculator, Hand } from 'lucide-react-taro'
 import { WheelIcon } from '@/components/wheel-icon'
+import { useShare } from '@/hooks/useShare'
 import type { FC, ReactNode } from 'react'
 
 interface ToolItem {
@@ -114,6 +115,7 @@ const TOOL_GROUPS: ToolGroup[] = [
 ]
 
 const ToolsPage: FC = () => {
+  useShare()
   const handleToolClick = (tool: ToolItem) => {
     if (tool.soon) {
       Taro.showToast({ title: '功能开发中', icon: 'none' })

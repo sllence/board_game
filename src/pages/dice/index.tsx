@@ -2,6 +2,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { useShare } from '@/hooks/useShare'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
 import { Switch } from '@/components/ui/switch'
 import { Dices, ArrowLeft, Settings, X, Plus, Minus, Volume2, MousePointerClick, Smartphone } from 'lucide-react-taro'
@@ -22,6 +23,7 @@ const DICE_TYPES = [
 type RollMode = 'tap' | 'shake'
 
 const DicePage: FC = () => {
+  useShare()
   const [selectedDice, setSelectedDice] = useState(DICE_TYPES[1])
   const [selectedColor, setSelectedColor] = useState<DiceColor>(DICE_COLORS[0])
   const [selectedTheme, setSelectedTheme] = useState<DiceTheme>(DICE_THEMES[0])

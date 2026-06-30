@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useShare } from '@/hooks/useShare'
 import { Search, RotateCcw } from 'lucide-react-taro'
 import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
 import type { FC } from 'react'
@@ -73,6 +74,7 @@ type FilterKey = keyof typeof FILTER_OPTIONS
 const PAGE_SIZE = 10
 
 const GamesPage: FC = () => {
+  useShare()
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)

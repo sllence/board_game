@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
+import { useShare } from '@/hooks/useShare'
 import { Lightbulb, BookOpen } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -23,6 +24,7 @@ interface GuideDetail {
 }
 
 const GuideDetailPage: FC = () => {
+  useShare()
   const [guide, setGuide] = useState<GuideDetail | null>(null)
   const [loading, setLoading] = useState(true)
 

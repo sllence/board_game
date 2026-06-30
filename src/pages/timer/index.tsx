@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useShare } from '@/hooks/useShare'
 import { Timer, Play, Pause, RotateCcw, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -18,6 +19,7 @@ const PRESETS = [
 type TimerMode = 'countdown' | 'stopwatch'
 
 const TimerPage: FC = () => {
+  useShare()
   const [mode, setMode] = useState<TimerMode>('countdown')
   const [totalSeconds, setTotalSeconds] = useState(60)
   const [remaining, setRemaining] = useState(60)

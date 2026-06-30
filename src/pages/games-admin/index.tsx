@@ -2,6 +2,7 @@ import { View, Text, ScrollView, Image } from '@tarojs/components'
 import { useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
+import { useShare } from '@/hooks/useShare'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -92,6 +93,7 @@ const STATUS_FILTER_OPTIONS = [
 ]
 
 const GamesAdminPage: FC = () => {
+  useShare()
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)

@@ -5,6 +5,7 @@ import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Plus, Trash2, Save } from 'lucide-react-taro'
+import { useShare } from '@/hooks/useShare'
 import type { FC } from 'react'
 
 const WHEEL_COLORS = [
@@ -28,6 +29,7 @@ interface InvWheelItem {
 type WheelItem = ProbWheelItem | InvWheelItem
 
 const WheelEditPage: FC = () => {
+  useShare()
   const [wheelId, setWheelId] = useState<number | null>(null)
   const [title, setTitle] = useState('')
   const [type, setType] = useState<'probability' | 'inventory'>('probability')

@@ -5,6 +5,7 @@ import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useShare } from '@/hooks/useShare'
 import { Empty } from '@/components/ui/empty'
 import { Dices, Calculator, ArrowRight, Sparkles, History, Hand, Timer } from 'lucide-react-taro'
 import { WheelIcon } from '@/components/wheel-icon'
@@ -50,6 +51,7 @@ const QUICK_TOOLS = [
 ]
 
 const IndexPage: FC = () => {
+  useShare()
   const [hotGames, setHotGames] = useState<BoardGame[]>([])
   const [recentSessions, setRecentSessions] = useState<GameSession[]>([])
   const [loading, setLoading] = useState(false)

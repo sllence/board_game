@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { useShare } from '@/hooks/useShare'
 import { Calculator, Plus, Minus, User, RotateCcw, X, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -19,6 +20,7 @@ const RANK_STYLES = [
 ]
 
 const ScorerPage: FC = () => {
+  useShare()
   const [players, setPlayers] = useState<Player[]>([
     { name: '玩家1', score: 0 },
     { name: '玩家2', score: 0 },

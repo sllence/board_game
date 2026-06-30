@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
 import { Empty } from '@/components/ui/empty'
+import { useShare } from '@/hooks/useShare'
 import { Clock, History, Trophy, Bookmark, Users, ChevronDown } from 'lucide-react-taro'
 import { checkLogin, getCurrentUser } from '@/utils/auth'
 import { TYPE_META } from '@/constants/game'
@@ -42,6 +43,7 @@ const FILTER_TABS: { key: FilterMode; label: string }[] = [
 const PAGE_SIZE = 10
 
 const HistoryPage: FC = () => {
+  useShare()
   const [sessions, setSessions] = useState<GameSession[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)

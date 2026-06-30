@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useShare } from '@/hooks/useShare'
 import { Settings, Trash2, Bookmark, Target } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -32,6 +33,7 @@ interface Wheel {
 }
 
 const WheelManagePage: FC = () => {
+  useShare()
   const [wheels, setWheels] = useState<Wheel[]>([])
   const [loading, setLoading] = useState(false)
 
