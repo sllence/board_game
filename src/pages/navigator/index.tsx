@@ -1,5 +1,5 @@
 import { View, Text, RichText, Image } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
@@ -89,7 +89,56 @@ const NavigatorPage: FC = () => {
   const [showPhotoActions, setShowPhotoActions] = useState(false)
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [isFavorited, setIsFavorited] = useState(false)
   const isMiniApp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT
+
+  // 切换收藏
+  const toggleFavorite = async () => {
+    if (!sessionId || !session) return
+    if (!checkLogin()) {
+      Taro.showModal({
+        title: '需要登录',
+        content: '请先登录后收藏对局',
+        confirmText: '去登录',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            Taro.setStorageSync('pendingFavoriteSessionId', sessionId)
+            Taro.switchTab({ url: '/pages/profile/index' })
+          }
+        },
+      })
+      return
+    }
+    try {
+      if (isFavorited) {
+        await Network.request({ url: `/api/sessions/${sessionId}/favorite`, method: 'DELETE' })
+        setIsFavorited(false)
+        Taro.showToast({ title: '已取消收藏', icon: 'none' })
+      } else {
+        await Network.request({ url: `/api/sessions/${sessionId}/favorite`, method: 'POST' })
+        setIsFavorited(true)
+        Taro.showToast({ title: '已收藏', icon: 'success' })
+      }
+    } catch (e) {
+      console.error('[Navigator] toggleFavorite error:', e)
+      Taro.showToast({ title: '操作失败', icon: 'none' })
+    }
+  }
+
+  // 分享配置
+  useShareAppMessage(() => ({
+    title: session?.session_name || game?.name || '精彩对局',
+    path: `/pages/navigator/index?sessionId=${session?.id}`,
+  }))
+
+  const pendingFavoriteSessionId = Taro.getStorageSync('pendingFavoriteSessionId')
+  if (pendingFavoriteSessionId && checkLogin()) {
+    Taro.removeStorageSync('pendingFavoriteSessionId')
+    if (pendingFavoriteSessionId == sessionId && !isFavorited) {
+      toggleFavorite()
+    }
+  }
 
   useEffect(() => {
     if (!checkLogin()) {

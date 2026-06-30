@@ -18,18 +18,20 @@ export class SessionsController {
   }
 
   @Get()
-  async findAll(@Req() req: Request, @Query() query: {
+  @Public()
+  async findAll(@Query() query: {
+    user_id?: string
     game_id?: string
     status?: string
   }) {
-    const userId = (req as any).user?.userId
-    return this.sessionsService.findAll({ ...query, user_id: userId?.toString() })
+    // 如果没传 user_id，不限制用户（显示全部）
+    return this.sessionsService.findAll(query)
   }
 
   @Get('recent')
-  async findRecent(@Req() req: Request) {
-    const userId = (req as any).user?.userId
-    return this.sessionsService.findRecent(userId)
+  @Public()
+  async findRecent(@Query('user_id') userId?: string) {
+    return this.sessionsService.findRecent(userId ? Number(userId) : undefined)
   }
 
   @Get('favorites')

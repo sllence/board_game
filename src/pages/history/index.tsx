@@ -51,6 +51,7 @@ const HistoryPage: FC = () => {
   const [page, setPage] = useState(1)
 
   useDidShow(() => {
+    console.log('[HistoryPage] useDidShow fired')
     if (!checkLogin()) {
       Taro.showModal({
         title: '需要登录',
@@ -94,14 +95,21 @@ const HistoryPage: FC = () => {
         params.set('user_id', String(currentUser.id))
       } else if (mode === 'favorites') {
         url = '/api/sessions/favorites'
+      } else {
+        // 'all': 传当前用户 id，后端只返回该用户的
+        if (currentUser?.id) {
+          params.set('user_id', String(currentUser.id))
+        }
       }
-      // all: 不传 user_id，后端返回全部
 
       if (statusFilterValue) params.set('status', statusFilterValue)
 
       if (params.toString()) url += `?${params}`
+      console.log('[HistoryPage] fetchSessions url:', url, 'mode:', mode)
       const res = await Network.request({ url })
+      console.log('[HistoryPage] fetchSessions response:', JSON.stringify(res.data?.data?.length !== undefined ? { count: res.data.data.length, first: res.data.data[0] } : res.data).slice(0, 500))
       const all: GameSession[] = res.data?.data || []
+      console.log('[HistoryPage] all sessions count:', all.length)
       const slice = all.slice(0, pageNum * PAGE_SIZE)
       setSessions(slice)
       setHasMore(all.length > pageNum * PAGE_SIZE)
