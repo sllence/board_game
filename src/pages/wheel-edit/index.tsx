@@ -29,7 +29,7 @@ interface InvWheelItem {
 type WheelItem = ProbWheelItem | InvWheelItem
 
 const WheelEditPage: FC = () => {
-  useShare()
+  useShare('编辑转盘')
   const [wheelId, setWheelId] = useState<number | null>(null)
   const [title, setTitle] = useState('')
   const [type, setType] = useState<'probability' | 'inventory'>('probability')

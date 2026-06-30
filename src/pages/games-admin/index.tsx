@@ -93,7 +93,7 @@ const STATUS_FILTER_OPTIONS = [
 ]
 
 const GamesAdminPage: FC = () => {
-  useShare()
+  useShare('桌游管理')
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)

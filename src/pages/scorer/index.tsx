@@ -20,7 +20,7 @@ const RANK_STYLES = [
 ]
 
 const ScorerPage: FC = () => {
-  useShare()
+  useShare('计分器')
   const [players, setPlayers] = useState<Player[]>([
     { name: '玩家1', score: 0 },
     { name: '玩家2', score: 0 },

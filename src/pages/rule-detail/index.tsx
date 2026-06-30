@@ -123,7 +123,7 @@ const ImageCarousel: FC<{
 }
 
 const RuleDetailPage: FC = () => {
-  useShare()
+  useShare('规则详情')
   const [game, setGame] = useState<BoardGameDetail | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const [rules, setRules] = useState<GameRule[]>([])

@@ -33,7 +33,7 @@ interface Wheel {
 }
 
 const WheelManagePage: FC = () => {
-  useShare()
+  useShare('我的转盘')
   const [wheels, setWheels] = useState<Wheel[]>([])
   const [loading, setLoading] = useState(false)
 

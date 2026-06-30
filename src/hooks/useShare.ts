@@ -1,20 +1,10 @@
 import { useShareAppMessage } from '@tarojs/taro'
 
-interface ShareConfig {
-  title?: string
-  path?: string
-  imageUrl?: string
-}
-
-export function useShare(config?: ShareConfig | (() => ShareConfig)) {
+export function useShare(moduleName?: string) {
   useShareAppMessage(() => {
-    if (typeof config === 'function') {
-      return config()
-    }
     return {
-      title: config?.title || '数智局伴',
-      path: config?.path || '/pages/index/index',
-      ...(config?.imageUrl ? { imageUrl: config.imageUrl } : {}),
+      title: moduleName ? `数智局伴-${moduleName}` : '数智局伴',
+      path: '/pages/index/index',
     }
   })
 }

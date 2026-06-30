@@ -9,7 +9,7 @@ import { Shuffle, Plus, X, User, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 const RandomPage: FC = () => {
-  useShare()
+  useShare('随机选人')
   const [names, setNames] = useState<string[]>(['玩家1', '玩家2', '玩家3', '玩家4'])
   const [newName, setNewName] = useState('')
   const [result, setResult] = useState<string | null>(null)

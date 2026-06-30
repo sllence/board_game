@@ -151,12 +151,12 @@ const WheelSpinPage: FC = () => {
   useShareAppMessage(() => {
     if (!wheel) {
       return {
-        title: '来玩转盘吧！',
+        title: '数智局伴-来玩转盘吧！',
         path: `/pages/wheel-spin/index?id=0`,
       }
     }
     return {
-      title: `来玩「${wheel.title}」转盘吧！`,
+      title: `数智局伴-来玩「${wheel.title}」转盘吧！`,
       path: `/pages/wheel-spin/index?id=${wheel.id}`,
     }
   })

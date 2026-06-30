@@ -19,7 +19,7 @@ const PRESETS = [
 type TimerMode = 'countdown' | 'stopwatch'
 
 const TimerPage: FC = () => {
-  useShare()
+  useShare('计时器')
   const [mode, setMode] = useState<TimerMode>('countdown')
   const [totalSeconds, setTotalSeconds] = useState(60)
   const [remaining, setRemaining] = useState(60)

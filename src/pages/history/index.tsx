@@ -43,7 +43,7 @@ const FILTER_TABS: { key: FilterMode; label: string }[] = [
 const PAGE_SIZE = 10
 
 const HistoryPage: FC = () => {
-  useShare()
+  useShare('对局历史')
   const [sessions, setSessions] = useState<GameSession[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)

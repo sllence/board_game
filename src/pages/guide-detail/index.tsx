@@ -24,7 +24,7 @@ interface GuideDetail {
 }
 
 const GuideDetailPage: FC = () => {
-  useShare()
+  useShare('攻略详情')
   const [guide, setGuide] = useState<GuideDetail | null>(null)
   const [loading, setLoading] = useState(true)
 

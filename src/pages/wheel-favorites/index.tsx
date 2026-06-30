@@ -66,7 +66,7 @@ const formatDate = (dateStr: string): string => {
 }
 
 const FavoritesPage: FC = () => {
-  useShare()
+  useShare('我的收藏')
   const [activeTab, setActiveTab] = useState('sessions')
   const [sessions, setSessions] = useState<Session[]>([])
   const [wheels, setWheels] = useState<Wheel[]>([])

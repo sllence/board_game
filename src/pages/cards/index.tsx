@@ -37,7 +37,7 @@ const STANDARD_DECK: CardItem[] = SUITS.flatMap((suit) =>
 type DeckMode = 'standard' | 'custom'
 
 const CardsPage: FC = () => {
-  useShare()
+  useShare('抽牌')
   const [mode, setMode] = useState<DeckMode>('standard')
   const [deck, setDeck] = useState<CardItem[]>([...STANDARD_DECK])
   const [drawn, setDrawn] = useState<CardItem[]>([])

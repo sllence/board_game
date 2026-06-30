@@ -19,7 +19,7 @@ interface UserInfo {
 }
 
 const ProfilePage: FC = () => {
-  useShare()
+  useShare('我的')
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null)

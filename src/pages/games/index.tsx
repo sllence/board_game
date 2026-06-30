@@ -74,7 +74,7 @@ type FilterKey = keyof typeof FILTER_OPTIONS
 const PAGE_SIZE = 10
 
 const GamesPage: FC = () => {
-  useShare()
+  useShare('桌游馆')
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)

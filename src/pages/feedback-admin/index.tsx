@@ -36,7 +36,7 @@ const feedbackTabs = [
 ]
 
 export default function FeedbackAdminPage() {
-  useShare()
+  useShare('反馈管理')
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')

@@ -13,7 +13,7 @@ interface HistoryItem {
 }
 
 const WheelHistoryPage: FC = () => {
-  useShare()
+  useShare('转盘历史')
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [title, setTitle] = useState('')
   const [loading, setLoading] = useState(false)

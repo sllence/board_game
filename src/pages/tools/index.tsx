@@ -115,7 +115,7 @@ const TOOL_GROUPS: ToolGroup[] = [
 ]
 
 const ToolsPage: FC = () => {
-  useShare()
+  useShare('工具箱')
   const handleToolClick = (tool: ToolItem) => {
     if (tool.soon) {
       Taro.showToast({ title: '功能开发中', icon: 'none' })

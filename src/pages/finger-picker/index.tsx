@@ -63,7 +63,7 @@ const COUNTDOWN_DURATION = 1500
 const AMBIENT_COUNT = 25
 
 const FingerPickerPage: FC = () => {
-  useShare()
+  useShare('手指选人')
   const [, setAppStateDisplay] = useState<AppState>('idle')
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [settingsOpen, setSettingsOpen] = useState(false)

@@ -51,7 +51,7 @@ const QUICK_TOOLS = [
 ]
 
 const IndexPage: FC = () => {
-  useShare()
+  useShare('首页')
   const [hotGames, setHotGames] = useState<BoardGame[]>([])
   const [recentSessions, setRecentSessions] = useState<GameSession[]>([])
   const [loading, setLoading] = useState(false)

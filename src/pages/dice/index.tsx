@@ -23,7 +23,7 @@ const DICE_TYPES = [
 type RollMode = 'tap' | 'shake'
 
 const DicePage: FC = () => {
-  useShare()
+  useShare('骰子')
   const [selectedDice, setSelectedDice] = useState(DICE_TYPES[1])
   const [selectedColor, setSelectedColor] = useState<DiceColor>(DICE_COLORS[0])
   const [selectedTheme, setSelectedTheme] = useState<DiceTheme>(DICE_THEMES[0])

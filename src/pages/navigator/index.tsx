@@ -207,7 +207,7 @@ const NavigatorPage: FC = () => {
 
   // 分享配置
   useShareAppMessage(() => ({
-    title: session?.session_name || game?.name || '精彩对局',
+    title: `数智局伴-${session?.session_name || game?.name || '精彩对局'}`,
     path: `/pages/navigator/index?sessionId=${session?.id}`,
   }))
 

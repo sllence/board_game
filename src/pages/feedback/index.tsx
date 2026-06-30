@@ -29,7 +29,7 @@ const typeMap: Record<string, string> = {
 }
 
 export default function FeedbackPage() {
-  useShare()
+  useShare('问题反馈')
   const [selectedType, setSelectedType] = useState<string>('bug')
   const [content, setContent] = useState('')
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
