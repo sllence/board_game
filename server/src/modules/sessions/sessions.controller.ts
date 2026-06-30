@@ -23,6 +23,8 @@ export class SessionsController {
     user_id?: string
     game_id?: string
     status?: string
+    page?: string
+    page_size?: string
   }) {
     // 如果没传 user_id，不限制用户（显示全部）
     return this.sessionsService.findAll(query)
@@ -35,12 +37,12 @@ export class SessionsController {
   }
 
   @Get('favorites')
-  async getFavorites(@Req() req: Request) {
+  async getFavorites(@Req() req: Request, @Query('page') page?: string, @Query('page_size') page_size?: string) {
     const userId = (req as any).user?.userId
     if (!userId) {
       return { code: 401, msg: '未授权', data: null }
     }
-    return this.sessionsService.getFavoriteSessions(userId)
+    return this.sessionsService.getFavoriteSessions(userId, page ? Number(page) : 1, page_size ? Number(page_size) : 10)
   }
 
   @Get(':id')

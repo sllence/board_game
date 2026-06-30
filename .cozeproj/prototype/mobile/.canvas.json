@@ -3,9 +3,17 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/mobile/timer.html"
+        "path": ".cozeproj/prototype/mobile/games.html"
       },
-      "title": "计时器",
+      "title": "桌游馆(滑动加载)",
+      "size": "mobile"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/mobile/history.html"
+      },
+      "title": "对局历史(滑动加载)",
       "size": "mobile"
     }
   ]

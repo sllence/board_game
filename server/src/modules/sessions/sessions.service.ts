@@ -35,20 +35,31 @@ export class SessionsService {
     user_id?: string
     game_id?: string
     status?: string
+    page?: string
+    page_size?: string
   }) {
     const client = getSupabaseClient()
+    const page = Math.max(1, Number(filters.page) || 1)
+    const pageSize = Math.min(100, Math.max(1, Number(filters.page_size) || 10))
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
     let query = client
       .from('game_sessions')
-      .select('id, game_id, user_id, session_name, players, winner, rounds, duration, status, started_at, finished_at, created_at, game:board_games(id, name, type, icon_bg)')
+      .select('id, game_id, user_id, session_name, players, winner, rounds, duration, status, started_at, finished_at, created_at, game:board_games(id, name, type, icon_bg)', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .limit(50)
+      .range(from, to)
 
     if (filters.user_id) query = query.eq('user_id', Number(filters.user_id))
     if (filters.game_id) query = query.eq('game_id', Number(filters.game_id))
     if (filters.status) query = query.eq('status', filters.status)
 
-    const { data, error } = await query
-    if (error) throw new Error(`查询对局列表失败: ${error.message}`)
+    const { data, error, count } = await query
+    if (error) {
+      console.error('[SessionsService] Supabase error:', error)
+      // 超出数据范围时返回空列表，不抛错
+      return { data: [], total: count || 0 }
+    }
 
     // 批量查询用户昵称
     let userNicknameMap = new Map<number, string>()
@@ -80,7 +91,7 @@ export class SessionsService {
       user: { nickname: userNicknameMap.get(item.user_id) || null },
     }))
 
-    return { data: result }
+    return { data: result, total: count }
   }
 
   async findRecent(userId?: number) {
@@ -143,16 +154,27 @@ export class SessionsService {
     return { data: null }
   }
 
-  async getFavoriteSessions(userId: number) {
+  async getFavoriteSessions(userId: number, page = 1, pageSize = 10) {
     const client = getSupabaseClient()
-    // 先获取收藏记录
+    // 先获取收藏记录总数
+    const { count: favCount, error: countError } = await client
+      .from('favorites')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+    if (countError) throw new Error(`查询收藏对局失败: ${countError.message}`)
+    if (!favCount || favCount === 0) return { data: [], total: 0 }
+
+    // 分页获取收藏记录
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
     const { data: favData, error: favError } = await client
       .from('favorites')
       .select('id, game_id, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
+      .range(from, to)
     if (favError) throw new Error(`查询收藏对局失败: ${favError.message}`)
-    if (!favData || favData.length === 0) return { data: [] }
+    if (!favData || favData.length === 0) return { data: [], total: 0 }
 
     // 再批量查询对应的对局
     const gameIds = favData.map((f: any) => f.game_id)
@@ -186,7 +208,7 @@ export class SessionsService {
     }))
     // 按 favorited_at 排序
     result.sort((a: any, b: any) => new Date(b.favorited_at).getTime() - new Date(a.favorited_at).getTime())
-    return { data: result }
+    return { data: result, total: favCount }
   }
 
   async isSessionFavorited(sessionId: number, userId: number) {

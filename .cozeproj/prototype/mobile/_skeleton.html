@@ -16,15 +16,15 @@
     @theme {
       /* === 品牌色 === */
       --color-primary:              #4F46E5;
-      --color-primary-container:    #E0E7FF;
+      --color-primary-container:    #EEF2FF;
       --color-on-primary:           #ffffff;
       /* === 背景 / 表面 === */
       --color-background:                 #F5F5F7;
-      --color-surface-container-lowest:   #FFFFFF;
-      --color-surface:                    #FAFAFA;
-      --color-surface-container:          #EEEEF0;
-      --color-surface-container-high:     #E8E8EA;
-      --color-surface-container-highest:  #E0E0E3;
+      --color-surface-container-lowest:   #ffffff;
+      --color-surface:                    #ffffff;
+      --color-surface-container:          #F0F0F4;
+      --color-surface-container-high:     #EAEAEF;
+      --color-surface-container-highest:  #E0E0E5;
       /* === 文字 === */
       --color-on-surface:           #1E1B4B;
       --color-on-surface-variant:   #6B7280;
@@ -43,8 +43,8 @@
       --radius-2xl:  1.5rem;
       --radius-full: 9999px;
       /* === 阴影 === */
-      --shadow-card:   0 4px 12px rgba(0,0,0,0.1);
-      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-card:   0 4px 12px rgba(0,0,0,0.05);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.08);
       --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
       --font-sans: system-ui, sans-serif;
@@ -79,18 +79,32 @@
 
 <body class="bg-background text-on-surface font-sans">
 
-  <!-- @nav:start 导航组件，不需要的页面则不要复制此段 -->
-  <!-- 二级页：Header + 返回按钮，无 TabBar -->
-  <header class="bg-background sticky top-0 z-40 h-14 flex items-center justify-between px-4">
-    <button class="w-10 h-10 flex items-center justify-center text-on-surface-variant rounded-full hover:bg-surface-container active:bg-surface-container-high transition-colors" onclick="history.back()">
-      <i data-lucide="arrow-left" class="w-5 h-5"></i>
-    </button>
-    <h1 class="text-base font-semibold text-on-surface">计时器</h1>
-    <div class="w-10 h-10"></div>
-  </header>
+  <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-surface flex justify-around items-center h-14 pb-[env(safe-area-inset-bottom)] shadow-[-1px_0_3px_rgba(0,0,0,0.05)]">
+    <a href="home.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <i data-lucide="house" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">首页</span>
+    </a>
+    <a href="games.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-primary" aria-current="page">
+      <i data-lucide="chess-king" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">桌游馆</span>
+    </a>
+    <a href="tools.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <i data-lucide="toolbox" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">工具箱</span>
+    </a>
+    <a href="history.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <i data-lucide="history" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">对局</span>
+    </a>
+    <a href="profile.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <i data-lucide="user" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">我的</span>
+    </a>
+  </nav>
   <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
 
-  <main class="overflow-y-auto pb-4">
+  <main class="overflow-y-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
     <!-- @main-content:start -->
     <!-- @main-content:end -->
   </main>

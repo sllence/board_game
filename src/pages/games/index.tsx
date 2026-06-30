@@ -1,4 +1,4 @@
-import { View, Text } from '@tarojs/components'
+import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Network } from '@/network'
@@ -70,9 +70,14 @@ const FILTER_OPTIONS = {
 
 type FilterKey = keyof typeof FILTER_OPTIONS
 
+const PAGE_SIZE = 10
+
 const GamesPage: FC = () => {
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [page, setPage] = useState(1)
   const [keyword, setKeyword] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterKey | null>(null)
   const [filters, setFilters] = useState({
@@ -83,59 +88,72 @@ const GamesPage: FC = () => {
     difficulty: '',
   })
 
-  // 防抖定时器引用
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null)
+  // 保存当前过滤条件，用于 loadMore 时读取最新的值
+  const filtersRef = useRef(filters)
+  const keywordRef = useRef(keyword)
+  filtersRef.current = filters
+  keywordRef.current = keyword
 
-  const fetchGames = async () => {
-    setLoading(true)
+  const fetchGames = async (pageNum: number, append = false) => {
+    if (!append) setLoading(true)
+    else setLoadingMore(true)
     try {
-      const params: Record<string, string> = {}
-      if (filters.type) params.type = filters.type
-      if (filters.scene) params.scene = filters.scene
-      if (filters.difficulty) params.difficulty = filters.difficulty
-      if (filters.duration) params.duration = filters.duration
-      if (filters.players) params.min_players = filters.players
-      if (keyword) params.keyword = keyword
+      const params: Record<string, string> = { page: String(pageNum), page_size: String(PAGE_SIZE) }
+      const f = filtersRef.current
+      const kw = keywordRef.current
+      if (f.type) params.type = f.type
+      if (f.scene) params.scene = f.scene
+      if (f.difficulty) params.difficulty = f.difficulty
+      if (f.duration) params.duration = f.duration
+      if (f.players) params.min_players = f.players
+      if (kw) params.keyword = kw
       const queryStr = new URLSearchParams(params).toString()
       const url = `/api/games${queryStr ? '?' + queryStr : ''}`
       console.log('[GamesPage] fetchGames url:', url)
       const res = await Network.request({ url })
       console.log('[GamesPage] fetchGames response:', res.data)
-      setGames(res.data?.data || [])
+      const data: BoardGame[] = res.data?.data || []
+      const total: number = res.data?.total ?? 0
+      if (append) {
+        setGames(prev => [...prev, ...data])
+      } else {
+        setGames(data)
+      }
+      setPage(pageNum)
+      setHasMore(append ? (games.length + data.length < total) : (data.length < total))
     } catch (err) {
       console.error('[GamesPage] fetchGames error:', err)
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
   }
 
-  useEffect(() => { fetchGames() }, [filters, keyword])
+  // 首次加载 / 筛选或搜索变化时重置
+  useEffect(() => {
+    setPage(1)
+    setGames([])
+    setHasMore(true)
+    fetchGames(1, false)
+  }, [filters, keyword])
 
   // 防抖搜索处理
   const handleSearchInput = useCallback((value: string) => {
     setKeyword(value)
-    
-    // 清除之前的定时器
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current)
-    }
-    
-    // 设置新的定时器，300ms 后执行搜索
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
     searchTimerRef.current = setTimeout(() => {
-      // fetchGames 会通过 useEffect 自动触发
+      // keyword 变化会触发 useEffect
     }, 300)
   }, [])
 
-  // 组件卸载时清理定时器
   useEffect(() => {
     return () => {
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current)
-      }
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
     }
   }, [])
 
-  const handleSearch = () => { fetchGames() }
+  const handleSearch = () => { fetchGames(page, false) }
 
   const handleFilterSelect = (filterKey: FilterKey, value: string) => {
     setFilters(prev => ({ ...prev, [filterKey]: value }))
@@ -147,6 +165,11 @@ const GamesPage: FC = () => {
     setKeyword('')
   }
 
+  const loadMore = () => {
+    if (loadingMore || !hasMore) return
+    fetchGames(page + 1, true)
+  }
+
   const getFilterLabel = (filterKey: FilterKey): string => {
     const currentValue = filters[filterKey]
     if (!currentValue) return FILTER_OPTIONS[filterKey][0].label
@@ -155,7 +178,6 @@ const GamesPage: FC = () => {
   }
 
   const isFilterActive = (filterKey: FilterKey): boolean => filters[filterKey] !== ''
-
   const hasAnyFilter = Object.values(filters).some(v => v !== '')
 
   const goToDetail = (id: number) => {
@@ -164,19 +186,17 @@ const GamesPage: FC = () => {
 
   const filterKeys: FilterKey[] = ['type', 'scene', 'players', 'duration', 'difficulty']
 
-  // 取游戏主类型颜色
   const getGameColor = (game: BoardGame) => {
     const primaryType = game.type?.[0] || 'strategy'
     return TYPE_META[primaryType]?.color || '#4F46E5'
   }
 
   return (
-    <View className="flex flex-col min-h-screen bg-background">
+    <View className="flex flex-col h-screen bg-background">
       {/* 顶部搜索区 */}
-      <View className="px-5 pt-12 pb-5 bg-white">
+      <View className="px-5 pt-12 pb-5 bg-white flex-shrink-0">
         <Text className="block text-2xl font-bold text-gray-900 mb-1">桌游馆 🎲</Text>
         <Text className="block text-sm text-gray-400 mb-4">发现好玩的桌游，开启精彩对局</Text>
-        {/* 搜索栏 */}
         <View className="flex flex-row items-center gap-2">
           <View className="flex-1 flex flex-row items-center rounded-xl px-3 py-2 bg-white border border-gray-200">
             <Search size={16} color="#9ca3af" />
@@ -195,7 +215,7 @@ const GamesPage: FC = () => {
       </View>
 
       {/* 筛选栏 */}
-      <View className="bg-white px-4 pb-3">
+      <View className="bg-white px-4 pb-3 flex-shrink-0">
         <View className="flex flex-row items-center gap-2">
           {filterKeys.map((filterKey) => (
             <View
@@ -209,7 +229,6 @@ const GamesPage: FC = () => {
               >
                 <Text className="text-xs">{getFilterLabel(filterKey)}</Text>
               </Button>
-              {/* 下拉选项 */}
               {activeFilter === filterKey && (
                 <View
                   className="absolute left-0 right-0 top-full mt-1 rounded-xl shadow-lg z-50 overflow-hidden"
@@ -219,9 +238,7 @@ const GamesPage: FC = () => {
                     <View
                       key={option.key}
                       className="py-2 px-3"
-                      style={{
-                        backgroundColor: filters[filterKey] === option.key ? '#eef2ff' : '#fff',
-                      }}
+                      style={{ backgroundColor: filters[filterKey] === option.key ? '#eef2ff' : '#fff' }}
                       onClick={(e) => {
                         e.stopPropagation()
                         handleFilterSelect(filterKey, option.key)
@@ -236,9 +253,8 @@ const GamesPage: FC = () => {
               )}
             </View>
           ))}
-          {/* 重置按钮 */}
           {hasAnyFilter && (
-            <Button variant="ghost" size="sm" className="h-auto py-2 px-3" onClick={resetFilters}>
+            <Button variant="ghost" size="sm" className="h-auto py-2 px-3 flex-shrink-0" onClick={resetFilters}>
               <RotateCcw size={12} color="#6b7280" className="mr-1" />
               <Text className="text-xs">重置</Text>
             </Button>
@@ -248,7 +264,7 @@ const GamesPage: FC = () => {
 
       {/* 已选筛选标签 */}
       {hasAnyFilter && (
-        <View className="flex flex-row flex-wrap items-center gap-2 px-5 py-2 bg-white" style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
+        <View className="flex flex-row flex-wrap items-center gap-2 px-5 py-2 bg-white flex-shrink-0" style={{ borderTopWidth: 1, borderTopColor: '#f3f4f6' }}>
           <Text className="text-xs text-gray-400">已选:</Text>
           {filterKeys.map(key => {
             if (!filters[key]) return null
@@ -274,8 +290,14 @@ const GamesPage: FC = () => {
         />
       )}
 
-      {/* 游戏列表 */}
-      <View className="flex-1 px-4 pt-3 pb-20">
+      {/* 游戏列表 - ScrollView 滑动加载 */}
+      <ScrollView
+        className="flex-1 px-4 pt-3"
+        scrollY
+        style={{ height: '100%' }}
+        onScrollToLower={loadMore}
+        scrollWithAnimation
+      >
         {loading ? (
           <View className="flex items-center justify-center py-20">
             <Text className="block text-gray-400 text-sm">加载中...</Text>
@@ -289,7 +311,7 @@ const GamesPage: FC = () => {
             )}
           </View>
         ) : (
-          <View className="flex flex-col gap-3">
+          <View className="flex flex-col gap-3 pb-20">
             {games.map((game) => {
               const gameColor = getGameColor(game)
               const difficultyInfo = DIFFICULTY_META[game.difficulty] || DIFFICULTY_META.medium
@@ -302,9 +324,7 @@ const GamesPage: FC = () => {
                 >
                   <CardContent className="p-3">
                     <View className="flex flex-row items-start">
-                      {/* 右侧内容 */}
                       <View className="flex-1 min-w-0">
-                        {/* 名字 + 人数时长 */}
                         <View className="flex flex-row items-center justify-between">
                           <View className="flex flex-row items-center gap-2 min-w-0 flex-1">
                             <Text className="text-base font-bold text-gray-900 flex-shrink-0">{game.name}</Text>
@@ -318,8 +338,6 @@ const GamesPage: FC = () => {
                           </Badge>
                         </View>
                         <Text className="block text-xs text-gray-400 mt-1 line-clamp-1">{game.intro}</Text>
-
-                        {/* 类型 + 场景标签 */}
                         <View className="flex flex-row flex-wrap items-center gap-1 mt-2">
                           {game.type?.map((t) => {
                             const meta = TYPE_META[t]
@@ -344,9 +362,20 @@ const GamesPage: FC = () => {
                 </Card>
               )
             })}
+            {/* 底部加载指示器 */}
+            {loadingMore && (
+              <View className="flex items-center justify-center py-4">
+                <Text className="block text-sm text-gray-400">加载中...</Text>
+              </View>
+            )}
+            {!hasMore && games.length > 0 && (
+              <View className="flex items-center justify-center py-4">
+                <Text className="block text-sm text-gray-400">没有更多了</Text>
+              </View>
+            )}
           </View>
         )}
-      </View>
+      </ScrollView>
     </View>
   )
 }

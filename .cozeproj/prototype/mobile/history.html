@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #4F46E5;
+      --color-primary-container:    #EEF2FF;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F5F5F7;
+      --color-surface-container-lowest:   #ffffff;
+      --color-surface:                    #ffffff;
+      --color-surface-container:          #F0F0F4;
+      --color-surface-container-high:     #EAEAEF;
+      --color-surface-container-highest:  #E0E0E5;
+      /* === 文字 === */
+      --color-on-surface:           #1E1B4B;
+      --color-on-surface-variant:   #6B7280;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D1D5DB;
+      --color-outline-variant:  #E5E7EB;
+      /* === 圆角 === */
+      --radius-sm:   0.5rem;
+      --radius-md:   0.75rem;
+      --radius-lg:   1rem;
+      --radius-xl:   1.25rem;
+      --radius-2xl:  1.5rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 4px 12px rgba(0,0,0,0.05);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.08);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: system-ui, sans-serif;
+    }
+  </style>
+
+  <style>
+    body {
+      min-height: max(812px, 100dvh);
+      font-family: system-ui, sans-serif;
+    }
+    /* 自定义动画 - 加载指示器 */
+    @keyframes loader-pulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .loader-dot {
+      animation: loader-pulse 1.2s ease-in-out infinite;
+    }
+    .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+    /* 渐变标题区 */
+    .gradient-header {
+      background: linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(79,70,229,0.04) 50%, rgba(245,245,247,1) 100%);
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件 -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-surface flex justify-around items-center h-14 pb-[env(safe-area-inset-bottom)] shadow-[-1px_0_3px_rgba(0,0,0,0.05)]">
+    <a href="home.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <i data-lucide="house" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">首页</span>
+    </a>
+    <a href="games.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <i data-lucide="chess-king" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">桌游馆</span>
+    </a>
+    <a href="tools.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <i data-lucide="toolbox" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">工具箱</span>
+    </a>
+    <a href="history.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-primary" aria-current="page">
+      <i data-lucide="history" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">对局</span>
+    </a>
+    <a href="profile.html" class="flex flex-col items-center gap-0.5 px-5 py-1.5 text-on-surface-variant hover:text-on-surface transition-colors">
+      <i data-lucide="user" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold tracking-wide">我的</span>
+    </a>
+  </nav>
+  <!-- @nav:end 导航组件 -->
+
+  <main id="history-main" class="overflow-y-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+    <!-- @main-content:start -->
+
+    <!-- 渐变标题区 -->
+    <div id="gradient-header" class="gradient-header sticky top-0 z-30">
+      <div class="px-4 pt-5 pb-4">
+        <h1 class="text-xl font-bold text-on-surface">对局历史</h1>
+        <p class="text-xs text-on-surface-variant mt-1">查看你参与的所有对局记录</p>
+      </div>
+
+      <!-- 下拉筛选 -->
+      <div id="filter-bar" class="flex gap-2 px-4 pb-3">
+        <select id="filter-type" class="flex-1 bg-surface-container border-none rounded-xl px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors appearance-none">
+          <option value="all">全部</option>
+          <option value="created">我创建的</option>
+          <option value="favorited">我收藏的</option>
+        </select>
+        <select id="filter-status" class="flex-1 bg-surface-container border-none rounded-xl px-3 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors appearance-none">
+          <option value="all">全部状态</option>
+          <option value="ongoing">进行中</option>
+          <option value="finished">已结束</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 对局卡片列表 -->
+    <div id="game-list" class="px-4 pt-2 pb-2 space-y-3">
+
+      <!-- 卡片1：三国杀 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-1" data-creator="张三" data-type="created" data-status="finished" data-favorited="true">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="swords" class="w-4.5 h-4.5 text-primary"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">三国杀·经典8人局</h3>
+              <p class="text-xs text-on-surface-variant">创建人：张三 · 2024-01-15 14:30</p>
+            </div>
+          </div>
+          <button id="btn-fav-1" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-1">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500 fill-red-500"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 60min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>8人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：李四</span>
+        </div>
+        <!-- 得分快照 -->
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">李四</span>
+            <p class="text-sm font-bold text-on-surface">25</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">张三</span>
+            <p class="text-sm font-bold text-on-surface">18</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">王五</span>
+            <p class="text-sm font-bold text-on-surface">12</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">赵六</span>
+            <p class="text-sm font-bold text-on-surface">8</p>
+          </div>
+        </div>
+        <!-- 状态标签 -->
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+      <!-- 卡片2：狼人杀 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-2" data-creator="王五" data-type="favorited" data-status="ongoing" data-favorited="true">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-warning/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="moon" class="w-4.5 h-4.5 text-warning"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">狼人杀·暗夜12人</h3>
+              <p class="text-xs text-on-surface-variant">创建人：王五 · 2024-01-16 20:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-2" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-2">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500 fill-red-500"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 45min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>12人</span>
+          <span class="inline-flex items-center gap-1 text-warning"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>进行中</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">赵六</span>
+            <p class="text-sm font-bold text-on-surface">存活</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">王五</span>
+            <p class="text-sm font-bold text-on-surface">存活</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">刘七</span>
+            <p class="text-sm font-bold text-on-surface">出局</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">陈八</span>
+            <p class="text-sm font-bold text-on-surface">存活</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-warning/10 text-warning">进行中</span>
+        </div>
+      </div>
+
+      <!-- 卡片3：大富翁 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-3" data-creator="小初" data-type="created" data-status="finished" data-favorited="false">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-success/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="land-plot" class="w-4.5 h-4.5 text-success"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">大富翁·金融风暴</h3>
+              <p class="text-xs text-on-surface-variant">创建人：小初 · 2024-01-14 10:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-3" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-3">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-on-surface-variant/40"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 90min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>4人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：小初</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">小初</span>
+            <p class="text-sm font-bold text-on-surface text-success">¥12800</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">周九</span>
+            <p class="text-sm font-bold text-on-surface">¥6400</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">吴十</span>
+            <p class="text-sm font-bold text-on-surface">¥3200</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">郑一</span>
+            <p class="text-sm font-bold text-on-surface text-error">破产</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+      <!-- 卡片4：谁是卧底 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-4" data-creator="刘七" data-type="favorited" data-status="finished" data-favorited="true">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="search" class="w-4.5 h-4.5 text-primary"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">谁是卧底·谍影重重</h3>
+              <p class="text-xs text-on-surface-variant">创建人：刘七 · 2024-01-13 19:30</p>
+            </div>
+          </div>
+          <button id="btn-fav-4" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-4">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500 fill-red-500"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 30min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>8人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：陈八</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">陈八</span>
+            <p class="text-sm font-bold text-on-surface text-success">卧底胜</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">刘七</span>
+            <p class="text-sm font-bold text-on-surface">平民</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">周九</span>
+            <p class="text-sm font-bold text-on-surface">平民</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">吴十</span>
+            <p class="text-sm font-bold text-on-surface">出局</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+      <!-- 卡片5：象棋 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-5" data-creator="周九" data-type="created" data-status="finished" data-favorited="false">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-surface-container-high rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="chess-knight" class="w-4.5 h-4.5 text-on-surface"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">象棋·巅峰对决</h3>
+              <p class="text-xs text-on-surface-variant">创建人：周九 · 2024-01-12 15:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-5" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-5">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-on-surface-variant/40"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 25min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>2人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：周九</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">周九</span>
+            <p class="text-sm font-bold text-on-surface text-success">将杀</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">林五</span>
+            <p class="text-sm font-bold text-on-surface text-error">认输</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+      <!-- 卡片6：飞行棋 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-6" data-creator="吴十" data-type="favorited" data-status="finished" data-favorited="false">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-warning/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="plane" class="w-4.5 h-4.5 text-warning"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">飞行棋·欢乐4人</h3>
+              <p class="text-xs text-on-surface-variant">创建人：吴十 · 2024-01-11 14:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-6" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-6">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-on-surface-variant/40"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 40min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>4人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：郑一</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">郑一</span>
+            <p class="text-sm font-bold text-on-surface text-success">第1名</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">吴十</span>
+            <p class="text-sm font-bold text-on-surface">第2名</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">孙二</span>
+            <p class="text-sm font-bold text-on-surface">第3名</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">黄四</span>
+            <p class="text-sm font-bold text-on-surface">第4名</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+      <!-- 卡片7：剧本杀 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-7" data-creator="孙二" data-type="created" data-status="finished" data-favorited="true">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-error/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="theater" class="w-4.5 h-4.5 text-error"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">剧本杀·雪山谜案</h3>
+              <p class="text-xs text-on-surface-variant">创建人：孙二 · 2024-01-10 18:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-7" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-7">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500 fill-red-500"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 120min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>6人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：徐三</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">徐三</span>
+            <p class="text-sm font-bold text-on-surface text-success">侦探胜</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">孙二</span>
+            <p class="text-sm font-bold text-on-surface">凶手</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">刘七</span>
+            <p class="text-sm font-bold text-on-surface">侦探</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">陈八</span>
+            <p class="text-sm font-bold text-on-surface">侦探</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+      <!-- 卡片8：斗地主 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-8" data-creator="黄四" data-type="favorited" data-status="finished" data-favorited="false">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="club" class="w-4.5 h-4.5 text-primary"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">斗地主·欢乐3人</h3>
+              <p class="text-xs text-on-surface-variant">创建人：黄四 · 2024-01-09 21:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-8" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-8">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-on-surface-variant/40"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 20min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>3人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：黄四</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">黄四</span>
+            <p class="text-sm font-bold text-on-surface text-success">地主胜</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">张三</span>
+            <p class="text-sm font-bold text-on-surface">农民</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">李四</span>
+            <p class="text-sm font-bold text-on-surface">农民</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+      <!-- 卡片9：围棋 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-9" data-creator="林五" data-type="created" data-status="finished" data-favorited="false">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-surface-container-high rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="circle" class="w-4.5 h-4.5 text-on-surface"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">围棋·9路对弈</h3>
+              <p class="text-xs text-on-surface-variant">创建人：林五 · 2024-01-08 10:30</p>
+            </div>
+          </div>
+          <button id="btn-fav-9" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-9">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-on-surface-variant/40"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 90min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>2人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：林五</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">林五</span>
+            <p class="text-sm font-bold text-on-surface text-success">黑中盘胜</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">周九</span>
+            <p class="text-sm font-bold text-on-surface text-error">白认输</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+      <!-- 卡片10：UNO -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-10" data-creator="何六" data-type="favorited" data-status="finished" data-favorited="true">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-warning/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="dices" class="w-4.5 h-4.5 text-warning"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">UNO·疯狂6人局</h3>
+              <p class="text-xs text-on-surface-variant">创建人：何六 · 2024-01-07 16:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-10" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-10">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500 fill-red-500"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 35min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>6人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：马七</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">马七</span>
+            <p class="text-sm font-bold text-on-surface text-success">第1名</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">何六</span>
+            <p class="text-sm font-bold text-on-surface">第2名</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">罗八</span>
+            <p class="text-sm font-bold text-on-surface">第3名</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">方一</span>
+            <p class="text-sm font-bold text-on-surface">第4名</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 加载区域 + 已加载全部状态 -->
+    <div id="scroll-footer" class="flex flex-col items-center justify-center py-6 px-4">
+      <!-- 加载动画指示器（默认隐藏） -->
+      <div id="loading-indicator" class="hidden flex items-center gap-2.5">
+        <div class="flex items-center gap-1">
+          <span class="loader-dot w-2 h-2 bg-primary rounded-full inline-block"></span>
+          <span class="loader-dot w-2 h-2 bg-primary rounded-full inline-block"></span>
+          <span class="loader-dot w-2 h-2 bg-primary rounded-full inline-block"></span>
+        </div>
+        <span class="text-sm text-on-surface-variant">加载中...</span>
+      </div>
+      <!-- 已加载全部（默认隐藏） -->
+      <div id="all-loaded-indicator" class="hidden flex flex-col items-center gap-2">
+        <div class="w-12 h-0.5 bg-outline-variant/30 rounded-full"></div>
+        <span class="text-xs text-on-surface-variant/60">已加载全部</span>
+      </div>
+    </div>
+
+    <!-- @main-content:end -->
+  </main>
+
+  <script>
+    // 导航辅助函数
+    function navPush(route) {
+      console.log('[原型演示] PUSH 到: ' + route);
+      window.location.href = route;
+    }
+    function navReplace(route) {
+      console.log('[原型演示] REPLACE 为: ' + route);
+      window.location.replace(route);
+    }
+    function navReset(route) {
+      console.log('[原型演示] RESET 到: ' + route);
+      window.location.href = route;
+    }
+    function navBack() {
+      console.log('[原型演示] BACK 返回上一页');
+      if (window.history.length > 1) window.history.back();
+    }
+
+    $(function() {
+      // ==================== 滑动加载分页 ====================
+      var currentPage = 1;
+      var totalPages = 3; // 共3页（初始10条 + 加载2次各5条）
+      var isLoading = false;
+      var allLoaded = false;
+
+      // 预置更多数据模板（硬编码，滑动时追加到DOM）
+      function getMoreItems(pageNum) {
+        if (pageNum === 2) {
+          return `
+      <!-- 追加-卡片11：德州扑克 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-11" data-creator="罗八" data-type="created" data-status="finished" data-favorited="false">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="diamond" class="w-4.5 h-4.5 text-primary"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">德州扑克·锦标赛</h3>
+              <p class="text-xs text-on-surface-variant">创建人：罗八 · 2024-01-06 20:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-11" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-11">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-on-surface-variant/40"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 60min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>8人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：梁九</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">梁九</span>
+            <p class="text-sm font-bold text-on-surface text-success">¥52000</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">罗八</span>
+            <p class="text-sm font-bold text-on-surface">¥28000</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">钱二</span>
+            <p class="text-sm font-bold text-on-surface">¥12000</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">杨三</span>
+            <p class="text-sm font-bold text-on-surface">出局</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+      <!-- 追加-卡片12：五子棋 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-12" data-creator="宋十" data-type="favorited" data-status="finished" data-favorited="false">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-surface-container-high rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="cross" class="w-4.5 h-4.5 text-on-surface"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">五子棋·闪电战</h3>
+              <p class="text-xs text-on-surface-variant">创建人：宋十 · 2024-01-05 11:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-12" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-12">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-on-surface-variant/40"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 15min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>2人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：宋十</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">宋十</span>
+            <p class="text-sm font-bold text-on-surface text-success">五连珠</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">林五</span>
+            <p class="text-sm font-bold text-on-surface">认输</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+      <!-- 追加-卡片13：卡坦岛 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-13" data-creator="方一" data-type="created" data-status="finished" data-favorited="true">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-success/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="mountain" class="w-4.5 h-4.5 text-success"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">卡坦岛·资源争夺</h3>
+              <p class="text-xs text-on-surface-variant">创建人：方一 · 2024-01-04 13:30</p>
+            </div>
+          </div>
+          <button id="btn-fav-13" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-13">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500 fill-red-500"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 75min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>4人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：方一</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">方一</span>
+            <p class="text-sm font-bold text-on-surface text-success">10分</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">何六</span>
+            <p class="text-sm font-bold text-on-surface">7分</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">罗八</span>
+            <p class="text-sm font-bold text-on-surface">5分</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">钱二</span>
+            <p class="text-sm font-bold text-on-surface">3分</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>
+      <!-- 追加-卡片14：炸弹猫 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-14" data-creator="钱二" data-type="favorited" data-status="ongoing" data-favorited="false">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-error/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="bomb" class="w-4.5 h-4.5 text-error"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">炸弹猫·5人乱斗</h3>
+              <p class="text-xs text-on-surface-variant">创建人：钱二 · 2024-01-03 15:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-14" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-14">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-on-surface-variant/40"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 20min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>5人</span>
+          <span class="inline-flex items-center gap-1 text-warning"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>进行中</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">钱二</span>
+            <p class="text-sm font-bold text-on-surface">存活</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">方一</span>
+            <p class="text-sm font-bold text-on-surface">存活</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">杨三</span>
+            <p class="text-sm font-bold text-on-surface">存活</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">马七</span>
+            <p class="text-sm font-bold text-on-surface">存活</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-warning/10 text-warning">进行中</span>
+        </div>
+      </div>
+      <!-- 追加-卡片15：阿瓦隆 -->
+      <div class="game-card bg-surface rounded-xl shadow-card p-4" data-id="game-15" data-creator="杨三" data-type="created" data-status="finished" data-favorited="true">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+              <i data-lucide="crown" class="w-4.5 h-4.5 text-primary"></i>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-semibold text-on-surface truncate">阿瓦隆·圆桌会议</h3>
+              <p class="text-xs text-on-surface-variant">创建人：杨三 · 2024-01-02 19:00</p>
+            </div>
+          </div>
+          <button id="btn-fav-15" class="fav-btn w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors shrink-0" data-game-id="game-15">
+            <i data-lucide="heart" class="w-4.5 h-4.5 text-red-500 fill-red-500"></i>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-on-surface-variant mb-2.5">
+          <span class="inline-flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i>时长 50min</span>
+          <span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>10人</span>
+          <span class="inline-flex items-center gap-1 text-success"><i data-lucide="trophy" class="w-3.5 h-3.5"></i>胜者：杨三</span>
+        </div>
+        <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+          <div class="flex-1 text-center">
+            <span class="text-xs text-on-surface-variant">杨三</span>
+            <p class="text-sm font-bold text-on-surface text-success">梅林胜</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">钱二</span>
+            <p class="text-sm font-bold text-on-surface">莫甘娜</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">方一</span>
+            <p class="text-sm font-bold text-on-surface">派西维尔</p>
+          </div>
+          <div class="flex-1 text-center border-l border-outline-variant/20">
+            <span class="text-xs text-on-surface-variant">罗八</span>
+            <p class="text-sm font-bold text-on-surface">莫德雷德</p>
+          </div>
+        </div>
+        <div class="mt-2 flex justify-end">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/10 text-success">已结束</span>
+        </div>
+      </div>`;
+        }
+        return '';
+      }
+
+      // 滑动加载检测
+      $('#history-main').on('scroll', function() {
+        if (isLoading || allLoaded) return;
+
+        var $main = $(this);
+        var scrollBottom = $main.scrollTop() + $main.innerHeight();
+        var totalHeight = this.scrollHeight;
+        var threshold = 120; // 距离底部120px触发
+
+        if (totalHeight - scrollBottom < threshold) {
+          loadMore();
+        }
+      });
+
+      function loadMore() {
+        if (isLoading || allLoaded) return;
+        isLoading = true;
+
+        // 显示加载指示器
+        $('#loading-indicator').removeClass('hidden');
+        $('#all-loaded-indicator').addClass('hidden');
+
+        // 模拟加载延迟
+        setTimeout(function() {
+          currentPage++;
+
+          if (currentPage <= totalPages) {
+            var html = getMoreItems(currentPage);
+            if (html) {
+              $('#game-list').append(html);
+              // 重新生成新追加的图标
+              lucide.createIcons();
+              // 为新追加的收藏按钮绑定事件
+              $('.fav-btn').off('click').on('click', function(e) {
+                e.stopPropagation();
+                var $btn = $(this);
+                var $icon = $btn.find('i');
+                var gameId = $btn.data('game-id');
+                var isFav = $icon.hasClass('fill-red-500');
+                if (isFav) {
+                  $icon.removeClass('text-red-500 fill-red-500').addClass('text-on-surface-variant/40');
+                  console.log('[原型演示] 取消收藏对局: ' + gameId);
+                } else {
+                  $icon.addClass('text-red-500 fill-red-500').removeClass('text-on-surface-variant/40');
+                  console.log('[原型演示] 收藏对局: ' + gameId);
+                }
+              });
+            }
+          }
+
+          if (currentPage >= totalPages) {
+            allLoaded = true;
+            $('#loading-indicator').addClass('hidden');
+            $('#all-loaded-indicator').removeClass('hidden');
+          } else {
+            $('#loading-indicator').addClass('hidden');
+          }
+
+          isLoading = false;
+        }, 800);
+      }
+
+      // ==================== 筛选功能 ====================
+      $('#filter-type, #filter-status').on('change', function() {
+        var typeVal = $('#filter-type').val();
+        var statusVal = $('#filter-status').val();
+
+        console.log('[原型演示] 筛选条件变更 - 类型: ' + typeVal + ', 状态: ' + statusVal);
+
+        // 筛选展示逻辑：遍历所有卡片，匹配则显示，不匹配则隐藏
+        $('#game-list .game-card').each(function() {
+          var $card = $(this);
+          var creator = $card.data('creator');
+          var isFavorited = $card.data('favorited');
+          var cardStatus = $card.data('status');
+
+          var typeMatch = true;
+          if (typeVal === 'created') {
+            typeMatch = (creator === '小初' || creator === '张三' || creator === '周九' || creator === '孙二' || creator === '林五' || creator === '罗八' || creator === '方一' || creator === '杨三');
+          } else if (typeVal === 'favorited') {
+            typeMatch = (isFavorited === true || isFavorited === 'true');
+          }
+
+          var statusMatch = true;
+          if (statusVal === 'ongoing') {
+            statusMatch = (cardStatus === 'ongoing');
+          } else if (statusVal === 'finished') {
+            statusMatch = (cardStatus === 'finished');
+          }
+
+          if (typeMatch && statusMatch) {
+            $card.show();
+          } else {
+            $card.hide();
+          }
+        });
+      });
+
+      // ==================== 收藏按钮 ====================
+      $('.fav-btn').on('click', function(e) {
+        e.stopPropagation();
+        var $btn = $(this);
+        var $icon = $btn.find('i');
+        var gameId = $btn.data('game-id');
+        // 取小图标内的class做切换
+        var isFav = $icon.hasClass('fill-red-500');
+        if (isFav) {
+          $icon.removeClass('text-red-500 fill-red-500').addClass('text-on-surface-variant/40');
+          console.log('[原型演示] 取消收藏对局: ' + gameId);
+        } else {
+          $icon.addClass('text-red-500 fill-red-500').removeClass('text-on-surface-variant/40');
+          console.log('[原型演示] 收藏对局: ' + gameId);
+        }
+      });
+
+      // ==================== TabBar 导航 ====================
+      $('nav a').on('click', function(e) {
+        e.preventDefault();
+        var href = $(this).attr('href');
+        navReset(href);
+      });
+
+    });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

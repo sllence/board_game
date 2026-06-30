@@ -11,15 +11,24 @@ export class GamesService {
     duration?: string
     difficulty?: string
     keyword?: string
+    page?: string
+    page_size?: string
   }) {
     const client = getSupabaseClient()
+    const page = Math.max(1, Number(filters.page) || 1)
+    const pageSize = Math.min(100, Math.max(1, Number(filters.page_size) || 10))
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
     let query = client
       .from('board_games')
       .select(
-        'id, name, type, scene, min_players, max_players, min_duration, max_duration, difficulty, icon_key, icon_bg, icon_color, image_url, intro, sort_order, status'
+        'id, name, type, scene, min_players, max_players, min_duration, max_duration, difficulty, icon_key, icon_bg, icon_color, image_url, intro, sort_order, status',
+        { count: 'exact' }
       )
       .order('sort_order', { ascending: true })
       .eq('status', 'online')
+      .range(from, to)
 
     if (filters.type) query = query.contains('type', [filters.type])
     if (filters.scene) query = query.contains('scene', [filters.scene])
@@ -34,9 +43,9 @@ export class GamesService {
     }
     if (filters.keyword) query = query.ilike('name', `%${filters.keyword}%`)
 
-    const { data, error } = await query
+    const { data, error, count } = await query
     if (error) throw new Error(`查询桌游列表失败: ${error.message}`)
-    return { data }
+    return { data, total: count }
   }
 
   async findHot(is_admin = false) {

@@ -17,6 +17,8 @@ export class GamesController {
     duration?: string
     difficulty?: string
     keyword?: string
+    page?: string
+    page_size?: string
   }) {
     return this.gamesService.findAll(query)
   }
