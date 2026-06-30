@@ -684,10 +684,10 @@ const FingerPickerPage: FC = () => {
         if (state === 'idle') {
           const cx = W / 2
           const cy = H / 2
-          const orbitR = Math.min(W, H) * 0.18
+          const orbitR = Math.min(W, H) * 0.24
           const ballR = 10
           const idleColors = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ec4899']
-          const angle = now / 800 // 顺时针
+          const angle = now / 500 // 顺时针
           for (let i = 0; i < 6; i++) {
             const a = angle + (i / 6) * Math.PI * 2
             const bx = cx + Math.cos(a) * orbitR
