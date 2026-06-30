@@ -1,4 +1,4 @@
-import { View, Text, RichText, Image } from '@tarojs/components'
+import { View, Text, RichText, Image, ScrollView } from '@tarojs/components'
 import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
@@ -82,6 +82,70 @@ const TOOL_ITEMS = [
   { key: 'dice', label: '骰子', icon: <Dices size={20} color="#6366f1" />, path: '/pages/dice/index' },
   { key: 'timer', label: '计时', icon: <Timer size={20} color="#10b981" />, path: '/pages/timer/index' },
 ]
+
+/** 图片轮播组件：左右滑动 + 页标指示器 */
+const ImageCarousel: FC<{
+  images: string[]
+  onPreview: (url: string) => void
+}> = ({ images, onPreview }) => {
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageWidth, setPageWidth] = useState(375)
+
+  useEffect(() => {
+    Taro.createSelectorQuery()
+      .select('.image-carousel-scroll')
+      .boundingClientRect((rect) => {
+        if (rect && !Array.isArray(rect)) setPageWidth(rect.width)
+      })
+      .exec()
+  }, [])
+
+  const handleScroll = (e: any) => {
+    const left = e.detail?.scrollLeft ?? 0
+    const page = Math.round(left / pageWidth)
+    if (page !== currentPage && page >= 0 && page < images.length) {
+      setCurrentPage(page)
+    }
+  }
+
+  return (
+    <View className="border-t border-gray-100 pt-3">
+      <View className="relative overflow-hidden rounded-xl">
+        <ScrollView
+          scrollX
+          showScrollbar={false}
+          onScroll={handleScroll}
+          className="w-full image-carousel-scroll"
+          style={{ height: '384px' }}
+        >
+          <View className="flex flex-row gap-0" style={{ height: '384px' }}>
+            {images.map((url, idx) => (
+              <Image
+                key={idx}
+                className="flex-shrink-0 w-full h-full"
+                src={url}
+                mode="aspectFill"
+                style={{ width: `${pageWidth}px`, height: '384px' }}
+                onClick={() => onPreview(url)}
+              />
+            ))}
+          </View>
+        </ScrollView>
+        {images.length > 1 && (
+          <View className="absolute bottom-3 left-0 right-0 flex flex-row items-center justify-center gap-1.5">
+            {images.map((_, idx) => (
+              <View
+                key={idx}
+                className={`w-2 h-2 rounded-full ${currentPage === idx ? 'bg-white' : ''}`}
+                style={{ backgroundColor: `rgba(255, 255, 255, ${currentPage === idx ? 1 : 0.4})` }}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+    </View>
+  )
+}
 
 const NavigatorPage: FC = () => {
   const [phase, setPhase] = useState<Phase>('setup')
@@ -679,17 +743,10 @@ const NavigatorPage: FC = () => {
                               </View>
                             )}
                             {rule.rule_type === 'images' && rule.image_urls && rule.image_urls.length > 0 && (
-                              <View className="flex flex-row flex-wrap gap-1.5 mt-2">
-                                {rule.image_urls.map((url, idx) => (
-                                  <Image
-                                    key={idx}
-                                    className="w-[48%] aspect-square rounded-lg"
-                                    src={url}
-                                    mode="aspectFill"
-                                    onClick={() => Taro.previewImage({ urls: rule.image_urls!, current: url })}
-                                  />
-                                ))}
-                              </View>
+                              <ImageCarousel
+                                images={rule.image_urls}
+                                onPreview={(url) => Taro.previewImage({ urls: rule.image_urls!, current: url })}
+                              />
                             )}
                           </CardContent>
                         )}
@@ -1067,17 +1124,10 @@ const NavigatorPage: FC = () => {
                             </View>
                           )}
                           {rule.rule_type === 'images' && rule.image_urls && rule.image_urls.length > 0 && (
-                            <View className="flex flex-row flex-wrap gap-1.5 mt-2">
-                              {rule.image_urls.map((url, idx) => (
-                                <Image
-                                  key={idx}
-                                  className="w-[48%] aspect-square rounded-lg"
-                                  src={url}
-                                  mode="aspectFill"
-                                  onClick={() => Taro.previewImage({ urls: rule.image_urls!, current: url })}
-                                />
-                              ))}
-                            </View>
+                            <ImageCarousel
+                              images={rule.image_urls}
+                              onPreview={(url) => Taro.previewImage({ urls: rule.image_urls!, current: url })}
+                            />
                           )}
                         </CardContent>
                       )}
