@@ -1,5 +1,5 @@
 import { View, Text, Canvas } from '@tarojs/components'
-import Taro, { useReady } from '@tarojs/taro'
+import Taro, { useReady, useShareAppMessage } from '@tarojs/taro'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Settings } from 'lucide-react-taro'
 import {
@@ -62,6 +62,7 @@ const COUNTDOWN_DURATION = 1500
 const AMBIENT_COUNT = 25
 
 const FingerPickerPage: FC = () => {
+  useShareAppMessage(() => ({ title: '数智局伴-手指选人-快速随机选中玩家', path: '/pages/finger-picker/index' }))
   const [, setAppStateDisplay] = useState<AppState>('idle')
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [settingsOpen, setSettingsOpen] = useState(false)

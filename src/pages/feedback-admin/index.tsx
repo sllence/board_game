@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { View, Text, ScrollView, Image } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -35,6 +35,7 @@ const feedbackTabs = [
 ]
 
 export default function FeedbackAdminPage() {
+  useShareAppMessage(() => ({ title: '数智局伴-反馈管理-查看用户反馈', path: '/pages/feedback-admin/index' }))
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View, Text, Image } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useShareAppMessage } from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,6 +28,7 @@ const typeMap: Record<string, string> = {
 }
 
 export default function FeedbackPage() {
+  useShareAppMessage(() => ({ title: '数智局伴-反馈-意见与建议', path: '/pages/feedback/index' }))
   const [selectedType, setSelectedType] = useState<string>('bug')
   const [content, setContent] = useState('')
   const [uploadedImages, setUploadedImages] = useState<string[]>([])

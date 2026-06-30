@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useShareAppMessage } from '@tarojs/taro'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Network } from '@/network'
 import { Input } from '@/components/ui/input'
@@ -73,6 +73,7 @@ type FilterKey = keyof typeof FILTER_OPTIONS
 const PAGE_SIZE = 10
 
 const GamesPage: FC = () => {
+  useShareAppMessage(() => ({ title: '数智局伴-桌游馆-海量桌游规则与攻略', path: '/pages/games/index' }))
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)

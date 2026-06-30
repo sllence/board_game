@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
@@ -32,6 +32,7 @@ interface Wheel {
 }
 
 const WheelManagePage: FC = () => {
+  useShareAppMessage(() => ({ title: '数智局伴-转盘管理-创建与管理转盘', path: '/pages/wheel-manage/index' }))
   const [wheels, setWheels] = useState<Wheel[]>([])
   const [loading, setLoading] = useState(false)
 

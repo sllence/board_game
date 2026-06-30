@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
@@ -50,6 +50,7 @@ const QUICK_TOOLS = [
 ]
 
 const IndexPage: FC = () => {
+  useShareAppMessage(() => ({ title: '数智局伴-首页-一站式桌游辅助工具', path: '/pages/index/index' }))
   const [hotGames, setHotGames] = useState<BoardGame[]>([])
   const [recentSessions, setRecentSessions] = useState<GameSession[]>([])
   const [loading, setLoading] = useState(false)

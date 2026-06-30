@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useShareAppMessage } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,7 @@ const RANK_STYLES = [
 ]
 
 const ScorerPage: FC = () => {
+  useShareAppMessage(() => ({ title: '数智局伴-计分-多人计分快速记录', path: '/pages/scorer/index' }))
   const [players, setPlayers] = useState<Player[]>([
     { name: '玩家1', score: 0 },
     { name: '玩家2', score: 0 },

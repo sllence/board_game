@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useShareAppMessage } from '@tarojs/taro'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +18,7 @@ const PRESETS = [
 type TimerMode = 'countdown' | 'stopwatch'
 
 const TimerPage: FC = () => {
+  useShareAppMessage(() => ({ title: '数智局伴-计时器-精准倒计时与计时', path: '/pages/timer/index' }))
   const [mode, setMode] = useState<TimerMode>('countdown')
   const [totalSeconds, setTotalSeconds] = useState(60)
   const [remaining, setRemaining] = useState(60)

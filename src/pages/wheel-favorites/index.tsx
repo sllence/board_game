@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
@@ -65,6 +65,7 @@ const formatDate = (dateStr: string): string => {
 }
 
 const FavoritesPage: FC = () => {
+  useShareAppMessage(() => ({ title: '数智局伴-转盘收藏-收藏常用转盘', path: '/pages/wheel-favorites/index' }))
   const [activeTab, setActiveTab] = useState('sessions')
   const [sessions, setSessions] = useState<Session[]>([])
   const [wheels, setWheels] = useState<Wheel[]>([])
