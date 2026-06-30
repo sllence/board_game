@@ -422,13 +422,9 @@ const HistoryPage: FC = () => {
               </View>
             )}
             {!hasMore && sessions.length > 0 && (
-              <Card className="shadow-sm">
-                <CardContent className="p-4">
-                  <View className="flex items-center justify-center">
-                    <Text className="text-sm text-gray-400">没有更多了</Text>
-                  </View>
-                </CardContent>
-              </Card>
+              <View className="flex items-center justify-center py-4">
+                <Text className="block text-sm text-gray-400">没有更多了</Text>
+              </View>
             )}
           </View>
         )}
