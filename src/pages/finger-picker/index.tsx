@@ -685,19 +685,13 @@ const FingerPickerPage: FC = () => {
           const cx = W / 2
           const cy = H / 2
           const orbitR = Math.min(W, H) * 0.24
-          const ballR = 10
+          const ballR = 16
           const idleColors = ['#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ec4899']
           const angle = now / 500 // 顺时针
           for (let i = 0; i < 6; i++) {
             const a = angle + (i / 6) * Math.PI * 2
             const bx = cx + Math.cos(a) * orbitR
             const by = cy + Math.sin(a) * orbitR
-
-            // 辉光
-            ctx.beginPath()
-            ctx.arc(bx, by, ballR * 1.6, 0, Math.PI * 2)
-            ctx.fillStyle = idleColors[i] + '25'
-            ctx.fill()
 
             // 小球
             ctx.beginPath()
