@@ -208,7 +208,7 @@ const FingerPickerPage: FC = () => {
         resultTimeoutRef.current = setTimeout(() => {
           resultTimeoutRef.current = 0
           resetAll()
-        }, 2000) as unknown as number
+        }, 1000) as unknown as number
       }
       return
     }
