@@ -13,7 +13,7 @@ import {
   Play, Plus, X, User, Dices, Timer,
   Hand, Calculator, BookOpen, ChevronRight,
   Trophy, RotateCcw, Minus, Send, Sparkles, ChessKing, ArrowLeft,
-  Camera, Trash2, Image as ImageIcon
+  Camera, Image as ImageIcon
 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -87,7 +87,6 @@ const NavigatorPage: FC = () => {
   const [rulesExpanded, setRulesExpanded] = useState(false)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [showPhotoActions, setShowPhotoActions] = useState(false)
-  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const isMiniApp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT
@@ -331,29 +330,6 @@ const NavigatorPage: FC = () => {
     } else {
       Taro.showToast({ title: '上传失败，请重试', icon: 'none' })
     }
-  }
-
-  const deletePhoto = async (photoId: number) => {
-    Taro.showModal({
-      title: '删除照片',
-      content: '确定要删除这张照片吗？',
-      success: async (res) => {
-        if (res.confirm) {
-          try {
-            await Network.request({
-              url: `/api/sessions/${sessionId}/photos/${photoId}`,
-              method: 'DELETE',
-            })
-            setPhotos((prev) => prev.filter((p) => p.id !== photoId))
-            setPreviewPhoto(null)
-            Taro.showToast({ title: '已删除', icon: 'success' })
-          } catch (err) {
-            console.error('[NavigatorPage] deletePhoto error:', err)
-            Taro.showToast({ title: '删除失败', icon: 'none' })
-          }
-        }
-      },
-    })
   }
 
   const addPlayer = () => {
@@ -653,7 +629,7 @@ const NavigatorPage: FC = () => {
                   <View
                     key={photo.id}
                     className="w-[31%] aspect-square rounded-xl overflow-hidden bg-muted cursor-pointer"
-                    onClick={() => setPreviewPhoto(photo.url)}
+                    onClick={() => Taro.previewImage({ current: photo.url, urls: photos.map(p => p.url) })}
                   >
                     <Image className="w-full h-full" src={photo.url} mode="aspectFill" />
                   </View>
@@ -987,7 +963,7 @@ const NavigatorPage: FC = () => {
                 <View
                   key={photo.id}
                   className="w-[31%] aspect-square rounded-xl overflow-hidden bg-muted cursor-pointer"
-                  onClick={() => setPreviewPhoto(photo.url)}
+                  onClick={() => Taro.previewImage({ current: photo.url, urls: photos.map(p => p.url) })}
                 >
                   <Image
                     className="w-full h-full"
@@ -1126,32 +1102,7 @@ const NavigatorPage: FC = () => {
           </View>
         </DialogContent>
       </Dialog>
-
-      {/* 照片预览 */}
-      <Dialog open={!!previewPhoto} onOpenChange={(open) => { if (!open) setPreviewPhoto(null) }}>
-        <DialogContent className="max-w-[90vw]">
-          <View className="relative flex items-center justify-center">
-            <Image
-              className="w-full rounded-xl"
-              src={previewPhoto || ''}
-              mode="widthFix"
-              style={{ maxHeight: '70vh' }}
-            />
-            <View className="absolute bottom-3 right-3">
-              <View
-                className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
-                style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-                onClick={() => {
-                  const photo = photos.find((p) => p.url === previewPhoto)
-                  if (photo) deletePhoto(photo.id)
-                }}
-              >
-                <Trash2 size={18} color="#fff" />
-              </View>
-            </View>
-          </View>
-        </DialogContent>
-      </Dialog>
+	      {/* 预览评价区 - 下面是其他 UI... */}
       {phase === 'finished' && (
         <View className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <Card className="w-72 shadow-xl">
