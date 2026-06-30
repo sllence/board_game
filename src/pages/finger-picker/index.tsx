@@ -82,6 +82,7 @@ const FingerPickerPage: FC = () => {
   const screenSizeRef = useRef({ width: 375, height: 667 })
   const shockwavesRef = useRef<ShockwaveRing[]>([])
   const ambientRef = useRef<AmbientDot[]>([])
+  const resultTimeoutRef = useRef<number>(0)
 
   const updateAppState = (s: AppState) => {
     appStateRef.current = s
@@ -116,7 +117,13 @@ const FingerPickerPage: FC = () => {
         settingsRef.current = parsed
       }
     } catch { /* ignore */ }
-    return () => { cancelAnimationFrame(rafRef.current) }
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      if (resultTimeoutRef.current) {
+        clearTimeout(resultTimeoutRef.current)
+        resultTimeoutRef.current = 0
+      }
+    }
   }, [])
 
   useReady(() => {
@@ -187,7 +194,22 @@ const FingerPickerPage: FC = () => {
   const handleTouchEnd = (e: any) => {
     if (appStateRef.current === 'animating') return
     if (appStateRef.current === 'result') {
-      resetAll()
+      // 检查离开的手指中是否有被选中的人
+      const ended = e.changedTouches || []
+      let winnerLeft = false
+      for (const t of ended) {
+        if (winnersRef.current.includes(t.identifier)) {
+          winnerLeft = true
+          break
+        }
+      }
+      // 被选中人离开，2秒后自动重置
+      if (winnerLeft && !resultTimeoutRef.current) {
+        resultTimeoutRef.current = setTimeout(() => {
+          resultTimeoutRef.current = 0
+          resetAll()
+        }, 2000) as unknown as number
+      }
       return
     }
     const ended = e.changedTouches || []
@@ -220,6 +242,10 @@ const FingerPickerPage: FC = () => {
   }
 
   const resetAll = () => {
+    if (resultTimeoutRef.current) {
+      clearTimeout(resultTimeoutRef.current)
+      resultTimeoutRef.current = 0
+    }
     touchPointsRef.current.clear()
     colorIndexRef.current = 0
     winnersRef.current = []
@@ -761,7 +787,9 @@ const FingerPickerPage: FC = () => {
       if (state === 'countdown') drawCountdown(ctx, countdownValueRef.current, W, H)
       if (state === 'idle') drawHint(ctx, '请将手指放在屏幕上', W, H)
       else if (state === 'waiting') drawHint(ctx, '再放一根手指开始倒计时', W, H)
-      else if (state === 'result') drawHint(ctx, '点击任意位置重新开始', W, H)
+      else if (state === 'result') {
+        drawHint(ctx, resultTimeoutRef.current ? '即将自动重置...' : '被选中者离开后自动重置', W, H)
+      }
 
       rafRef.current = requestAnimationFrame(loop)
     }
