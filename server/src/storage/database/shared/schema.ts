@@ -81,6 +81,7 @@ export const gameSessions = pgTable("game_sessions", {
   userId: integer("user_id"),
   gameId: integer("game_id").notNull().references(() => boardGames.id),
   sessionName: varchar("session_name", { length: 64 }),
+  mode: varchar("mode", { length: 16 }).default("scoring"),
   players: jsonb("players").notNull(),
   winner: varchar("winner", { length: 32 }),
   rounds: integer("rounds").default(0),

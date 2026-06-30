@@ -18,6 +18,7 @@ interface GameSession {
   winner: string
   duration: number
   status: string
+  mode?: string
   scoring_snapshot: { name: string; score: number }[]
   created_at: string
   game?: { id: number; name: string; type?: string; icon_bg?: string } | null
@@ -362,6 +363,11 @@ const HistoryPage: FC = () => {
                         <View className="rounded-full px-2 py-1" style={{ backgroundColor: statusInfo.bg }}>
                           <Text className="text-xs font-medium" style={{ color: statusInfo.color }}>{statusInfo.label}</Text>
                         </View>
+                        {session.mode === 'normal' && (
+                          <View className="rounded-full px-2 py-1" style={{ backgroundColor: '#f3f4f6' }}>
+                            <Text className="text-xs font-medium text-gray-500">普通</Text>
+                          </View>
+                        )}
                       </View>
                     </View>
 

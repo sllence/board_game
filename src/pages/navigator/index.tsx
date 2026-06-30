@@ -46,6 +46,7 @@ interface GameSession {
   game_id: number | null
   game?: BoardGame
   status: string
+  mode?: string
   players: string[]
   winner: string | null
   scoring_snapshot: Player[] | null
@@ -91,6 +92,7 @@ const NavigatorPage: FC = () => {
   const [showPhotoActions, setShowPhotoActions] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
+  const [sessionMode, setSessionMode] = useState<'scoring' | 'normal'>('scoring')
   const isMiniApp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT
 
   // 切换收藏
@@ -229,6 +231,9 @@ const NavigatorPage: FC = () => {
       if (sessionData) {
         setSession(sessionData)
         setSessionId(sessionData.id)
+        if (sessionData.mode) {
+          setSessionMode(sessionData.mode)
+        }
         if (sessionData.game) {
           setGame(sessionData.game)
         }
@@ -345,7 +350,8 @@ const NavigatorPage: FC = () => {
   }
 
   const startGame = async () => {
-    if (!game || players.length < game.min_players) {
+    if (!game) return
+    if (sessionMode === 'scoring' && players.length < game.min_players) {
       Taro.showToast({ title: `至少需要${game?.min_players || 0}名玩家`, icon: 'none' })
       return
     }
@@ -358,7 +364,8 @@ const NavigatorPage: FC = () => {
           user_id: currentUser?.id,
           game_id: game.id,
           sessionName: `${game.name} 对局`,
-          players: players.map((p) => p.name),
+          mode: sessionMode,
+          players: sessionMode === 'scoring' ? players.map((p) => p.name) : [],
         },
       })
       console.log('[NavigatorPage] createSession response:', res.data)
@@ -386,15 +393,18 @@ const NavigatorPage: FC = () => {
     setTimerRunning(false)
     if (sessionId) {
       try {
-        const sorted = [...players].sort((a, b) => b.score - a.score)
+        const data: Record<string, unknown> = {
+          duration_seconds: elapsedSeconds,
+        }
+        if (sessionMode === 'scoring') {
+          const sorted = [...players].sort((a, b) => b.score - a.score)
+          data.winner = sorted[0]?.name
+          data.scoring_snapshot = players.map((p) => ({ name: p.name, score: p.score }))
+        }
         await Network.request({
           url: `/api/sessions/${sessionId}/finish`,
           method: 'POST',
-          data: {
-            winner: sorted[0]?.name,
-            scoring_snapshot: players.map((p) => ({ name: p.name, score: p.score })),
-            duration_seconds: elapsedSeconds,
-          },
+          data,
         })
       } catch (err) {
         console.error('[NavigatorPage] finishSession error:', err)
@@ -560,8 +570,8 @@ const NavigatorPage: FC = () => {
             </View>
           )}
 
-          {/* 计分板 */}
-          {players.length > 0 && (
+          {/* 计分板 (仅计分模式) */}
+          {sessionMode === 'scoring' && players.length > 0 && (
             <View className="mb-5">
               <View className="flex flex-row items-center gap-2 mb-3">
                 <View className="w-1 h-4 rounded-full bg-violet-500" />
@@ -740,7 +750,40 @@ const NavigatorPage: FC = () => {
           </View>
         )}
 
-        {/* 添加玩家 */}
+        {/* 对局模式选择 */}
+        <View className="px-4 mb-5">
+          <View className="flex flex-row items-center gap-2 mb-3">
+            <View className="w-1 h-4 rounded-full bg-amber-500" />
+            <Text className="block text-sm font-semibold text-foreground">对局模式</Text>
+          </View>
+          <View className="flex flex-row gap-3">
+            <View
+              className={`flex-1 rounded-2xl p-4 cursor-pointer border-2 transition-all ${sessionMode === 'scoring' ? 'border-primary bg-indigo-50' : 'border-muted bg-white'}`}
+              onClick={() => setSessionMode('scoring')}
+            >
+              <Text className="block text-base font-bold text-foreground">计分模式</Text>
+              <Text className="block text-xs text-muted-foreground mt-1">添加玩家，记录得分，决出胜者</Text>
+              <View className="flex flex-row items-center gap-1 mt-2">
+                <Text className="text-xl">🏆</Text>
+                <Text className="text-xs text-muted-foreground">支持计分板</Text>
+              </View>
+            </View>
+            <View
+              className={`flex-1 rounded-2xl p-4 cursor-pointer border-2 transition-all ${sessionMode === 'normal' ? 'border-primary bg-indigo-50' : 'border-muted bg-white'}`}
+              onClick={() => setSessionMode('normal')}
+            >
+              <Text className="block text-base font-bold text-foreground">普通模式</Text>
+              <Text className="block text-xs text-muted-foreground mt-1">纯休闲对局，无需计分</Text>
+              <View className="flex flex-row items-center gap-1 mt-2">
+                <Text className="text-xl">🎲</Text>
+                <Text className="text-xs text-muted-foreground">仅计时 + 工具</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* 添加玩家 (仅计分模式) */}
+        {sessionMode === 'scoring' && (
         <View className="px-4 mb-5">
           <View className="flex flex-row items-center gap-2 mb-3">
             <View className="w-1 h-4 rounded-full bg-primary" />
@@ -774,14 +817,14 @@ const NavigatorPage: FC = () => {
               </View>
             ))}
           </View>
-        </View>
+        </View>)}
 
         {/* 开始按钮 */}
         <View className="px-4 pb-8 mt-auto">
           <Button
             className="w-full h-12 rounded-2xl text-base"
             onClick={startGame}
-            disabled={!game || players.length < (game?.min_players || 1)}
+            disabled={!game || (sessionMode === 'scoring' && players.length < (game?.min_players || 1))}
           >
             <View className="flex flex-row items-center gap-2">
               <Play size={20} color="#fff" />
@@ -789,7 +832,7 @@ const NavigatorPage: FC = () => {
             </View>
           </Button>
           <Text className="block text-xs text-muted-foreground text-center mt-3">
-            {game ? `至少${game.min_players}人，最多${game.max_players}人` : ('请先选择桌游')}
+            {game && sessionMode === 'scoring' ? `至少${game.min_players}人，最多${game.max_players}人` : game ? `开始${sessionMode === 'normal' ? '休闲' : ''}对局` : ('请先选择桌游')}
           </Text>
         </View>
       </View>
@@ -836,8 +879,8 @@ const NavigatorPage: FC = () => {
 
       {/* 核心内容区 */}
       <View className="flex-1 px-4 pt-4 pb-4 overflow-y-auto">
-        {/* 计分板 */}
-        <View className="mb-5">
+        {/* 计分板 (仅计分模式) */}
+        {sessionMode === 'scoring' && (<View className="mb-5">
           <View className="flex flex-row items-center justify-between mb-3">
             <View className="flex flex-row items-center gap-2">
               <View className="w-1 h-4 rounded-full bg-violet-500" />
@@ -887,7 +930,7 @@ const NavigatorPage: FC = () => {
               )
             })}
           </View>
-        </View>
+        </View>)}
 
         {/* 规则速查 */}
         {game?.rules && (

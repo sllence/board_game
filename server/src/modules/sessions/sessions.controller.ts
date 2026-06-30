@@ -11,6 +11,7 @@ export class SessionsController {
   async create(@Req() req: Request, @Body() body: {
     game_id: number
     session_name?: string
+    mode?: string
     players: any[]
   }) {
     const userId = (req as any).user?.userId

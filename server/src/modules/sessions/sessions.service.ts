@@ -12,6 +12,7 @@ export class SessionsService {
     user_id?: number
     game_id: number
     session_name?: string
+    mode?: string
     players: Player[]
   }) {
     const client = getSupabaseClient()
@@ -21,6 +22,7 @@ export class SessionsService {
         user_id: body.user_id || null,
         game_id: body.game_id,
         session_name: body.session_name || null,
+        mode: body.mode || 'scoring',
         players: body.players,
         status: 'playing',
         started_at: new Date().toISOString(),
@@ -46,7 +48,7 @@ export class SessionsService {
 
     let query = client
       .from('game_sessions')
-      .select('id, game_id, user_id, session_name, players, winner, rounds, duration, status, started_at, finished_at, created_at, game:board_games(id, name, type, icon_bg)', { count: 'exact' })
+      .select('id, game_id, user_id, session_name, mode, players, winner, rounds, duration, status, started_at, finished_at, created_at, game:board_games(id, name, type, icon_bg)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to)
 
@@ -98,7 +100,7 @@ export class SessionsService {
     const client = getSupabaseClient()
     let query = client
       .from('game_sessions')
-      .select('id, game_id, session_name, players, winner, duration, status, created_at, game:board_games(id, name)')
+      .select('id, game_id, session_name, mode, players, winner, duration, status, created_at, game:board_games(id, name)')
       .order('created_at', { ascending: false })
       .limit(5)
 
@@ -180,7 +182,7 @@ export class SessionsService {
     const gameIds = favData.map((f: any) => f.game_id)
     const { data: sessions, error: sessionError } = await client
       .from('game_sessions')
-      .select('id, game_id, user_id, session_name, players, winner, duration, status, created_at, game:board_games(id, name, type, icon_bg)')
+      .select('id, game_id, user_id, session_name, mode, players, winner, duration, status, created_at, game:board_games(id, name, type, icon_bg)')
       .in('id', gameIds)
     if (sessionError) throw new Error(`查询收藏对局失败: ${sessionError.message}`)
 
