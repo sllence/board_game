@@ -180,8 +180,13 @@ const HistoryPage: FC = () => {
   const formatDuration = (seconds: number) => {
     if (!seconds) return '-'
     const m = Math.floor(seconds / 60)
-    if (m < 60) return `${m}分钟`
-    return `${Math.floor(m / 60)}小时${m % 60}分钟`
+    const h = Math.floor(m / 60)
+    if (h < 24) {
+      if (h < 1) return `${m}分钟`
+      return `${h}小时${m % 60}分钟`
+    }
+    const d = Math.floor(h / 24)
+    return `${d}天${h % 24}小时${m % 60}分钟`
   }
 
   const formatDate = (dateStr: string) => {
@@ -379,11 +384,6 @@ const HistoryPage: FC = () => {
                     )}
 
                     <View className="flex flex-row items-center gap-3 mb-3">
-                      <View className="flex flex-row items-center gap-1">
-                        <Clock size={12} color="#9ca3af" />
-                        <Text className="text-xs text-gray-400">{formatDuration(session.duration)}</Text>
-                      </View>
-                      <Text className="text-xs text-gray-300">·</Text>
                       <Text className="text-xs text-gray-400">{formatDate(session.created_at)}</Text>
                       {playerList.length > 0 && (
                         <>
@@ -391,12 +391,17 @@ const HistoryPage: FC = () => {
                           <Text className="text-xs text-gray-400">{playerList.length}人</Text>
                         </>
                       )}
+                      <Text className="text-xs text-gray-300">·</Text>
+                      <View className="flex flex-row items-center gap-1">
+                        <Clock size={12} color="#9ca3af" />
+                        <Text className="text-xs text-gray-400">{formatDuration(session.status === 'playing' ? Math.floor((Date.now() - new Date(session.created_at).getTime()) / 1000) : session.duration)}</Text>
+                      </View>
                     </View>
 
                     {session.winner && (
                       <View className="flex flex-row items-center gap-2 bg-amber-50 rounded-xl px-3 py-2 mb-2">
                         <Trophy size={12} color="#d97706" />
-                        <Text className="text-xs font-semibold text-amber-700">🏆 {session.winner}</Text>
+                        <Text className="text-xs font-semibold text-amber-700">{session.winner}</Text>
                       </View>
                     )}
 
