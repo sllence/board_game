@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
@@ -23,7 +23,6 @@ interface GuideDetail {
 }
 
 const GuideDetailPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-攻略-桌游攻略与技巧', path: '/pages/guide-detail/index' }))
   const [guide, setGuide] = useState<GuideDetail | null>(null)
   const [loading, setLoading] = useState(true)
 

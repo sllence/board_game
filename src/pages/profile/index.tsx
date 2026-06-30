@@ -1,5 +1,5 @@
 import { View, Text, Image, Button as TaroButton, Input as TaroInput } from '@tarojs/components' // eslint-disable-line no-restricted-syntax
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,6 @@ interface UserInfo {
 }
 
 const ProfilePage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-个人中心-管理你的桌游数据', path: '/pages/profile/index' }))
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [tempAvatarUrl, setTempAvatarUrl] = useState<string | null>(null)

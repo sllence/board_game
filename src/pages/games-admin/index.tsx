@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Image } from '@tarojs/components'
 import { useState, useEffect } from 'react'
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -92,7 +92,6 @@ const STATUS_FILTER_OPTIONS = [
 ]
 
 const GamesAdminPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-桌游管理-编辑与管理桌游库', path: '/pages/games-admin/index' }))
   const [games, setGames] = useState<BoardGame[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)

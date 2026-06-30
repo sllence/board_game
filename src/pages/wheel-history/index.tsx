@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
 import { Clock, Target } from 'lucide-react-taro'
@@ -12,7 +12,6 @@ interface HistoryItem {
 }
 
 const WheelHistoryPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-转盘历史-查看转盘记录', path: '/pages/wheel-history/index' }))
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [title, setTitle] = useState('')
   const [loading, setLoading] = useState(false)

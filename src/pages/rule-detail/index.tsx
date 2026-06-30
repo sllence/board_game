@@ -1,5 +1,5 @@
 import { View, Text, RichText, Image, ScrollView } from '@tarojs/components'
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { useState, useEffect, useMemo } from 'react'
 import { markdownToRichText } from '@/lib/markdown'
 import { Network } from '@/network'
@@ -122,7 +122,6 @@ const ImageCarousel: FC<{
 }
 
 const RuleDetailPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-规则-查看桌游规则详情', path: '/pages/rule-detail/index' }))
   const [game, setGame] = useState<BoardGameDetail | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const [rules, setRules] = useState<GameRule[]>([])

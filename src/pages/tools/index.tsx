@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { Dices, Timer, Layers, Shuffle, Calculator, Hand } from 'lucide-react-taro'
 import { WheelIcon } from '@/components/wheel-icon'
 import type { FC, ReactNode } from 'react'
@@ -114,7 +114,6 @@ const TOOL_GROUPS: ToolGroup[] = [
 ]
 
 const ToolsPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-工具箱-骰子计时计分全能工具', path: '/pages/tools/index' }))
   const handleToolClick = (tool: ToolItem) => {
     if (tool.soon) {
       Taro.showToast({ title: '功能开发中', icon: 'none' })

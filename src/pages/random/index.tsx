@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,6 @@ import { Shuffle, Plus, X, User, ArrowLeft } from 'lucide-react-taro'
 import type { FC } from 'react'
 
 const RandomPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-随机-随机数与随机选择', path: '/pages/random/index' }))
   const [names, setNames] = useState<string[]>(['玩家1', '玩家2', '玩家3', '玩家4'])
   const [newName, setNewName] = useState('')
   const [result, setResult] = useState<string | null>(null)

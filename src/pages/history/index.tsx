@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useRef } from 'react'
 import { Network } from '@/network'
 import { Card, CardContent } from '@/components/ui/card'
@@ -42,7 +42,6 @@ const FILTER_TABS: { key: FilterMode; label: string }[] = [
 const PAGE_SIZE = 10
 
 const HistoryPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-对局-记录精彩对局时刻', path: '/pages/history/index' }))
   const [sessions, setSessions] = useState<GameSession[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)

@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow, useShareAppMessage } from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
@@ -28,7 +28,6 @@ interface InvWheelItem {
 type WheelItem = ProbWheelItem | InvWheelItem
 
 const WheelEditPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-转盘编辑-自定义转盘选项', path: '/pages/wheel-edit/index' }))
   const [wheelId, setWheelId] = useState<number | null>(null)
   const [title, setTitle] = useState('')
   const [type, setType] = useState<'probability' | 'inventory'>('probability')

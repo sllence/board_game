@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -36,7 +36,6 @@ const STANDARD_DECK: CardItem[] = SUITS.flatMap((suit) =>
 type DeckMode = 'standard' | 'custom'
 
 const CardsPage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-卡牌-随机抽牌与卡牌管理', path: '/pages/cards/index' }))
   const [mode, setMode] = useState<DeckMode>('standard')
   const [deck, setDeck] = useState<CardItem[]>([...STANDARD_DECK])
   const [drawn, setDrawn] = useState<CardItem[]>([])

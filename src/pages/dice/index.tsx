@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useShareAppMessage } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
@@ -22,7 +22,6 @@ const DICE_TYPES = [
 type RollMode = 'tap' | 'shake'
 
 const DicePage: FC = () => {
-  useShareAppMessage(() => ({ title: '数智局伴-骰子-物理模拟随机骰子', path: '/pages/dice/index' }))
   const [selectedDice, setSelectedDice] = useState(DICE_TYPES[1])
   const [selectedColor, setSelectedColor] = useState<DiceColor>(DICE_COLORS[0])
   const [selectedTheme, setSelectedTheme] = useState<DiceTheme>(DICE_THEMES[0])
