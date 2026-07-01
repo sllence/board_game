@@ -295,9 +295,9 @@ const PosterPage: FC = () => {
         </Card>
 
         {/* 操作按钮 */}
-        <View className="flex flex-col gap-3 mt-6">
+        <View className="flex flex-row gap-3 mt-6">
           {/* 分享按钮 - 使用原生Button openType="share" */}
-          <View className="relative w-full rounded-xl" style={{ height: '44px' }}>
+          <View className="relative flex-1 rounded-xl" style={{ height: '44px' }}>
             {/* eslint-disable-next-line no-restricted-syntax */}
             <NativeBtn openType="share" className="absolute inset-0 w-full h-full opacity-0 z-10" />
             <View
@@ -309,7 +309,7 @@ const PosterPage: FC = () => {
             </View>
           </View>
           <Button
-            className="w-full rounded-xl border border-gray-200"
+            className="flex-1 rounded-xl border border-gray-200"
             style={{ backgroundColor: '#ffffff', color: '#374151' }}
             onClick={() => Taro.navigateBack()}
           >
