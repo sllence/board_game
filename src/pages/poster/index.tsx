@@ -5,7 +5,7 @@ import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  Trophy, Clock, Share2, Medal, Crown, Camera, User
+  Trophy, Clock, Share2, Medal, Crown, Camera, User, ArrowLeft
 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -296,6 +296,16 @@ const PosterPage: FC = () => {
 
         {/* 操作按钮 */}
         <View className="flex flex-row gap-3 mt-6">
+          <Button
+            className="flex-1 rounded-xl border border-gray-200"
+            style={{ backgroundColor: '#ffffff', color: '#374151' }}
+            onClick={() => Taro.navigateBack()}
+          >
+            <View className="flex flex-row items-center justify-center gap-1.5">
+              <ArrowLeft size={16} color="#374151" />
+              <Text className="text-gray-700 font-medium">返回</Text>
+            </View>
+          </Button>
           {/* 分享按钮 - 使用原生Button openType="share" */}
           <View className="relative flex-1 rounded-xl" style={{ height: '44px' }}>
             {/* eslint-disable-next-line no-restricted-syntax */}
@@ -308,13 +318,6 @@ const PosterPage: FC = () => {
               <Text className="text-white font-medium text-sm">分享给好友</Text>
             </View>
           </View>
-          <Button
-            className="flex-1 rounded-xl border border-gray-200"
-            style={{ backgroundColor: '#ffffff', color: '#374151' }}
-            onClick={() => Taro.navigateBack()}
-          >
-            <Text className="text-gray-700 font-medium">返回对局详情</Text>
-          </Button>
         </View>
       </View>
     </ScrollView>
