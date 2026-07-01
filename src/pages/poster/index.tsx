@@ -5,7 +5,7 @@ import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
-  Trophy, Clock, Share2, Medal, Crown, Camera, User, ArrowLeft
+  Trophy, Clock, Share2, Medal, Crown, Camera, User
 } from 'lucide-react-taro'
 import type { FC } from 'react'
 
@@ -294,29 +294,16 @@ const PosterPage: FC = () => {
           </CardContent>
         </Card>
 
-        {/* 操作按钮 */}
-        <View className="flex flex-row gap-3 mt-6">
-          <Button
-            className="flex-1 rounded-xl border border-gray-200"
-            style={{ backgroundColor: '#ffffff', color: '#374151' }}
-            onClick={() => Taro.navigateBack()}
+        {/* 分享按钮 - 使用原生Button openType="share" */}
+        <View className="relative w-full rounded-xl mt-6" style={{ height: '44px' }}>
+          {/* eslint-disable-next-line no-restricted-syntax */}
+          <NativeBtn openType="share" className="absolute inset-0 w-full h-full opacity-0 z-10" />
+          <View
+            className="absolute inset-0 w-full h-full flex flex-row items-center justify-center gap-2 rounded-xl pointer-events-none"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
-            <View className="flex flex-row items-center justify-center gap-1.5">
-              <ArrowLeft size={16} color="#374151" />
-              <Text className="text-gray-700 font-medium">返回</Text>
-            </View>
-          </Button>
-          {/* 分享按钮 - 使用原生Button openType="share" */}
-          <View className="relative flex-1 rounded-xl" style={{ height: '44px' }}>
-            {/* eslint-disable-next-line no-restricted-syntax */}
-            <NativeBtn openType="share" className="absolute inset-0 w-full h-full opacity-0 z-10" />
-            <View
-              className="absolute inset-0 w-full h-full flex flex-row items-center justify-center gap-2 rounded-xl pointer-events-none"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-            >
-              <Share2 size={18} color="#fff" />
-              <Text className="text-white font-medium text-sm">分享给好友</Text>
-            </View>
+            <Share2 size={18} color="#fff" />
+            <Text className="text-white font-medium text-sm">分享给好友</Text>
           </View>
         </View>
       </View>
