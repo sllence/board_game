@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useShare } from '@/hooks/useShare'
 import { Bookmark, Trash2, Trophy, Timer } from 'lucide-react-taro'
+import { formatGameDuration } from '@/lib/utils'
 import type { FC } from 'react'
 
 interface ProbWheelItem {
@@ -51,13 +52,6 @@ const getUserId = (): number | undefined => {
     }
   } catch { /* ignore */ }
   return undefined
-}
-
-const formatTime = (minutes: number): string => {
-  if (minutes < 60) return `${minutes}分钟`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m > 0 ? `${h}小时${m}分钟` : `${h}小时`
 }
 
 const formatDate = (dateStr: string): string => {
@@ -244,7 +238,7 @@ const FavoritesPage: FC = () => {
                       {session.duration > 0 && (
                         <View className="flex flex-row items-center gap-1">
                           <Timer size={12} color="#9CA3AF" />
-                          <Text className="text-xs">{formatTime(session.duration)}</Text>
+                          <Text className="text-xs">{formatGameDuration(session.duration)}</Text>
                         </View>
                       )}
                       {session.winner && (

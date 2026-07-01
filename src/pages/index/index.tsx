@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { useShare } from '@/hooks/useShare'
 import { Empty } from '@/components/ui/empty'
 import { Dices, Calculator, ArrowRight, Sparkles, History, Hand, Timer } from 'lucide-react-taro'
+import { formatGameDuration } from '@/lib/utils'
 import { WheelIcon } from '@/components/wheel-icon'
 import { requireLogin, getCurrentUser } from '@/utils/auth'
 import { TYPE_META, SCENE_META, DIFFICULTY_META } from '@/constants/game'
@@ -303,7 +304,7 @@ const IndexPage: FC = () => {
                             <>
                               <Text className="text-xs text-gray-400">·</Text>
                               <Text className="text-xs text-gray-500">
-                                {Math.floor(session.duration / 60)}分钟
+                                {formatGameDuration(session.duration)}
                               </Text>
                             </>
                           )}

@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { markdownToRichText } from '@/lib/markdown'
+import { formatGameDuration } from '@/lib/utils'
 import {
   Play, Plus, X, User, Dices, Timer,
   Hand, Calculator, BookOpen, ChevronRight,
@@ -642,7 +643,7 @@ const NavigatorPage: FC = () => {
                     <View className="flex flex-row items-center justify-between">
                       <Text className="block text-sm text-muted-foreground">时长</Text>
                       <Text className="block text-sm font-semibold text-foreground">
-                        {session.duration ? formatTime(session.duration) : '-'}
+                        {session.duration ? formatGameDuration(session.duration) : '-'}
                       </Text>
                     </View>
                     {session.winner && (

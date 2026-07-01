@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { formatGameDuration } from '@/lib/utils'
 import {
   Trophy, Clock, Share2, Medal, Crown, Camera, User
 } from 'lucide-react-taro'
@@ -101,16 +102,6 @@ const PosterPage: FC = () => {
     }
   }
 
-  const formatDuration = (seconds: number): string => {
-    if (seconds < 60) return `${seconds}秒`
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    if (mins < 60) return secs > 0 ? `${mins}分${secs}秒` : `${mins}分钟`
-    const hours = Math.floor(mins / 60)
-    const remainMins = mins % 60
-    return remainMins > 0 ? `${hours}小时${remainMins}分` : `${hours}小时`
-  }
-
   const formatDate = (dateStr: string) => {
     if (!dateStr) return ''
     const d = new Date(dateStr)
@@ -149,7 +140,7 @@ const PosterPage: FC = () => {
 
   const winner = sortedPlayers.length > 0 ? sortedPlayers[0] : null
   const gameName = session.game?.name || session.session_name || '桌游对局'
-  const duration = session.duration ? formatDuration(session.duration) : '--'
+  const duration = session.duration ? formatGameDuration(session.duration) : '--'
   const hasPhotos = photos.length > 0
 
   return (
