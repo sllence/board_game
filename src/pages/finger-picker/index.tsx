@@ -63,7 +63,7 @@ const COUNTDOWN_DURATION = 1500
 const AMBIENT_COUNT = 25
 
 const FingerPickerPage: FC = () => {
-  useShare('手指选人')
+  useShare('手指选人', 'https://coze-coding-project.tos.coze.site/coze_storage_7638846015172444195/share-cards/finger-picker-share_195165bb.png?sign=1785505305-64a2c8fd4a-0-54bd653bcdd1cb588c08b1e04eb135f49f403a1b16cd4cd42de17e9e93ee4aed')
   const [, setAppStateDisplay] = useState<AppState>('idle')
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [settingsOpen, setSettingsOpen] = useState(false)

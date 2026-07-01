@@ -1,9 +1,13 @@
 import { useShareAppMessage } from '@tarojs/taro'
 
-export function useShare(title?: string) {
+export function useShare(title?: string, imageUrl?: string) {
   useShareAppMessage(() => {
-    return {
+    const config: any = {
       title: title || '数智局伴',
     }
+    if (imageUrl) {
+      config.imageUrl = imageUrl
+    }
+    return config
   })
 }
