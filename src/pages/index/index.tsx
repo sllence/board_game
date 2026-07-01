@@ -300,14 +300,21 @@ const IndexPage: FC = () => {
                           <Text className="text-xs text-gray-500">
                             {formatDate(session.created_at)}
                           </Text>
-                          {session.duration && session.status === 'finished' && (
+                          {session.status === 'finished' && session.duration ? (
                             <>
                               <Text className="text-xs text-gray-400">·</Text>
                               <Text className="text-xs text-gray-500">
                                 {formatGameDuration(session.duration)}
                               </Text>
                             </>
-                          )}
+                          ) : session.status === 'playing' && session.created_at ? (
+                            <>
+                              <Text className="text-xs text-gray-400">·</Text>
+                              <Text className="text-xs text-gray-500">
+                                {formatGameDuration(Math.floor((Date.now() - new Date(session.created_at).getTime()) / 1000))}
+                              </Text>
+                            </>
+                          ) : null}
                         </View>
                       </View>
                       <ArrowRight size={12} color="#d1d5db" />
